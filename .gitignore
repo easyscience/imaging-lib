@@ -41,6 +41,12 @@ docs/_build
 # VSCode
 .vscode
 
+# Large files
+*.hdf
+*normalized.tiff
+*sample.tiff
+*open_beam.tiff
+
 # Misc
 ..*
 *.log
