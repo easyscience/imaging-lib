@@ -86,6 +86,7 @@ repo = "easyimaging"
 line-length = 127
 exclude = [
     "docs",
+    "ProofOfConcept*",
 ]
 
 [tool.ruff.format]
