@@ -47,6 +47,7 @@ docs/_build
 *sample.tiff
 *open_beam.tiff
 ProofOfConcept/sample_data/*.tiff
+ProofOfConcept/sample_data/*
 
 # Misc
 ..*
