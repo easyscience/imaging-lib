@@ -21,24 +21,28 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Development Status :: 3 - Alpha"
 ]
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.10,<3.13"
 dependencies = [
-    "easyscience>=0.6.0",
-    "scipp>=23.12.0",
+    "easyscience>=2.0.0",
+    "scitiff",
+    "plopp",
+    "ncrystal[composer]"
 ]
 
 [project.optional-dependencies]
+build = [
+    "hatchling <= 1.21.0",
+    "setuptools-git-versioning",
+    "build"
+]
 dev = [
     "build",
     "codecov>=2.1.11",
-    "coverage",
-    "coveralls",
     "flake8>=6.0.0",
     "ipykernel",
     "jupyter>=1.0.0",
@@ -47,15 +51,14 @@ dev = [
     "pytest>=5.2",
     "pytest-cov>=3.0.0",
     "ruff",
-    "toml>=0.10",
-    "yapf>=0.31.0",
+    "tox-gh-actions"
 ]
 docs = [
-    "myst_parser",
-    "nbsphinx",
-    "sphinx_autodoc_typehints",
+    "doc8",
+    "readme-renderer",
+    "sphinx_autodoc_typehints", 
     "sphinx_book_theme",
-    "sphinx-copybutton",
+    "sphinx_gallery",
     "toml"
 ]
 
@@ -126,10 +129,9 @@ force-single-line = true
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{3.9,3.10,3.11,3.12}
+envlist = py{3.10,3.11,3.12}
 [gh-actions]
 python =
-        3.9: py39
         3.10: py310
         3.11: py311
         3.12: py312
@@ -137,6 +139,7 @@ python =
 PLATFORM =
     ubuntu-latest: linux
     macos-latest: macos
+    macos-15-intel: macos-intel
     windows-latest: windows
 [testenv]
 passenv =
