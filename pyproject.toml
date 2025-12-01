@@ -129,12 +129,12 @@ force-single-line = true
 legacy_tox_ini = """
 [tox]
 isolated_build = True
-envlist = py{3.10,3.11,3.12}
+envlist = py{3.11,3.12,3.13}
 [gh-actions]
 python =
-        3.10: py310
         3.11: py311
         3.12: py312
+        3.13: py313
 [gh-actions:env]
 PLATFORM =
     ubuntu-latest: linux
