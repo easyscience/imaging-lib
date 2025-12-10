@@ -1,57 +1,98 @@
 #  SPDX-FileCopyrightText: 2026 EasyImaging contributors  <imaging@easyscience.software>
 #  SPDX-License-Identifier: BSD-3-Clause
 #  © 2021-2026 Contributors to the EasyImaging project <https://github.com/easyScience/EasyImaging>
+from __future__ import annotations
 
-from easyscience.job.experiment import ExperimentBase
-from scipp import DataArray
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import scipp as sc
+from easyscience.base_classes import NewBase
 from scipp import UnitError
+from scitiff import load_scitiff
 
+if TYPE_CHECKING:
+    from typing import Optional
 
-class Measurement(ExperimentBase):
+class Measurement(NewBase):
     """
     Class responsible for managing the measurement data of a time-of-flight neutron imaging experiment.
     """
     def __init__(
         self, 
-        name: str,
-        data_array: DataArray
+        data_array: sc.DataArray,
+        unique_name: Optional[str] = None,
+        display_name: Optional[str] = None,
     ):
-        if data_array.coords.get('tof') is None or data_array.coords['tof'].shape == ():
-            raise ValueError("DataArray must contain 'tof' coordinate for time-of-flight information.")
-        if data_array.coords['tof'].dim != 't':
-            raise ValueError("'tof' coordinate must be of dimension time: 't'.")
-        try:
-            temp_tof_coords = data_array.coords['tof'].copy(deep=True)
-            temp_tof_coords.to(unit='s')
-        except UnitError:
-            raise UnitError("'tof' coordinate must have a unit of time, such as seconds ('s').") from None
+        
+        if not isinstance(data_array, sc.DataArray):
+            raise TypeError("data_array must be an instance of scipp.DataArray.")
 
-        if data_array.coords.get('x') is None or data_array.coords['x'].shape == ():
-            raise ValueError("DataArray must contain 'x' coordinate for pixels.")
-        if data_array.coords['x'].dim != 'x':
-            raise ValueError("'x' coordinate must be of dimension 'x'.")
-        try:
-            temp_x_coords = data_array.coords['x'].copy(deep=True)
-            temp_x_coords.to(unit='m')
-        except UnitError:
-            raise UnitError("'x' coordinate must have a unit of length, such as meters ('m').") from None
+        self._validate_data_array_coordinate(
+            data_array, 'tof', 'time-of-flight information', 't', 'time', 's')
 
-        if data_array.coords.get('y') is None or data_array.coords['y'].shape == ():
-            raise ValueError("DataArray must contain 'y' coordinate for pixels.")
-        if data_array.coords['y'].dim != 'y':
-            raise ValueError("'y' coordinate must be of dimension 'y'.")
-        try:
-            temp_y_coords = data_array.coords['y'].copy(deep=True)
-            temp_y_coords.to(unit='m')
-        except UnitError:
-            raise UnitError("'y' coordinate must have a unit of length, such as meters ('m').") from None
+        self._validate_data_array_coordinate(
+            data_array, 'x', 'pixels', 'x', 'length', 'm')
+        
+        self._validate_data_array_coordinate(
+            data_array, 'y', 'pixels', 'y', 'length', 'm')
 
         self._pixel_positions_y = data_array.coords['y']
+        self._pixel_positions_x = data_array.coords['x']
+        self._time_of_flight = data_array.coords['tof']
 
-        super().__init__(name)
+        super().__init__(unique_name=unique_name, display_name=display_name)
 
-        self._data_array = data_array
+        self._data_array = data_array.copy(deep=False)
 
         self._regions_of_interest = []
 
-        
+    @classmethod
+    def from_scitiff(cls, filename: str | Path, unique_name: Optional[str] = None, display_name: Optional[str] = None) -> Measurement:  # noqa: E501
+        """
+        Create a Measurement instance by loading data from a SciTIFF file.
+
+        Parameters
+        ----------
+        filename : str
+            Path to the SciTIFF file.
+        unique_name : Optional[str]
+            Unique identifier for the measurement.
+        display_name : Optional[str]
+            Display name for the measurement.
+
+        Returns
+        -------
+        Measurement
+            An instance of the Measurement class containing the loaded data.
+        """
+        if not isinstance(filename, (str, Path)):
+            raise TypeError("filename must be a string or Path object.")
+        try:
+            data_array = load_scitiff(filename)['image']
+        except Exception as e:
+            raise RuntimeError(f"Failed to load SciTIFF file '{filename}': {e}") from e
+        try:
+            instance = cls(data_array=data_array, unique_name=unique_name, display_name=display_name)
+        except Exception as e:
+            raise RuntimeError(f"Tiff file '{filename}' not a proper SciTIFF file: {e}") from e
+        return instance
+    
+    def _validate_data_array_coordinate(
+            data_array : sc.DataArray, 
+            coord_name: str,
+            coord_context: str, 
+            expected_dim: str,
+            expected_dim_string: str, 
+            expected_unit: str
+            ) -> None:
+        if data_array.coords.get(coord_name) is None or data_array.coords[coord_name].shape == ():
+            raise ValueError(f"DataArray must contain '{coord_name}' coordinate for {coord_context}.")
+        if data_array.coords[coord_name].dim != expected_dim:
+            raise ValueError(f"'{coord_name}' coordinate must be of dimension '{expected_dim}'.")
+        try:
+            unit = data_array.coords[coord_name].unit
+            temp_varable = sc.scalar(value=1, unit=unit)
+            temp_varable.to(unit=expected_unit)
+        except UnitError:
+            raise UnitError(f"'{coord_name}' coordinate must have a unit of {expected_dim_string}, such as ('{expected_unit}').") from None  # noqa: E501
