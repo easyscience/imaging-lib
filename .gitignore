@@ -41,6 +41,9 @@ docs/_build
 # VSCode
 .vscode
 
+# Pixi
+.pixi/
+
 # Large files
 *.hdf
 *normalized.tiff
