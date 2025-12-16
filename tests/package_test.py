@@ -4,4 +4,4 @@ import easyimaging as pkg
 
 
 def test_has_version():
-    assert hasattr(pkg, '__version__') # noqa S101
+    assert hasattr(pkg, '__version__')  # noqa S101
