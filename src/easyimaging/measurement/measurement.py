@@ -28,19 +28,27 @@ class Measurement(NewBase):
         
         if not isinstance(data_array, sc.DataArray):
             raise TypeError("data_array must be an instance of scipp.DataArray.")
-
         
         self._validate_data_array_coordinate(
             data_array, 'tof', 'time-of-flight information', 't', 'time', 's')
-
-        self._validate_data_array_coordinate(
-            data_array, 'x', 'pixels', 'x', 'length', 'm')
         
-        self._validate_data_array_coordinate(
-            data_array, 'y', 'pixels', 'y', 'length', 'm')
+        if any(data_array.coords['tof'].to(unit='s') < sc.scalar(0, unit='s')):
+            raise ValueError("time_of_flight values must be non-negative.")
+        
+        if 'x' in data_array.coords:
+            self._validate_data_array_coordinate(
+                data_array, 'x', 'pixels', 'x', 'length', 'm')
+            self._pixel_positions_x = data_array.coords['x']
+        elif 'x' not in data_array.dims:
+            raise ValueError("data array must have an 'x' dimension.")
+            
+        if 'y' in data_array.coords:
+            self._validate_data_array_coordinate(
+                data_array, 'y', 'pixels', 'y', 'length', 'm')
+            self._pixel_positions_y = data_array.coords['y']
+        elif 'y' not in data_array.dims:
+            raise ValueError("data array must have an 'y' dimension.")
 
-        self._pixel_positions_y = data_array.coords['y']
-        self._pixel_positions_x = data_array.coords['x']
         self._time_of_flight = data_array.coords['tof']
 
         super().__init__(unique_name=unique_name, display_name=display_name)
@@ -121,18 +129,15 @@ class Measurement(NewBase):
         try:
             data_array = load_scitiff(filename)['image']
         except Exception as e:
-            raise RuntimeError(f"Failed to load TIFF stack file '{filename}': {e}") from e
+            raise FileNotFoundError(f"Failed to load TIFF stack file '{filename}': {e}") from e
         
         try:
-            data_array = data_array.rename_dims({'dim_0': 'tof', 'dim_1': 'y', 'dim_2': 'x'})
+            data_array = data_array.rename_dims({'dim_0': 't', 'dim_1': 'y', 'dim_2': 'x'})
         except Exception as e:
             raise RuntimeError(f"Failed to rename dimensions for TIFF stack file '{filename}': {e}") from e
 
         time_of_flight = cls._validate_provided_coord(
-            data_array, time_of_flight, 'time_of_flight', 'tof', 'frames in the TIFF stack', 'time', 's')
-        if any(time_of_flight.to(unit='s') < sc.scalar(0, unit='s')):
-            raise ValueError("time_of_flight values must be non-negative.")
-        
+            data_array, time_of_flight, 'time_of_flight', 't', 'frames in the TIFF stack', 'time', 's')
         data_array.coords['tof'] = time_of_flight
         
         if x_positions is not None:
@@ -159,7 +164,7 @@ class Measurement(NewBase):
             expected_unit: str
             ) -> None:
         if data_array.coords.get(coord_name) is None or data_array.coords[coord_name].shape == ():
-            raise ValueError(f"DataArray must contain '{coord_name}' coordinate for {coord_context}.")
+            raise ValueError(f"data array must contain '{coord_name}' coordinate for {coord_context}.")
         if data_array.coords[coord_name].dim != expected_dim:
             raise ValueError(f"'{coord_name}' coordinate must be of dimension '{expected_dim}'.")
         try:
