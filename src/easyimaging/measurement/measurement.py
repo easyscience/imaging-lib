@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import ess.imaging as essimaging
 import numpy as np
 import scipp as sc
 from easyscience.base_classes import NewBase
@@ -54,6 +55,9 @@ class Measurement(NewBase):
         super().__init__(unique_name=unique_name, display_name=display_name)
 
         self._data_array = data_array.copy(deep=False)
+        # For tracking original pixels when rebinning, add pixel indices as coordinates
+        self._data_array.coords['x_pixels'] = sc.arange('x', 0, self._data_array.sizes['x'] + 1, 1)
+        self._data_array.coords['y_pixels'] = sc.arange('y', 0, self._data_array.sizes['y'] + 1, 1)
 
         self._regions_of_interest = []
 
@@ -92,7 +96,7 @@ class Measurement(NewBase):
     def from_tiff_stack(
         cls, 
         filename: str | Path, 
-        time_of_flight: sc.Variable | np.array,
+        time_of_flights: sc.Variable | np.array,
         x_positions: sc.Variable | np.array | None = None,
         y_positions: sc.Variable | np.array | None = None,
         unique_name: str | None = None, 
@@ -105,7 +109,7 @@ class Measurement(NewBase):
         ----------
         filename : str | Path
             Path to the TIFF stack file.
-        time_of_flight : sc.Variable | np.array
+        time_of_flights : sc.Variable | np.array
             Array of time-of-flight values corresponding to the frames in the TIFF stack. 
             If a numpy array is provided, the unit is assumed to be seconds.
         x_positions : sc.Variable | np.array | None
@@ -136,9 +140,9 @@ class Measurement(NewBase):
         except Exception as e:
             raise RuntimeError(f"Failed to rename dimensions for TIFF stack file '{filename}': {e}") from e
 
-        time_of_flight = cls._validate_provided_coord(
-            data_array, time_of_flight, 'time_of_flight', 't', 'frames in the TIFF stack', 'time', 's')
-        data_array.coords['tof'] = time_of_flight
+        time_of_flights = cls._validate_provided_coord(
+            data_array, time_of_flights, 'time_of_flight', 't', 'frames in the TIFF stack', 'time', 's')
+        data_array.coords['tof'] = time_of_flights
         
         if x_positions is not None:
             x_positions = cls._validate_provided_coord(
@@ -153,6 +157,32 @@ class Measurement(NewBase):
         instance = cls(data_array=data_array, unique_name=unique_name, display_name=display_name)
         return instance
         
+    def rebin(self, dimensions: dict[str, int]) -> None:
+        """
+        Rebin the measurement image stack. This operation reduces the resolution of the data by combining adjacent pixels or time bins.
+        The rebinned dimensions must be evenly divisible by their specific rebin factor.
+
+        Parameters
+        ----------
+        dimensions : dict[str, int]
+            A dictionary specifying the rebinning factors for each dimension.
+            For example, {'t': 2} will rebin the time dimension by a factor of 2.
+        """  # noqa: E501
+        if not isinstance(dimensions, dict):
+            raise TypeError("dimensions must be a dictionary mapping dimension names to rebin factors.")
+        for dim, value in dimensions.items():
+            if dim not in self._data_array.dims:
+                raise KeyError(f"Dimension '{dim}' not a valid dimension for rebinning. Should be one of {self._data_array.dims}.")  # noqa: E501
+            if not isinstance(value, int) or value < 2:
+                raise ValueError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 2.")
+            if self._data_array.sizes[dim] % value != 0:
+                raise ValueError(f"Dimension '{dim}' with size {self._data_array.sizes[dim]} is not evenly divisible by rebin size {value}.")  # noqa: E501
+        self._rebinned_data_array = essimaging.tools.analysis.resize(self._data_array, sizes=dimensions, method='mean')
+        # Update coordinates after rebinning. Can be removed when scipp supports resizing with coordinates.
+        if 'x' in dimensions:
+            self._rebinned_data_array.coords['x_pixels'] = self._data_array.coords['x_pixels'][::dimensions['x']] # Bin-edge
+            # if 'x' in self._data_array.coords:
+            
 
     def _validate_data_array_coordinate(
             self,
@@ -171,6 +201,8 @@ class Measurement(NewBase):
             data_array.coords[coord_name].to(unit=expected_unit)
         except UnitError:
             raise UnitError(f"'{coord_name}' coordinate must have a unit of {expected_dim_string}, such as ('{expected_unit}').") from None  # noqa: E501
+        if data_array.coords.is_edges(coord_name):
+            data_array.coords[coord_name] = sc.midpoints(data_array.coords[coord_name])
         
     @staticmethod
     def _validate_provided_coord(
@@ -193,5 +225,4 @@ class Measurement(NewBase):
         except UnitError:
             raise UnitError(f"{coord_name} must have a unit of {expected_dim_string}, such as '{expected_unit}'.") from None
         return coord
-        
         

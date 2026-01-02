@@ -40,6 +40,25 @@ class TestMeasurement:
         assert 'x' not in measurement._data_array.coords
         assert 'y' not in measurement._data_array.coords
 
+    def test_init_valid_data_array_coordinate_edges(self, valid_data_array):
+        # When
+        data_array_with_edge_coords = valid_data_array.copy(deep=True)
+        tof_bin_edges = sc.arange('t', 0, 11, 1, unit='s')
+        x_bin_edges = sc.arange('x', 0, 6, 1, unit='m')
+        y_bin_edges = sc.arange('y', 0, 6, 1, unit='m')
+        data_array_with_edge_coords.coords['tof'] = tof_bin_edges
+        data_array_with_edge_coords.coords['x'] = x_bin_edges
+        data_array_with_edge_coords.coords['y'] = y_bin_edges
+        # Then
+        measurement = Measurement(data_array=data_array_with_edge_coords)
+        # Expect
+        assert sc.identical(
+            measurement._data_array.coords['tof'], sc.midpoints(tof_bin_edges))
+        assert sc.identical(
+            measurement._data_array.coords['x'], sc.midpoints(x_bin_edges))
+        assert sc.identical(
+            measurement._data_array.coords['y'], sc.midpoints(y_bin_edges))
+
     def test_init_invalid_data_array_type(self):
         # When Then
         with pytest.raises(TypeError, match="data_array must be an instance of scipp.DataArray."):

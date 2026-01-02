@@ -30,6 +30,7 @@ requires-python = ">=3.10,<3.13"
 dependencies = [
     "easyscience>=2.0.0",
     "scitiff",
+    "essimaging",
     "plopp",
     "ncrystal[composer]"
 ]
