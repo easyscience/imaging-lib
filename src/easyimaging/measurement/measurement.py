@@ -13,6 +13,8 @@ from easyscience.base_classes import NewBase
 from scipp import UnitError
 from scitiff import load_scitiff
 
+Numeric = int | float
+
 if TYPE_CHECKING:
     pass
 
@@ -52,18 +54,18 @@ class Measurement(NewBase):
 
         super().__init__(unique_name=unique_name, display_name=display_name)
 
-        self._data_array = data_array.copy(deep=False)
+        self._full_data_array = data_array.copy(deep=False)
 
         # Ensure x and y coordinates are in edge format for consistent ROIs across rebinning
-        if 'x' in self._data_array.coords and not self._data_array.coords.is_edges('x'):
-            self._data_array.coords['x'] = Measurement._to_edges(self._data_array.coords['x'])
-        if 'y' in self._data_array.coords and not self._data_array.coords.is_edges('y'):
-            self._data_array.coords['y'] = Measurement._to_edges(self._data_array.coords['y'])
+        if 'x' in self._full_data_array.coords and not self._full_data_array.coords.is_edges('x'):
+            self._full_data_array.coords['x'] = Measurement._to_edges(self._full_data_array.coords['x'])
+        if 'y' in self._full_data_array.coords and not self._full_data_array.coords.is_edges('y'):
+            self._full_data_array.coords['y'] = Measurement._to_edges(self._full_data_array.coords['y'])
 
         # Fallback for when no x/y coordinates are provided
         # For tracking original pixels when rebinning, add pixel indices as coordinates
-        self._data_array.coords['x_pixels'] = sc.arange('x', 0, self._data_array.sizes['x'] + 1, 1)
-        self._data_array.coords['y_pixels'] = sc.arange('y', 0, self._data_array.sizes['y'] + 1, 1)
+        self._full_data_array.coords['x_pixels'] = sc.arange('x', 0, self._full_data_array.sizes['x'] + 1, 1)
+        self._full_data_array.coords['y_pixels'] = sc.arange('y', 0, self._full_data_array.sizes['y'] + 1, 1)
 
         self._regions_of_interest = []
 
@@ -168,10 +170,12 @@ class Measurement(NewBase):
         instance = cls(data_array=data_array, unique_name=unique_name, display_name=display_name)
         return instance
 
-    def rebin(self, dimensions: dict[str, int]) -> None:
+    def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """
         Rebin the measurement image stack. This operation reduces the resolution of the data by combining adjacent pixels or time bins.
         The rebinned dimensions must be evenly divisible by their specific rebin factor.
+
+        To revert to the original data, provide a dictionary with all rebin factors set to 1.
 
         Parameters
         ----------
@@ -181,22 +185,56 @@ class Measurement(NewBase):
         """  # noqa: E501
         if not isinstance(dimensions, dict):
             raise TypeError('dimensions must be a dictionary mapping dimension names to rebin factors.')
+        if all(isinstance(value, Numeric) and value == 1 for value in dimensions.values()):  # Reverts to original data
+            self.revert_rebin()
+            return
+        if 't' in dimensions:
+            raise ValueError("Rebinning of the time-of-flight ('t') dimension is yet not supported.")
         for dim, value in dimensions.items():
-            if dim not in self._data_array.dims:
+            if not isinstance(dim, str):
+                raise TypeError(f'Dimension keys must be strings. Got {type(dim)} for {dim} instead.')
+            if dim not in self._full_data_array.dims:
                 raise KeyError(
-                    f"Dimension '{dim}' not a valid dimension for rebinning. Should be one of {self._data_array.dims}."
-                )  # noqa: E501
-            if not isinstance(value, int) or value < 2:
-                raise ValueError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 2.")
-            if self._data_array.sizes[dim] % value != 0:
+                    f"Dimension '{dim}' not a valid dimension for rebinning. Should be one of {self._full_data_array.dims}."
+                )
+            if (
+                not (isinstance(value, int) or (isinstance(value, float) and value.is_integer())) and value < 1
+            ):  # I allow eg. 2.0 as well as 2  # noqa: E501
+                raise ValueError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 1.")
+            if self._full_data_array.sizes[dim] % value != 0:
                 raise ValueError(
-                    f"Dimension '{dim}' with size {self._data_array.sizes[dim]} is not evenly divisible by rebin size {value}."
+                    f"Dimension '{dim}' with size {self._full_data_array.sizes[dim]} is not evenly divisible by rebin size {value}."  # noqa: E501
                 )  # noqa: E501
-        self._rebinned_data_array = essimaging.tools.analysis.resize(self._data_array, sizes=dimensions, method='mean')
+        self._rebinned_data_array = essimaging.tools.analysis.resize(self._full_data_array, sizes=dimensions, method='mean')
         # Update coordinates after rebinning. Can be removed when scipp supports resizing with coordinates.
         if 'x' in dimensions:
-            self._rebinned_data_array.coords['x_pixels'] = self._data_array.coords['x_pixels'][:: dimensions['x']]  # Bin-edge
-            # if 'x' in self._data_array.coords:
+            self._rebinned_data_array.coords['x_pixels'] = self._full_data_array.coords['x_pixels'][:: dimensions['x']]  # Bin-edge
+            if 'x' in self._full_data_array.coords:
+                self._rebinned_data_array.coords['x'] = self._full_data_array.coords['x'][:: dimensions['x']]  # Bin-edge
+        if 'y' in dimensions:
+            self._rebinned_data_array.coords['y_pixels'] = self._full_data_array.coords['y_pixels'][:: dimensions['y']]  # Bin-edge
+            if 'y' in self._full_data_array.coords:
+                self._rebinned_data_array.coords['y'] = self._full_data_array.coords['y'][:: dimensions['y']]  # Bin-edge
+
+    @property
+    def _data_array(self) -> sc.DataArray:
+        """
+        Get the current data array, either rebinned or the original full resolution.
+        """
+        if self._rebinned_data_array is not None:
+            return self._rebinned_data_array
+        return self._full_data_array
+    
+    @_data_array.setter
+    def _data_array(self, value: sc.DataArray) -> None:
+        raise AttributeError("Cannot set _data_array, it is a read-only property.")
+
+    def revert_rebin(self) -> None:
+        """
+        Revert any rebinning applied to the measurement data, restoring it to its original resolution.
+        """
+        if self._rebinned_data_array is not None:
+            del self._rebinned_data_array
 
     def _validate_data_array_coordinate(
         self,

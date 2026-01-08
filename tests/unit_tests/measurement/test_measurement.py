@@ -11,9 +11,9 @@ class TestMeasurement:
     @pytest.fixture
     def valid_data_array(self):
         tof = sc.arange('t', 0, 10, 1, unit='s')
-        x = sc.arange('x', 0, 6, 1, unit='m')
-        y = sc.arange('y', 0, 6, 1, unit='m')
-        data = sc.zeros(dims=('x', 'y', 't'), shape=(5, 5, 10))
+        x = sc.arange('x', 0, 7, 1, unit='m')
+        y = sc.arange('y', 0, 7, 1, unit='m')
+        data = sc.zeros(dims=('x', 'y', 't'), shape=(6, 6, 10))
         return sc.DataArray(data=data, coords={'tof': tof, 'x': x, 'y': y})
 
     def test_init_valid_data_array(self, valid_data_array):
@@ -41,15 +41,15 @@ class TestMeasurement:
     def test_init_valid_data_array_coordinate_not_edges(self, valid_data_array):
         # When
         data_array_with_center_coords = valid_data_array.copy(deep=True)
-        x_bin_edges = sc.arange('x', 0, 5, 1, unit='m')
-        y_bin_edges = sc.arange('y', 0, 5, 1, unit='m')
+        x_bin_edges = sc.arange('x', 0, 6, 1, unit='m')
+        y_bin_edges = sc.arange('y', 0, 6, 1, unit='m')
         data_array_with_center_coords.coords['x'] = x_bin_edges
         data_array_with_center_coords.coords['y'] = y_bin_edges
         # Then
         measurement = Measurement(data_array=data_array_with_center_coords)
         # Expect
-        assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', -0.5, 5.5, 1, unit='m'))
-        assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', -0.5, 5.5, 1, unit='m'))
+        assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', -0.5, 6.5, 1, unit='m'))
+        assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', -0.5, 6.5, 1, unit='m'))
 
     def test_init_invalid_data_array_type(self):
         # When Then
@@ -61,12 +61,8 @@ class TestMeasurement:
         [
             (None, ValueError, "data array must contain 'tof' coordinate for time-of-flight information."),
             (sc.scalar(5.0, unit='s'), ValueError, "data array must contain 'tof' coordinate for time-of-flight information."),
-            (sc.arange('x', 0, 5, 1, unit='s'), ValueError, "'tof' coordinate must be of dimension 't'."),
-            (
-                sc.arange('t', 0, 10, 1, unit='m'),
-                sc.UnitError,
-                "'tof' coordinate must have a unit of time, such as \\('s'\\).",
-            ),  # noqa: E501
+            (sc.arange('x', 0, 6, 1, unit='s'), ValueError, "'tof' coordinate must be of dimension 't'."),
+            (sc.arange('t', 0, 10, 1, unit='m'), sc.UnitError, "'tof' coordinate must have a unit of time, such as \\('s'\\).",),  # noqa: E501 # fmt: skip
             (sc.arange('t', -5, 5, 1, unit='s'), ValueError, 'time_of_flight values must be non-negative.'),
         ],
         ids=[
@@ -92,7 +88,7 @@ class TestMeasurement:
         [
             (sc.scalar(5.0, unit='m'), ValueError, "data array must contain 'x' coordinate for pixels."),
             (sc.arange('t', 0, 10, 1, unit='m'), ValueError, "'x' coordinate must be of dimension 'x'."),
-            (sc.arange('x', 0, 5, 1, unit='s'), sc.UnitError, "'x' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
+            (sc.arange('x', 0, 6, 1, unit='s'), sc.UnitError, "'x' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
         ],
         ids=[
             'scalar_x',
@@ -113,7 +109,7 @@ class TestMeasurement:
         [
             (sc.scalar(5.0, unit='m'), ValueError, "data array must contain 'y' coordinate for pixels."),
             (sc.arange('t', 0, 10, 1, unit='m'), ValueError, "'y' coordinate must be of dimension 'y'."),
-            (sc.arange('y', 0, 5, 1, unit='s'), sc.UnitError, "'y' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
+            (sc.arange('y', 0, 6, 1, unit='s'), sc.UnitError, "'y' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
         ],
         ids=[
             'scalar_y',
