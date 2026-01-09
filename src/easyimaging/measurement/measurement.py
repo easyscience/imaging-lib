@@ -186,8 +186,9 @@ class Measurement(NewBase):
         if not isinstance(dimensions, dict):
             raise TypeError('dimensions must be a dictionary mapping dimension names to rebin factors.')
         if all(isinstance(value, Numeric) and value == 1 for value in dimensions.values()):  # Reverts to original data
-            self.revert_rebin()
+            # self.revert_rebin() # If we want secondary rebins to work on the original data
             return
+        sizes = dimensions.copy()
         if 't' in dimensions:
             raise ValueError("Rebinning of the time-of-flight ('t') dimension is yet not supported.")
         for dim, value in dimensions.items():
@@ -197,37 +198,41 @@ class Measurement(NewBase):
                 raise KeyError(
                     f"Dimension '{dim}' not a valid dimension for rebinning. Should be one of {self._full_data_array.dims}."
                 )
-            if (
-                not (isinstance(value, int) or (isinstance(value, float) and value.is_integer())) and value < 1
-            ):  # I allow eg. 2.0 as well as 2  # noqa: E501
+            if isinstance(value, float) and value.is_integer():  # I allow eg. 2.0 as well as 2
+                value = int(value)
+                dimensions[dim] = value  # This line can be removed when scipp resize support resizing with coordinates
+            if not isinstance(value, int) or value < 1:
                 raise ValueError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 1.")
             if self._full_data_array.sizes[dim] % value != 0:
                 raise ValueError(
                     f"Dimension '{dim}' with size {self._full_data_array.sizes[dim]} is not evenly divisible by rebin size {value}."  # noqa: E501
                 )  # noqa: E501
-        self._rebinned_data_array = essimaging.tools.analysis.resize(self._full_data_array, sizes=dimensions, method='mean')
-        # Update coordinates after rebinning. Can be removed when scipp supports resizing with coordinates.
+            sizes[dim] = int(self._data_array.sizes[dim] // value)  # Convert to target size
+        temp_array = essimaging.tools.analysis.resize(self._data_array, sizes=sizes, method='mean')
+        # ------------------------------ To be removed when scipp supports resizing with coordinates. -------------------------
         if 'x' in dimensions:
-            self._rebinned_data_array.coords['x_pixels'] = self._full_data_array.coords['x_pixels'][:: dimensions['x']]  # Bin-edge
+            temp_array.coords['x_pixels'] = self._data_array.coords['x_pixels'][:: dimensions['x']]  # Bin-edge
             if 'x' in self._full_data_array.coords:
-                self._rebinned_data_array.coords['x'] = self._full_data_array.coords['x'][:: dimensions['x']]  # Bin-edge
+                temp_array.coords['x'] = self._data_array.coords['x'][:: dimensions['x']]  # Bin-edge
         if 'y' in dimensions:
-            self._rebinned_data_array.coords['y_pixels'] = self._full_data_array.coords['y_pixels'][:: dimensions['y']]  # Bin-edge
+            temp_array.coords['y_pixels'] = self._data_array.coords['y_pixels'][:: dimensions['y']]  # Bin-edge
             if 'y' in self._full_data_array.coords:
-                self._rebinned_data_array.coords['y'] = self._full_data_array.coords['y'][:: dimensions['y']]  # Bin-edge
+                temp_array.coords['y'] = self._data_array.coords['y'][:: dimensions['y']]  # Bin-edge
+        # ---------------------------------------------------------------------------------------------------------------------
+        self._rebinned_data_array = temp_array
 
     @property
     def _data_array(self) -> sc.DataArray:
         """
         Get the current data array, either rebinned or the original full resolution.
         """
-        if self._rebinned_data_array is not None:
+        if hasattr(self, '_rebinned_data_array'):
             return self._rebinned_data_array
         return self._full_data_array
-    
+
     @_data_array.setter
     def _data_array(self, value: sc.DataArray) -> None:
-        raise AttributeError("Cannot set _data_array, it is a read-only property.")
+        raise AttributeError('Cannot set _data_array, it is a read-only property.')
 
     def revert_rebin(self) -> None:
         """

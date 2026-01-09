@@ -26,17 +26,22 @@ class TestMeasurement:
         assert sc.identical(measurement._data_array, valid_data_array)
         assert measurement.unique_name == 'test_measurement'
         assert measurement.display_name == 'Test Measurement'
+        assert not hasattr(measurement, '_rebinned_data_array')
 
-    def test_init_valid_data_array_no_pixel_coords(self, valid_data_array):
+    def test_init_valid_data_array_no_xy_coords(self, valid_data_array):
         # When
-        data_array_no_pixel_coords = valid_data_array.copy(deep=True)
-        del data_array_no_pixel_coords.coords['x']
-        del data_array_no_pixel_coords.coords['y']
+        data_array_no_xy_coords = valid_data_array.copy(deep=True)
+        del data_array_no_xy_coords.coords['x']
+        del data_array_no_xy_coords.coords['y']
         # Then
-        measurement = Measurement(data_array=data_array_no_pixel_coords)
+        measurement = Measurement(data_array=data_array_no_xy_coords)
         # Expect
         assert 'x' not in measurement._data_array.coords
         assert 'y' not in measurement._data_array.coords
+        assert 'x_pixels' in measurement._data_array.coords
+        assert measurement._data_array.coords.is_edges('x_pixels')
+        assert 'y_pixels' in measurement._data_array.coords
+        assert measurement._data_array.coords.is_edges('y_pixels')
 
     def test_init_valid_data_array_coordinate_not_edges(self, valid_data_array):
         # When
@@ -62,7 +67,11 @@ class TestMeasurement:
             (None, ValueError, "data array must contain 'tof' coordinate for time-of-flight information."),
             (sc.scalar(5.0, unit='s'), ValueError, "data array must contain 'tof' coordinate for time-of-flight information."),
             (sc.arange('x', 0, 6, 1, unit='s'), ValueError, "'tof' coordinate must be of dimension 't'."),
-            (sc.arange('t', 0, 10, 1, unit='m'), sc.UnitError, "'tof' coordinate must have a unit of time, such as \\('s'\\).",),  # noqa: E501 # fmt: skip
+            (
+                sc.arange('t', 0, 10, 1, unit='m'),
+                sc.UnitError,
+                "'tof' coordinate must have a unit of time, such as \\('s'\\).",
+            ),  # noqa: E501 # fmt: skip
             (sc.arange('t', -5, 5, 1, unit='s'), ValueError, 'time_of_flight values must be non-negative.'),
         ],
         ids=[
@@ -335,3 +344,136 @@ class TestMeasurement:
                 time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
                 y_positions=coord,
             )
+
+    def test_rebin_full(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        measurement.rebin(dimensions={'x': 2, 'y': 3})
+        # Expect
+        assert measurement._data_array.sizes['x'] == 3
+        assert measurement._data_array.sizes['y'] == 2
+        assert measurement._data_array.sizes['t'] == 10
+        assert sc.identical(measurement._data_array.coords['x_pixels'], sc.arange('x', 0, 7, 2))
+        assert sc.identical(measurement._data_array.coords['y_pixels'], sc.arange('y', 0, 7, 3))
+        assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', 0, 7, 2, unit='m'))
+        assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', 0, 7, 3, unit='m'))
+        assert sc.identical(measurement._data_array, measurement._rebinned_data_array)
+        assert not sc.identical(measurement._data_array, measurement._full_data_array)
+
+    def test_rebin_partial(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        measurement.rebin(dimensions={'x': 3})
+        # Expect
+        assert measurement._data_array.sizes['x'] == 2
+        assert measurement._data_array.sizes['y'] == 6
+        assert sc.identical(measurement._data_array.coords['x_pixels'], sc.arange('x', 0, 7, 3))
+        assert sc.identical(measurement._data_array.coords['y_pixels'], sc.arange('y', 0, 7, 1))
+        assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', 0, 7, 3, unit='m'))
+        assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', 0, 7, 1, unit='m'))
+
+    def test_rebin_no_xy_coords(self, valid_data_array):
+        # When
+        data_array_no_xy_coords = valid_data_array.copy(deep=True)
+        del data_array_no_xy_coords.coords['x']
+        del data_array_no_xy_coords.coords['y']
+        measurement = Measurement(data_array=data_array_no_xy_coords)
+        # Then
+        measurement.rebin(dimensions={'x': 2, 'y': 3})
+        # Expect
+        assert measurement._data_array.sizes['x'] == 3
+        assert measurement._data_array.sizes['y'] == 2
+        assert sc.identical(measurement._data_array.coords['x_pixels'], sc.arange('x', 0, 7, 2))
+        assert sc.identical(measurement._data_array.coords['y_pixels'], sc.arange('y', 0, 7, 3))
+        assert 'x' not in measurement._data_array.coords
+        assert 'y' not in measurement._data_array.coords
+
+    def test_rebin_twice(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.rebin(dimensions={'x': 2, 'y': 3})
+        # Then
+        measurement.rebin(dimensions={'x': 3})
+        # Expect
+        assert measurement._data_array.sizes['x'] == 1
+        assert measurement._data_array.sizes['y'] == 2
+        assert sc.identical(measurement._data_array.coords['x_pixels'], sc.arange('x', 0, 7, 6))
+        assert sc.identical(measurement._data_array.coords['y_pixels'], sc.arange('y', 0, 7, 3))
+
+    def test_rebin_unity(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        data_array = measurement._data_array
+        # Then
+        measurement.rebin(dimensions={'x': 1, 'y': 1})
+        # Expect
+        assert not hasattr(measurement, '_rebinned_data_array')
+        assert sc.identical(measurement._data_array, data_array)
+
+    def test_rebin_unity_second_time(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.rebin(dimensions={'x': 2, 'y': 3})
+        data_array = measurement._data_array
+        # Then
+        measurement.rebin(dimensions={'x': 1, 'y': 1})
+        # Expect
+        assert hasattr(measurement, '_rebinned_data_array')
+        assert sc.identical(measurement._data_array, data_array)
+
+    def test_rebin_float_integers(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        measurement.rebin(dimensions={'x': 2.0, 'y': 3.0})
+        # Expect
+        assert measurement._data_array.sizes['x'] == 3
+        assert measurement._data_array.sizes['y'] == 2
+        assert sc.identical(measurement._data_array.coords['x_pixels'], sc.arange('x', 0, 7, 2))
+        assert sc.identical(measurement._data_array.coords['y_pixels'], sc.arange('y', 0, 7, 3))
+        assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', 0, 7, 2, unit='m'))
+        assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', 0, 7, 3, unit='m'))
+
+    def test_rebin_invalid_dimension_type(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(TypeError, match='dimensions must be a dictionary mapping dimension names to rebin factors.'):
+            measurement.rebin(dimensions=['x'])
+
+    def test_rebin_time_dimension(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(ValueError, match='Rebinning of the time-of-flight'):
+            measurement.rebin(dimensions={'t': 2, 'x': 2})
+
+    def test_rebin_invalid_dimensions_key_type(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(TypeError, match="Dimension keys must be strings. Got <class 'int'> for 0 instead."):
+            measurement.rebin(dimensions={0: 2})
+
+    def test_rebin_invalid_dimension_name(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(KeyError, match="Dimension 'z' not a valid dimension for rebinning. Should be one of"):
+            measurement.rebin(dimensions={'z': 2})
+
+    def test_rebin_invalid_dimensions_value_type(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(ValueError, match="Rebin size for dimension 'x' must be a positive integer of at least 1."):
+            measurement.rebin(dimensions={'x': 'not_an_integer'})
+
+    def test_rebin_invalid_dimensions_value_zero(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(ValueError, match="Rebin size for dimension 'x' must be a positive integer of at least 1."):
+            measurement.rebin(dimensions={'x': 0})
