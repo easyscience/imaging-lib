@@ -477,3 +477,17 @@ class TestMeasurement:
         # Then Expect
         with pytest.raises(ValueError, match="Rebin size for dimension 'x' must be a positive integer of at least 1."):
             measurement.rebin(dimensions={'x': 0})
+
+    def test_rebin_invalid_dimensions_value_negative(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(ValueError, match="Rebin size for dimension 'x' must be a positive integer of at least 1."):
+            measurement.rebin(dimensions={'x': -2})
+
+    def test_rebin_invalid_dimensions_value_non_divisable(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(ValueError, match="Dimension 'x' with size 6 is not evenly divisible by rebin size 4."):
+            measurement.rebin(dimensions={'x': 4})

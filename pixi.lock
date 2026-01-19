@@ -2252,7 +2252,7 @@ packages:
 - pypi: ./
   name: easyimaging
   version: 0.0.0
-  sha256: a0ab26739567464116af1dff22aaf94f17d42330bdf35b80aa11d44a3fffadbe
+  sha256: 70e287a046ba1c5c3f3dcdbb83a7856eb54c368f20d43889405ce90b16dbb18c
   requires_dist:
   - easyscience>=2.0.0
   - essimaging
@@ -2279,7 +2279,7 @@ packages:
   - sphinx-book-theme ; extra == 'docs'
   - sphinx-gallery ; extra == 'docs'
   - toml ; extra == 'docs'
-  requires_python: '>=3.10,<3.13'
+  requires_python: '>=3.11,<3.14'
   editable: true
 - pypi: https://files.pythonhosted.org/packages/f0/d4/0a873d3ead6815fb046189d375144a97e04902dbe221eeeb582a71d69f85/easyscience-2.1.0-py3-none-any.whl
   name: easyscience
