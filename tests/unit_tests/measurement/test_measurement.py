@@ -21,8 +21,10 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array, unique_name='test_measurement', display_name='Test Measurement')
         # Expect
         assert measurement._data_array is not valid_data_array  # Ensure a copy was made
+        assert sc.any(measurement._data_array.masks['non_finite']).value is False
         del measurement._data_array.coords['x_pixels']
         del measurement._data_array.coords['y_pixels']
+        del measurement._data_array.masks['non_finite']
         assert sc.identical(measurement._data_array, valid_data_array)
         assert measurement.unique_name == 'test_measurement'
         assert measurement.display_name == 'Test Measurement'
@@ -55,6 +57,17 @@ class TestMeasurement:
         # Expect
         assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', -0.5, 6.5, 1, unit='m'))
         assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', -0.5, 6.5, 1, unit='m'))
+
+    @pytest.mark.parametrize('value', [np.nan, np.inf], ids=['nan', 'inf'])
+    def test_init_valid_data_array_with_nonfinite_values(self, valid_data_array, value):
+        # When
+        data_array_with_nonfinite = valid_data_array.copy(deep=True)
+        data_array_with_nonfinite.data['x', 0]['y', 0]['t', 0] = value
+        # Then
+        measurement = Measurement(data_array=data_array_with_nonfinite)
+        # Expect
+        assert sc.any(measurement._data_array.masks['non_finite']).value is True
+        assert measurement._data_array.masks['non_finite']['x', 0]['y', 0]['t', 0].value is True
 
     def test_init_invalid_data_array_type(self):
         # When Then
@@ -154,6 +167,8 @@ class TestMeasurement:
         assert 'tof' in measurement._data_array.coords
         assert 'x' in measurement._data_array.coords
         assert 'y' in measurement._data_array.coords
+        assert 'non_finite' in measurement._data_array.masks
+        assert sc.any(measurement._data_array.masks['non_finite']).value is True
 
     def test_from_scitiff_invalid_path_type(self):
         # When Then Expect
@@ -360,6 +375,7 @@ class TestMeasurement:
         assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', 0, 7, 3, unit='m'))
         assert sc.identical(measurement._data_array, measurement._rebinned_data_array)
         assert not sc.identical(measurement._data_array, measurement._full_data_array)
+        assert 'non_finite' in measurement._data_array.masks
 
     def test_rebin_partial(self, valid_data_array):
         # When
@@ -373,6 +389,24 @@ class TestMeasurement:
         assert sc.identical(measurement._data_array.coords['y_pixels'], sc.arange('y', 0, 7, 1))
         assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', 0, 7, 3, unit='m'))
         assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', 0, 7, 1, unit='m'))
+
+    @pytest.mark.parametrize('values, result', 
+                             [([np.nan, np.nan], True), 
+                              ([np.nan, 5.0], False), 
+                              ([np.inf, np.inf], True), 
+                              ([np.inf, 10.0], False), 
+                              ([np.nan, np.inf], True)], 
+                             ids=['all_nan', 'nan_and_finite', 'all_inf', 'inf_and_finite', 'nan_and_inf'])
+    def test_rebin_with_masked_data(self, valid_data_array, values, result):
+        # When
+        data_array_with_masked = valid_data_array.copy(deep=True)
+        data_array_with_masked.data['x', 0]['y', 0:2]['t', 0] = values
+        measurement = Measurement(data_array=data_array_with_masked)
+        # Then
+        measurement.rebin(dimensions={'y': 2})
+        # Expect
+        assert measurement._data_array.sizes['y'] == 3
+        assert sc.any(measurement._data_array.masks['non_finite']).value is result
 
     def test_rebin_no_xy_coords(self, valid_data_array):
         # When
@@ -491,3 +525,38 @@ class TestMeasurement:
         # Then Expect
         with pytest.raises(ValueError, match="Dimension 'x' with size 6 is not evenly divisible by rebin size 4."):
             measurement.rebin(dimensions={'x': 4})
+
+    def test_revert_rebin(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.rebin(dimensions={'x': 2, 'y': 3})
+        # Then
+        measurement.revert_rebin()
+        # Expect
+        assert not hasattr(measurement, '_rebinned_data_array')
+        del measurement._data_array.coords['x_pixels']
+        del measurement._data_array.coords['y_pixels']
+        del measurement._data_array.masks['non_finite']
+        assert sc.identical(measurement._data_array, valid_data_array)
+
+    #Without making image comparisons, this is the best we can do to test the plot function
+    @pytest.mark.parametrize('time_of_flight', [None, 0, sc.scalar(5.0, unit='s')], ids=['sum', 'indice', 'scipp_scalar'])
+    def test_plot(self, valid_data_array, time_of_flight):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        measurement.plot(time_of_flight=time_of_flight)  # Just ensure no exception is raised
+
+    def test_plot_invalid_time_of_flight_type(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(TypeError, match='time_of_flight must be an integer, scipp Variable, or None.'):
+            measurement.plot(time_of_flight='not_a_valid_type')
+
+    def test_plot_invalid_time_of_flight_unit(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(sc.UnitError, match="time_of_flight variable must have a unit of time such as 's'"):
+            measurement.plot(time_of_flight=sc.scalar(5.0, unit='m'))

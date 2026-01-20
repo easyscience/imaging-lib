@@ -68,6 +68,8 @@ class Measurement(NewBase):
         self._full_data_array.coords['y_pixels'] = sc.arange('y', 0, self._full_data_array.sizes['y'] + 1, 1)
 
         self._regions_of_interest = []
+        non_finite_mask = ~sc.isfinite(self._full_data_array.data)
+        self._full_data_array.masks['non_finite'] = non_finite_mask
 
     @classmethod
     def from_scitiff(
@@ -219,6 +221,8 @@ class Measurement(NewBase):
             if 'y' in self._full_data_array.coords:
                 temp_array.coords['y'] = self._data_array.coords['y'][:: dimensions['y']]  # Bin-edge
         # ---------------------------------------------------------------------------------------------------------------------
+        non_finite_mask = ~sc.isfinite(temp_array.data)
+        temp_array.masks['non_finite'] = non_finite_mask
         self._rebinned_data_array = temp_array
 
     @property
@@ -240,6 +244,55 @@ class Measurement(NewBase):
         """
         if self._rebinned_data_array is not None:
             del self._rebinned_data_array
+
+    def plot(self, time_of_flight: int | sc.Variable | None = None, **kwargs) -> None:
+        """
+        Plot the measurement image at a specific time-of-flight. 
+        If no time-of-flight is provided, the plot will sum over all time-of-flight values.
+        
+        This method uses the plopp library for plotting:
+        https://scipp.github.io/plopp/plotting/image-plot.html
+
+        Parameters
+        ----------
+        time_of_flight : int | sc.Variable | None
+            The time-of-flight value to plot. If None, the time-of-flight axis is summed up.
+        kwargs : dict
+            Additional keyword arguments to pass to the plotting function. 
+            See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
+        """
+        if time_of_flight is None:
+            title_suffix = ' (summed over TOF)'
+        elif isinstance(time_of_flight, int):
+            title_suffix = f' at TOF index {time_of_flight}'
+        elif isinstance(time_of_flight, sc.Variable):
+            title_suffix = f' at TOF={time_of_flight}'
+        else:
+            title_suffix = ''
+
+        plot_kwargs_defaults = {
+            'title' : self.display_name + title_suffix,
+            'clabel' : 'Transmission',
+            'cmin' : 0.0,
+            'cmax' : 3.0,
+            'mask_color' : 'red',
+        }
+        # Overwrite defaults with any user-provided kwargs
+        plot_kwargs_defaults.update(kwargs)
+
+        if time_of_flight is None:
+            plot = self._data_array.mean('t').plot(**plot_kwargs_defaults)
+        elif isinstance(time_of_flight, int):
+            plot = self._data_array['t', time_of_flight].plot(**plot_kwargs_defaults)
+        elif isinstance(time_of_flight, sc.Variable):
+            try:
+                plot = self._data_array['tof', time_of_flight].plot(**plot_kwargs_defaults)
+            except UnitError:
+                raise UnitError("time_of_flight variable must have a unit of time such as 's'") from None
+        else:
+            raise TypeError('time_of_flight must be an integer, scipp Variable, or None.')
+        plot.show()
+
 
     def _validate_data_array_coordinate(
         self,
