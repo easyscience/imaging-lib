@@ -2,9 +2,9 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import numpy as np
+import plopp as pp
 import pytest
 import scipp as sc
-import plopp as pp
 
 from easyimaging import Measurement
 
@@ -392,13 +392,17 @@ class TestMeasurement:
         assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', 0, 7, 3, unit='m'))
         assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', 0, 7, 1, unit='m'))
 
-    @pytest.mark.parametrize('values, result', 
-                             [([np.nan, np.nan], True), 
-                              ([np.nan, 5.0], False), 
-                              ([np.inf, np.inf], True), 
-                              ([np.inf, 10.0], False), 
-                              ([np.nan, np.inf], True)], 
-                             ids=['all_nan', 'nan_and_finite', 'all_inf', 'inf_and_finite', 'nan_and_inf'])
+    @pytest.mark.parametrize(
+        'values, result',
+        [
+            ([np.nan, np.nan], True),
+            ([np.nan, 5.0], False),
+            ([np.inf, np.inf], True),
+            ([np.inf, 10.0], False),
+            ([np.nan, np.inf], True),
+        ],
+        ids=['all_nan', 'nan_and_finite', 'all_inf', 'inf_and_finite', 'nan_and_inf'],
+    )
     def test_rebin_with_masked_data(self, valid_data_array, values, result):
         # When
         data_array_with_masked = valid_data_array.copy(deep=True)
@@ -541,7 +545,7 @@ class TestMeasurement:
         del measurement._data_array.masks['non_finite']
         assert sc.identical(measurement._data_array, valid_data_array)
 
-    #Without making image comparisons, this is the best we can do to test the plot function
+    # Without making image comparisons, this is the best we can do to test the plot function
     @pytest.mark.parametrize('time_of_flight', [None, 0, sc.scalar(5.0, unit='s')], ids=['sum', 'indice', 'scipp_scalar'])
     def test_plot(self, valid_data_array, time_of_flight):
         # When
@@ -568,7 +572,7 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
         with pytest.raises(RuntimeError, match='Interactive slicer is only supported in Jupyter notebooks.'):
-            measurement.slicer()
+            measurement.slider_plot()
 
     def test_slicer_fails_without_matplotlib_widget_backend(self, valid_data_array, monkeypatch):
         # When
@@ -581,11 +585,13 @@ class TestMeasurement:
             return 'not_widget_backend'
 
         monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
-        monkeypatch.setattr(measurement,'_is_notebook', mock_is_notebook)
+        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
 
         # Then Expect
-        with pytest.raises(RuntimeError, match='Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks.'):  # noqa: E501
-            measurement.slicer()
+        with pytest.raises(
+            RuntimeError, match='Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks.'
+        ):  # noqa: E501
+            measurement.slider_plot()
 
     def test_slicer_runs_in_notebook_with_widget_backend(self, valid_data_array, monkeypatch):
         # When
@@ -596,13 +602,59 @@ class TestMeasurement:
 
         def mock_get_backend():
             return 'widget'
-        
+
         mock_slicer_widget = MagicMock()
 
         monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
-        monkeypatch.setattr(measurement,'_is_notebook', mock_is_notebook)
-        monkeypatch.setattr(pp,'slicer', mock_slicer_widget)
+        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
+        monkeypatch.setattr(pp, 'slicer', mock_slicer_widget)
         # Then Expect
-        slicer_widget = measurement.slicer()
+        slicer_widget = measurement.slider_plot()
         assert slicer_widget is not None
         assert mock_slicer_widget.assert_called_once
+
+    def test_spectrum_inspector_fails_outside_notebook(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(RuntimeError, match='Interactive spectrum inspector is only supported in Jupyter notebooks.'):
+            measurement.spectrum_inspector()
+
+    def test_spectrum_inspector_fails_without_matplotlib_widget_backend(self, valid_data_array, monkeypatch):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+
+        def mock_is_notebook():
+            return True
+
+        def mock_get_backend():
+            return 'not_widget_backend'
+
+        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
+        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
+
+        # Then Expect
+        with pytest.raises(
+            RuntimeError, match='Interactive spectrum inspector requires the matplotlib "widget" backend in Jupyter notebooks.'
+        ):  # noqa: E501
+            measurement.spectrum_inspector()
+
+    def test_spectrum_inspector_runs_in_notebook_with_widget_backend(self, valid_data_array, monkeypatch):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+
+        def mock_is_notebook():
+            return True
+
+        def mock_get_backend():
+            return 'widget'
+
+        mock_spectrum_widget = MagicMock()
+
+        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
+        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
+        monkeypatch.setattr(pp, 'inspector', mock_spectrum_widget)
+        # Then Expect
+        spectrum_widget = measurement.spectrum_inspector()
+        assert spectrum_widget is not None
+        assert mock_spectrum_widget.assert_called_once

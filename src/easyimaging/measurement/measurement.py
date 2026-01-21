@@ -249,9 +249,9 @@ class Measurement(NewBase):
 
     def plot(self, time_of_flight: int | sc.Variable | None = None, **kwargs) -> None:
         """
-        Plot the measurement image at a specific time-of-flight. 
+        Plot the measurement image at a specific time-of-flight.
         If no time-of-flight is provided, the plot will sum over all time-of-flight values.
-        
+
         This method uses the plopp library for plotting:
         https://scipp.github.io/plopp/plotting/image-plot.html
 
@@ -260,7 +260,7 @@ class Measurement(NewBase):
         time_of_flight : int | sc.Variable | None
             The time-of-flight value to plot. If None, the time-of-flight axis is summed up.
         kwargs : dict
-            Additional keyword arguments to pass to the plotting function. 
+            Additional keyword arguments to pass to the plotting function.
             See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
         """
         if time_of_flight is None:
@@ -273,12 +273,12 @@ class Measurement(NewBase):
             title_suffix = ''
 
         plot_kwargs_defaults = {
-            'title' : self.display_name + title_suffix,
-            'clabel' : 'Transmission',
-            'cmin' : 0.0,
-            'cmax' : 3.0,
-            'mask_color' : 'red',
-            'nan_color' : 'red', # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
+            'title': self.display_name + title_suffix,
+            'clabel': 'Transmission',
+            'cmin': 0.0,
+            'cmax': 3.0,
+            'mask_color': 'red',
+            'nan_color': 'red',  # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
         }
         # Overwrite defaults with any user-provided kwargs
         plot_kwargs_defaults.update(kwargs)
@@ -299,9 +299,9 @@ class Measurement(NewBase):
         else:
             plot.show()
 
-    def slicer(self, **kwargs) -> None:
+    def slider_plot(self, **kwargs) -> None:
         """
-        Launch an interactive slicer for exploring the measurement data.
+        Launch an interactive slider plot for exploring the measurement data.
 
         This method uses the plopp library for interactive slicing:
         https://scipp.github.io/plopp/plotting/slicer-plot.html
@@ -313,13 +313,13 @@ class Measurement(NewBase):
             See https://scipp.github.io/plopp/generated/plopp.slicer.html for options.
         """
         slicer_kwargs_defaults = {
-            'title' : self.display_name + ' - Time of Flight Slicer',
-            'clabel' : 'Transmission',
-            'cmin' : 0.0,
-            'cmax' : 3.0,
-            'mask_color' : 'red',
-            'nan_color' : 'red', # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
-            'coords' : 'tof',
+            'title': self.display_name + ' - Time of Flight Slicer',
+            'clabel': 'Transmission',
+            'cmin': 0.0,
+            'cmax': 3.0,
+            'mask_color': 'red',
+            'nan_color': 'red',  # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
+            'coords': 'tof',
         }
         # Overwrite defaults with any user-provided kwargs
         slicer_kwargs_defaults.update(kwargs)
@@ -328,17 +328,56 @@ class Measurement(NewBase):
             if matplotlib.get_backend() == 'widget':
                 return pp.slicer(self._data_array, keep=['x', 'y'], **slicer_kwargs_defaults)
             else:
-                raise RuntimeError('Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks. \n' \
-                'To set it, run "%matplotlib widget" in a notebook cell before launching the slicer.')
+                raise RuntimeError(
+                    'Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks. \n'
+                    'To set it, run "%matplotlib widget" in a notebook cell before launching the slicer.'
+                )
         else:
             raise RuntimeError('Interactive slicer is only supported in Jupyter notebooks.')
+
+    def spectrum_inspector(self, **kwargs) -> None:
+        """
+        Launch an interactive spectrum inspector plot for exploring the measurement data.
+
+        This method uses the plopp library for interactive inspection:
+        https://scipp.github.io/plopp/plotting/inspector-plot.html
+
+        Parameters
+        ----------
+        kwargs : dict
+            Additional keyword arguments to pass to the inspector function.
+            See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
+        """
+        inspector_kwargs_defaults = {
+            'title': self.display_name + ' - Spectrum Inspector',
+            'clabel': 'Transmission',
+            'cmin': 0.0,
+            'cmax': 3.0,
+            'mask_color': 'red',
+            'nan_color': 'red',  # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
+            #'ymax' : 3.0,
+            'ymin': 0.0,
+        }
+        # Overwrite defaults with any user-provided kwargs
+        inspector_kwargs_defaults.update(kwargs)
+
+        if self._is_notebook():
+            if matplotlib.get_backend() == 'widget':
+                return pp.inspector(self._data_array, dim='t', orientation='vertical', **inspector_kwargs_defaults)
+            else:
+                raise RuntimeError(
+                    'Interactive spectrum inspector requires the matplotlib "widget" backend in Jupyter notebooks. \n'  # noqa: E501
+                    'To set it, run "%matplotlib widget" in a notebook cell before launching the inspector.'
+                )
+        else:
+            raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
 
     def _is_notebook(self) -> bool:
         """
         Check if the code is running in a Jupyter notebook environment.
         """
         try:
-            shell = get_ipython().__class__.__name__ # pyright: ignore[reportUndefinedVariable]
+            shell = get_ipython().__class__.__name__  # pyright: ignore[reportUndefinedVariable]
             if shell == 'ZMQInteractiveShell':
                 return True  # Jupyter notebook or qtconsole
             elif shell == 'TerminalInteractiveShell':
