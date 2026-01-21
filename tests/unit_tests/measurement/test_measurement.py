@@ -1,8 +1,10 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
 import scipp as sc
+import plopp as pp
 
 from easyimaging import Measurement
 
@@ -560,3 +562,47 @@ class TestMeasurement:
         # Then Expect
         with pytest.raises(sc.UnitError, match="time_of_flight variable must have a unit of time such as 's'"):
             measurement.plot(time_of_flight=sc.scalar(5.0, unit='m'))
+
+    def test_slicer_fails_outside_notebook(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(RuntimeError, match='Interactive slicer is only supported in Jupyter notebooks.'):
+            measurement.slicer()
+
+    def test_slicer_fails_without_matplotlib_widget_backend(self, valid_data_array, monkeypatch):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+
+        def mock_is_notebook():
+            return True
+
+        def mock_get_backend():
+            return 'not_widget_backend'
+
+        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
+        monkeypatch.setattr(measurement,'_is_notebook', mock_is_notebook)
+
+        # Then Expect
+        with pytest.raises(RuntimeError, match='Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks.'):  # noqa: E501
+            measurement.slicer()
+
+    def test_slicer_runs_in_notebook_with_widget_backend(self, valid_data_array, monkeypatch):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+
+        def mock_is_notebook():
+            return True
+
+        def mock_get_backend():
+            return 'widget'
+        
+        mock_slicer_widget = MagicMock()
+
+        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
+        monkeypatch.setattr(measurement,'_is_notebook', mock_is_notebook)
+        monkeypatch.setattr(pp,'slicer', mock_slicer_widget)
+        # Then Expect
+        slicer_widget = measurement.slicer()
+        assert slicer_widget is not None
+        assert mock_slicer_widget.assert_called_once

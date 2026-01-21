@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import ess.imaging as essimaging
+import matplotlib
 import numpy as np
+import plopp as pp
 import scipp as sc
 from easyscience.base_classes import NewBase
 from scipp import UnitError
@@ -276,6 +278,7 @@ class Measurement(NewBase):
             'cmin' : 0.0,
             'cmax' : 3.0,
             'mask_color' : 'red',
+            'nan_color' : 'red', # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
         }
         # Overwrite defaults with any user-provided kwargs
         plot_kwargs_defaults.update(kwargs)
@@ -291,8 +294,59 @@ class Measurement(NewBase):
                 raise UnitError("time_of_flight variable must have a unit of time such as 's'") from None
         else:
             raise TypeError('time_of_flight must be an integer, scipp Variable, or None.')
-        plot.show()
+        if self._is_notebook():
+            return plot
+        else:
+            plot.show()
 
+    def slicer(self, **kwargs) -> None:
+        """
+        Launch an interactive slicer for exploring the measurement data.
+
+        This method uses the plopp library for interactive slicing:
+        https://scipp.github.io/plopp/plotting/slicer-plot.html
+
+        Parameters
+        ----------
+        kwargs : dict
+            Additional keyword arguments to pass to the slicer function.
+            See https://scipp.github.io/plopp/generated/plopp.slicer.html for options.
+        """
+        slicer_kwargs_defaults = {
+            'title' : self.display_name + ' - Time of Flight Slicer',
+            'clabel' : 'Transmission',
+            'cmin' : 0.0,
+            'cmax' : 3.0,
+            'mask_color' : 'red',
+            'nan_color' : 'red', # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
+            'coords' : 'tof',
+        }
+        # Overwrite defaults with any user-provided kwargs
+        slicer_kwargs_defaults.update(kwargs)
+
+        if self._is_notebook():
+            if matplotlib.get_backend() == 'widget':
+                return pp.slicer(self._data_array, keep=['x', 'y'], **slicer_kwargs_defaults)
+            else:
+                raise RuntimeError('Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks. \n' \
+                'To set it, run "%matplotlib widget" in a notebook cell before launching the slicer.')
+        else:
+            raise RuntimeError('Interactive slicer is only supported in Jupyter notebooks.')
+
+    def _is_notebook(self) -> bool:
+        """
+        Check if the code is running in a Jupyter notebook environment.
+        """
+        try:
+            shell = get_ipython().__class__.__name__ # pyright: ignore[reportUndefinedVariable]
+            if shell == 'ZMQInteractiveShell':
+                return True  # Jupyter notebook or qtconsole
+            elif shell == 'TerminalInteractiveShell':
+                return False  # Terminal running IPython
+            else:
+                return False  # Other type (possibly other IDE)
+        except NameError:
+            return False  # Probably standard Python interpreter
 
     def _validate_data_array_coordinate(
         self,
