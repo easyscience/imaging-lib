@@ -278,7 +278,6 @@ class Measurement(NewBase):
             'cmin': 0.0,
             'cmax': 3.0,
             'mask_color': 'red',
-            'nan_color': 'red',  # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
         }
         # Overwrite defaults with any user-provided kwargs
         plot_kwargs_defaults.update(kwargs)
@@ -318,7 +317,6 @@ class Measurement(NewBase):
             'cmin': 0.0,
             'cmax': 3.0,
             'mask_color': 'red',
-            'nan_color': 'red',  # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
             'coords': 'tof',
         }
         # Overwrite defaults with any user-provided kwargs
@@ -354,8 +352,7 @@ class Measurement(NewBase):
             'cmin': 0.0,
             'cmax': 3.0,
             'mask_color': 'red',
-            'nan_color': 'red',  # Due to a bug in plopp, masks are not shown on nans, so we set nan_color to the same as mask
-            #'ymax' : 3.0,
+            'ymax' : 3.0,
             'ymin': 0.0,
         }
         # Overwrite defaults with any user-provided kwargs
