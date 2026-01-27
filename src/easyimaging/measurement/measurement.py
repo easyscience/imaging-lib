@@ -352,7 +352,7 @@ class Measurement(NewBase):
             'cmin': 0.0,
             'cmax': 3.0,
             'mask_color': 'red',
-            'ymax' : 3.0,
+            'ymax': 3.0,
             'ymin': 0.0,
         }
         # Overwrite defaults with any user-provided kwargs
