@@ -157,102 +157,81 @@ class TestRectROI:
         with pytest.raises(ValueError, match='Cannot delete physical coordinate ranges because they are not set.'):
             roi.delete_physical_coord_range()
 
-    def test_x_pixel_start(self, roi_basic):
+    @pytest.mark.parametrize('attribute, value', [
+        ('x_pixel_start', 10), 
+        ('x_pixel_end', 50), 
+        ('y_pixel_start', 20), 
+        ('y_pixel_end', 80)],
+            ids=['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'])
+    def test_pixel_coordinate_getter(self, roi_basic, attribute, value):
         # When
         roi = roi_basic
         # Then Expect
-        assert roi.x_pixel_start == 10
+        assert getattr(roi, attribute) == value
 
-    def test_x_pixel_start_setter(self, roi_basic):
+    @pytest.mark.parametrize('attribute', ['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
+                             ids=['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'])
+    def test_pixel_coordinate_setter(self, roi_basic, attribute):
         # When
         roi = roi_basic
         # Then
-        roi.x_pixel_start = 15
+        setattr(roi, attribute, 15)
         # Expect
-        assert roi.x_pixel_start == 15
+        assert getattr(roi, attribute) == 15
 
+    @pytest.mark.parametrize('attribute', ['x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
+                             ids=['x_pixel_end', 'y_pixel_start', 'y_pixel_end'])
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
-            (-5, ValueError, 'x_pixel_start indice must be non-negative'),  # Negative integer
-            (3.5, TypeError, 'x_pixel_start indice must be an integer'),  # Float
-            ('10', TypeError, 'x_pixel_start indice must be an integer'),  # String
+            (-5, ValueError, 'indice must be non-negative'),  # Negative integer
+            (3.5, TypeError, 'indice must be an integer'),  # Float
+            ('10', TypeError, 'indice must be an integer'),  # String
         ],
         ids=['negative_integer', 'float', 'string'],
     )
-    def test_x_pixel_start_setter_invalid(self, roi_basic, invalid_value, error, message):
+    def test_pixel_coordinate_setter_invalid(self, roi_basic, invalid_value, error, message, attribute):
         # When
         roi = roi_basic
         # Then Expect
         with pytest.raises(error, match=message):
-            roi.x_pixel_start = invalid_value
+            setattr(roi, attribute, invalid_value)
 
-    def test_x_pixel_end(self, roi_basic):
-        # When
-        roi = roi_basic
-        # Then Expect
-        assert roi.x_pixel_end == 50
-
-    def test_x_pixel_end_setter(self, roi_basic):
-        # When
-        roi = roi_basic
-        # Then
-        roi.x_pixel_end = 55
-        # Expect
-        assert roi.x_pixel_end == 55
-
-    def test_y_pixel_start(self, roi_basic):
-        # When
-        roi = roi_basic
-        # Then Expect
-        assert roi.y_pixel_start == 20
-
-    def test_y_pixel_start_setter(self, roi_basic):
-        # When
-        roi = roi_basic
-        # Then
-        roi.y_pixel_start = 25
-        # Expect
-        assert roi.y_pixel_start == 25
-
-    def test_y_pixel_end(self, roi_basic):
-        # When
-        roi = roi_basic
-        # Then Expect
-        assert roi.y_pixel_end == 80
-
-    def test_y_pixel_end_setter(self, roi_basic):
-        # When
-        roi = roi_basic
-        # Then
-        roi.y_pixel_end = 85
-        # Expect
-        assert roi.y_pixel_end == 85
-
-    def test_x_start(self, roi_with_physical_coords):
+    @pytest.mark.parametrize('attribute, scalar', [
+        ('x_start', sc.scalar(0.0, unit='m')), 
+        ('x_end', sc.scalar(10.0, unit='m')), 
+        ('y_start', sc.scalar(0.0, unit='m')), 
+        ('y_end', sc.scalar(5.0, unit='m'))], 
+        ids=['x_start', 'x_end', 'y_start', 'y_end'])
+    def test_physical_coordinate_getter(self, roi_with_physical_coords, attribute, scalar):
         # When
         roi = roi_with_physical_coords
         # Then Expect
-        assert sc.identical(roi.x_start, sc.scalar(0.0, unit='m'))
-        assert roi.x_start is not roi._x_start  # Ensure a copy is returned
+        assert sc.identical(getattr(roi, attribute), scalar)
+        assert getattr(roi, attribute) is not getattr(roi, f'_{attribute}')  # Ensure a copy is returned
 
-    def test_x_start_setter(self, roi_with_physical_coords):
+    @pytest.mark.parametrize('attribute', ['x_start', 'x_end', 'y_start', 'y_end'],
+                             ids=['x_start', 'x_end', 'y_start', 'y_end'])
+    def test_physical_coordinate_setter(self, roi_with_physical_coords, attribute):
         # When
         roi = roi_with_physical_coords
         # Then
-        new_x_start = sc.scalar(1.0, unit='m')
-        roi.x_start = new_x_start
+        new_value = sc.scalar(1.0, unit='m')
+        setattr(roi, attribute, new_value)
         # Expect
-        assert sc.identical(roi.x_start, new_x_start)
+        assert sc.identical(getattr(roi, attribute), new_value)
 
-    def test_x_start_setter_setting_single_coordinate(self, roi_basic):
+    @pytest.mark.parametrize('attribute', ['x_start', 'x_end', 'y_start', 'y_end'],
+                             ids=['x_start', 'x_end', 'y_start', 'y_end'])
+    def test_physical_coordinate_setter_setting_single_coordinate(self, roi_basic, attribute):
         # When
         roi = roi_basic
         # Then Expect
-        with pytest.raises(ValueError, match='Cannot set x_start before setting all physical coordinate ranges.'):
-            roi.x_start = sc.scalar(1.0, unit='m')
+        with pytest.raises(ValueError, match=f'Cannot set {attribute} before setting all physical coordinate ranges.'):
+            setattr(roi, attribute, sc.scalar(1.0, unit='m'))
 
-    @pytest.mark.parametrize('attribute', ['x_start', 'x_end', 'y_start', 'y_end'])
+    @pytest.mark.parametrize('attribute', ['x_start', 'x_end', 'y_start', 'y_end'],
+                             ids=['x_start', 'x_end', 'y_start', 'y_end'])
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
@@ -270,57 +249,9 @@ class TestRectROI:
         ],
         ids=['not_scipp_variable', 'not_scalar', 'wrong_unit'],
     )
-    def test_x_start_setter_invalid(self, attribute, roi_with_physical_coords, invalid_value, error, message):
+    def test_physical_coordinate_setter_invalid(self, attribute, roi_with_physical_coords, invalid_value, error, message):
         # When
         roi = roi_with_physical_coords
         # Then Expect
         with pytest.raises(error, match=message):
             setattr(roi, attribute, invalid_value)
-
-    def test_x_end(self, roi_with_physical_coords):
-        # When
-        roi = roi_with_physical_coords
-        # Then Expect
-        assert sc.identical(roi.x_end, sc.scalar(10.0, unit='m'))
-        assert roi.x_end is not roi._x_end  # Ensure a copy is returned
-
-    def test_x_end_setter(self, roi_with_physical_coords):
-        # When
-        roi = roi_with_physical_coords
-        # Then
-        new_x_end = sc.scalar(12.0, unit='m')
-        roi.x_end = new_x_end
-        # Expect
-        assert sc.identical(roi.x_end, new_x_end)
-
-    def test_y_start(self, roi_with_physical_coords):
-        # When
-        roi = roi_with_physical_coords
-        # Then Expect
-        assert sc.identical(roi.y_start, sc.scalar(0.0, unit='m'))
-        assert roi.y_start is not roi._y_start  # Ensure a copy is returned
-
-    def test_y_start_setter(self, roi_with_physical_coords):
-        # When
-        roi = roi_with_physical_coords
-        # Then
-        new_y_start = sc.scalar(1.0, unit='m')
-        roi.y_start = new_y_start
-        # Expect
-        assert sc.identical(roi.y_start, new_y_start)
-
-    def test_y_end(self, roi_with_physical_coords):
-        # When
-        roi = roi_with_physical_coords
-        # Then Expect
-        assert sc.identical(roi.y_end, sc.scalar(5.0, unit='m'))
-        assert roi.y_end is not roi._y_end  # Ensure a copy is returned
-
-    def test_y_end_setter(self, roi_with_physical_coords):
-        # When
-        roi = roi_with_physical_coords
-        # Then
-        new_y_end = sc.scalar(6.0, unit='m')
-        roi.y_end = new_y_end
-        # Expect
-        assert sc.identical(roi.y_end, new_y_end)

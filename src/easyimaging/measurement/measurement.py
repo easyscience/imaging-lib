@@ -15,6 +15,8 @@ from easyscience.base_classes import NewBase
 from scipp import UnitError
 from scitiff import load_scitiff
 
+from easyimaging.measurement.regions import RectROI
+
 Numeric = int | float
 
 if TYPE_CHECKING:
@@ -368,6 +370,32 @@ class Measurement(NewBase):
                 )
         else:
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
+
+    def spectrum(self, roi: RectROI = None) -> sc.DataArray:
+        """
+        Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
+        If no ROI is provided, the spectrum is calculated over the entire image.
+
+        Parameters
+        ----------
+        roi : RectROI
+            The region of interest for which to extract the spectrum.
+
+        Returns
+        -------
+        sc.DataArray
+            A DataArray containing the spectrum data.
+        """
+        if roi is not None and not isinstance(roi, RectROI):
+            raise TypeError('roi must be an instance of RectROI or None.')
+
+        if roi is None:
+            spectrum_data = self._data_array.mean(dim=['x', 'y'])
+        elif 'x' in self._data_array.coords and 'y' in self._data_array.coords:
+            x_slice, y_slice = roi.slice()
+        else:
+            x_slice, y_slice = roi.pixel_slice()
+        return self._data_array['x', x_slice]['y', y_slice].mean(dim=['x', 'y'])
 
     def _is_notebook(self) -> bool:
         """
