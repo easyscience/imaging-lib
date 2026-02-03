@@ -16,8 +16,6 @@ from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
 
-from easyimaging.measurement.regions import RectROI
-
 Numeric = int | float
 
 if TYPE_CHECKING:
@@ -62,9 +60,9 @@ class Measurement(NewBase):
         self._full_data_array = data_array.copy(deep=False)
 
         # Ensure x and y coordinates are in edge format for consistent ROIs across rebinning
-        if 'x' in self._full_data_array.coords and not self._full_data_array.coords.is_edges('x'):
+        if self._has_physical_coords and not self._full_data_array.coords.is_edges('x'):
             self._full_data_array.coords['x'] = Measurement._to_edges(self._full_data_array.coords['x'])
-        if 'y' in self._full_data_array.coords and not self._full_data_array.coords.is_edges('y'):
+        if self._has_physical_coords and not self._full_data_array.coords.is_edges('y'):
             self._full_data_array.coords['y'] = Measurement._to_edges(self._full_data_array.coords['y'])
 
         # Fallback for when no x/y coordinates are provided
@@ -177,6 +175,170 @@ class Measurement(NewBase):
         instance = cls(data_array=data_array, unique_name=unique_name, display_name=display_name)
         return instance
 
+    @property
+    def _data_array(self) -> sc.DataArray:
+        """
+        Get the current data array, either rebinned or the original full resolution.
+        """
+        if hasattr(self, '_rebinned_data_array'):
+            return self._rebinned_data_array
+        return self._full_data_array
+
+    @_data_array.setter
+    def _data_array(self, value: sc.DataArray) -> None:
+        raise AttributeError('Cannot set _data_array, it is a read-only property.')
+
+    @property
+    def x_positions(self) -> sc.Variable | None:
+        """
+        Get the x-coordinate positions of the pixels, if available.
+        """
+        if self._has_physical_coords:
+            return self._data_array.coords['x'].copy()
+        return None
+
+    @x_positions.setter
+    def x_positions(self, value: sc.Variable | np.ndarray) -> None:
+        """
+        Set the x-coordinate positions of the pixels.
+
+        Parameters
+        ----------
+        value : sc.Variable | np.ndarray
+            The new x-coordinate positions to set.
+            If a numpy array is provided, the unit is assumed to be meters.
+        """
+        if not self._has_physical_coords:
+            raise ValueError(
+                'Cannot set x_positions before setting all physical coordinate positions. '
+                'Please use the set_physical_coord_range method.'
+            )
+        value = self._validate_provided_coord(
+            self._data_array,
+            value,
+            'x_positions',
+            'x',
+            'pixels in the x dimension',
+            'length',
+            'm',
+        )
+        self._data_array.coords['x'] = value
+
+    @property
+    def y_positions(self) -> sc.Variable | None:
+        """
+        Get the y-coordinate positions of the pixels, if available.
+        """
+        if self._has_physical_coords:
+            return self._data_array.coords['y'].copy()
+        return None
+
+    @y_positions.setter
+    def y_positions(self, value: sc.Variable | np.ndarray) -> None:
+        """
+        Set the y-coordinate positions of the pixels.
+
+        Parameters
+        ----------
+        value : sc.Variable | np.ndarray
+            The new y-coordinate positions to set.
+            If a numpy array is provided, the unit is assumed to be meters.
+        """
+        if not self._has_physical_coords:
+            raise ValueError(
+                'Cannot set y_positions before setting all physical coordinate positions. '
+                'Please use the set_physical_coord_range method.'
+            )
+        value = self._validate_provided_coord(
+            self._data_array,
+            value,
+            'y_positions',
+            'y',
+            'pixels in the y dimension',
+            'length',
+            'm',
+        )
+        self._data_array.coords['y'] = value
+
+    def set_physical_coord_positions(
+        self, x_positions: sc.Variable | np.ndarray, y_positions: sc.Variable | np.ndarray
+    ) -> None:
+        """
+        Set the physical coordinate positions for the measurement corresponding to the pixel indices.
+
+        Parameters
+        ----------
+        x_positions : sc.Variable | np.ndarray
+            The x-coordinate positions to set.
+            If a numpy array is provided, the unit is assumed to be meters.
+        y_positions : sc.Variable | np.ndarray
+            The y-coordinate positions to set.
+            If a numpy array is provided, the unit is assumed to be meters.
+        """
+        x_positions = self._validate_provided_coord(
+            self._data_array,
+            x_positions,
+            'x_positions',
+            'x',
+            'pixels in the x dimension',
+            'length',
+            'm',
+        )
+        y_positions = self._validate_provided_coord(
+            self._data_array,
+            y_positions,
+            'y_positions',
+            'y',
+            'pixels in the y dimension',
+            'length',
+            'm',
+        )
+        self._data_array.coords['x'] = x_positions
+        self._data_array.coords['y'] = y_positions
+        self._has_physical_coords = True
+
+    def delete_physical_coord_positions(self) -> None:
+        """
+        Delete the physical coordinate positions for the measurement.
+        """
+        if self._has_physical_coords:
+            del self._data_array.coords['x']
+            del self._data_array.coords['y']
+            self._has_physical_coords = False
+        else:
+            raise ValueError('Cannot delete physical coordinate positions because they are not set.')
+
+    @property
+    def time_of_flights(self) -> sc.Variable:
+        """
+        Get the time-of-flight values of the measurement.
+        """
+        return self._data_array.coords['tof'].copy()
+
+    @time_of_flights.setter
+    def time_of_flights(self, value: sc.Variable | np.ndarray) -> None:
+        """
+        Set the time-of-flight values of the measurement.
+
+        Parameters
+        ----------
+        value : sc.Variable | np.ndarray
+            The new time-of-flight values to set.
+            If a numpy array is provided, the unit is assumed to be seconds.
+        """
+        value = self._validate_provided_coord(
+            self._data_array,
+            value,
+            'time_of_flights',
+            't',
+            'frames in the measurement',
+            'time',
+            's',
+        )
+        if any(value.to(unit='s') < sc.scalar(0, unit='s')):
+            raise ValueError('time_of_flight values must be non-negative.')
+        self._data_array.coords['tof'] = value
+
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """
         Rebin the measurement image stack. This operation reduces the resolution of the data by combining adjacent pixels or time bins.
@@ -229,19 +391,6 @@ class Measurement(NewBase):
         non_finite_mask = ~sc.isfinite(temp_array.data)
         temp_array.masks['non_finite'] = non_finite_mask
         self._rebinned_data_array = temp_array
-
-    @property
-    def _data_array(self) -> sc.DataArray:
-        """
-        Get the current data array, either rebinned or the original full resolution.
-        """
-        if hasattr(self, '_rebinned_data_array'):
-            return self._rebinned_data_array
-        return self._full_data_array
-
-    @_data_array.setter
-    def _data_array(self, value: sc.DataArray) -> None:
-        raise AttributeError('Cannot set _data_array, it is a read-only property.')
 
     def revert_rebin(self) -> None:
         """
@@ -372,31 +521,31 @@ class Measurement(NewBase):
         else:
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
 
-    def spectrum(self, roi: RectROI = None) -> sc.DataArray:
-        """
-        Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
-        If no ROI is provided, the spectrum is calculated over the entire image.
+    # def spectrum(self, roi: RectROI = None) -> sc.DataArray:
+    #     """
+    #     Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
+    #     If no ROI is provided, the spectrum is calculated over the entire image.
 
-        Parameters
-        ----------
-        roi : RectROI
-            The region of interest for which to extract the spectrum.
+    #     Parameters
+    #     ----------
+    #     roi : RectROI
+    #         The region of interest for which to extract the spectrum.
 
-        Returns
-        -------
-        sc.DataArray
-            A DataArray containing the spectrum data.
-        """
-        if roi is not None and not isinstance(roi, RectROI):
-            raise TypeError('roi must be an instance of RectROI or None.')
+    #     Returns
+    #     -------
+    #     sc.DataArray
+    #         A DataArray containing the spectrum data.
+    #     """
+    #     if roi is not None and not isinstance(roi, RectROI):
+    #         raise TypeError('roi must be an instance of RectROI or None.')
 
-        if roi is None:
-            spectrum_data = self._data_array.mean(dim=['x', 'y'])
-        elif 'x' in self._data_array.coords and 'y' in self._data_array.coords:
-            x_slice, y_slice = roi.slice()
-        else:
-            x_slice, y_slice = roi.pixel_slice()
-        return self._data_array['x', x_slice]['y', y_slice].mean(dim=['x', 'y'])
+    #     if roi is None:
+    #         spectrum_data = self._data_array.mean(dim=['x', 'y'])
+    #     elif 'x' in self._data_array.coords and 'y' in self._data_array.coords:
+    #         x_slice, y_slice = roi.slice()
+    #     else:
+    #         x_slice, y_slice = roi.pixel_slice()
+    #     return self._data_array['x', x_slice]['y', y_slice].mean(dim=['x', 'y'])
 
     def _is_notebook(self) -> bool:
         """
@@ -430,6 +579,7 @@ class Measurement(NewBase):
                 f"'{coord_name}' coordinate must have a unit of {expected_dim_string}, such as ('{expected_unit}')."
             ) from None  # noqa: E501
 
+    # Does this need to be moved somewhere else? Maybe Corelib?
     @staticmethod
     def _to_edges(centers: sc.Variable) -> sc.Variable:
         """

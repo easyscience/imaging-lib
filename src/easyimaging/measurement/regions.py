@@ -88,7 +88,7 @@ class RectROI(NewBase):
             self._has_physical_coords = False
         else:
             raise ValueError('Cannot delete physical coordinate ranges because they are not set.')
-        
+
     def pixel_slice(self) -> slice:
         """Get the pixel slice corresponding to the ROI.
 
@@ -96,7 +96,7 @@ class RectROI(NewBase):
             slice: Two (x,y) slice objects representing the pixel range of the ROI.
         """
         return slice(self.x_pixel_start, self.x_pixel_end), slice(self.y_pixel_start, self.y_pixel_end)
-    
+
     def slice(self) -> slice:
         """Get the slice corresponding to the ROI, using physical coordinates if available.
 

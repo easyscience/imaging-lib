@@ -19,6 +19,12 @@ class TestMeasurement:
         data = sc.zeros(dims=('x', 'y', 't'), shape=(6, 6, 10))
         return sc.DataArray(data=data, coords={'tof': tof, 'x': x, 'y': y})
 
+    @pytest.fixture
+    def valid_data_array_no_xy_coords(self):
+        tof = sc.arange('t', 0, 10, 1, unit='s')
+        data = sc.zeros(dims=('x', 'y', 't'), shape=(6, 6, 10))
+        return sc.DataArray(data=data, coords={'tof': tof})
+
     def test_init_valid_data_array(self, valid_data_array):
         # When Then
         measurement = Measurement(data_array=valid_data_array, unique_name='test_measurement', display_name='Test Measurement')
@@ -34,13 +40,9 @@ class TestMeasurement:
         assert not hasattr(measurement, '_rebinned_data_array')
         assert measurement._has_physical_coords
 
-    def test_init_valid_data_array_no_xy_coords(self, valid_data_array):
-        # When
-        data_array_no_xy_coords = valid_data_array.copy(deep=True)
-        del data_array_no_xy_coords.coords['x']
-        del data_array_no_xy_coords.coords['y']
-        # Then
-        measurement = Measurement(data_array=data_array_no_xy_coords)
+    def test_init_valid_data_array_no_xy_coords(self, valid_data_array_no_xy_coords):
+        # When  Then
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
         # Expect
         assert 'x' not in measurement._data_array.coords
         assert 'y' not in measurement._data_array.coords
@@ -154,13 +156,29 @@ class TestMeasurement:
             Measurement(data_array=invalid_data_array)
 
     @pytest.mark.parametrize('dimension', ['x', 'y'], ids=['x_dimension', 'y_dimension'])
-    def test_init_missing_coordinate_and_wrong_dimension(self, valid_data_array, dimension):
+    def test_init_missing_single_wrong_dimension(self, valid_data_array, dimension):
         # When
         invalid_data_array = valid_data_array.copy(deep=True)
         del invalid_data_array.coords[dimension]
         invalid_data_array = invalid_data_array.rename_dims({dimension: 'wrong_dim'})
         # Then Expect
-        with pytest.raises(ValueError, match=f"data array must have an '{dimension}' dimension."):
+        with pytest.raises(DimensionError, match="data array must have both 'x' and 'y' dimensions."):
+            Measurement(data_array=invalid_data_array)
+
+    def test_init_missing_both_wrong_dimensions(self, valid_data_array_no_xy_coords):
+        # When
+        invalid_data_array = valid_data_array_no_xy_coords.rename_dims({'x': 'wrong_x', 'y': 'wrong_y'})
+        # Then Expect
+        with pytest.raises(DimensionError, match="data array must have both 'x' and 'y' dimensions."):
+            Measurement(data_array=invalid_data_array)
+
+    @pytest.mark.parametrize('coordinate', ['x', 'y'], ids=['x', 'y'])
+    def test_init_missing_single_physical_coordinate(self, valid_data_array, coordinate):
+        # When
+        invalid_data_array = valid_data_array.copy(deep=True)
+        del invalid_data_array.coords[coordinate]
+        # Then Expect
+        with pytest.raises(ValueError, match="data array must have both 'x' and 'y' coordinates or neither."):
             Measurement(data_array=invalid_data_array)
 
     @pytest.mark.parametrize('path', ['small_scitiff.tiff', Path('small_scitiff.tiff')], ids=['str_path', 'Path_object'])
@@ -366,6 +384,164 @@ class TestMeasurement:
                 y_positions=coord,
             )
 
+    @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
+    def test_positions(self, valid_data_array, coordinate):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        assert sc.identical(getattr(measurement, coordinate), sc.arange(coordinate[0], 0, 7, 1, unit='m'))
+        assert (
+            getattr(measurement, coordinate) is not measurement._data_array.coords[coordinate[0]]
+        )  # Ensure a copy was returned
+
+    @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
+    def test_positions_no_coord(self, valid_data_array_no_xy_coords, coordinate):
+        # When
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
+        # Then Expect
+        assert getattr(measurement, coordinate) is None
+
+    @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
+    def test_positions_setter_valid(self, valid_data_array, coordinate):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        new_positions = sc.arange(coordinate[0], 0, 14, 2, unit='m')
+        # Then
+        setattr(measurement, coordinate, new_positions)
+        # Expect
+        assert sc.identical(getattr(measurement, coordinate), new_positions)
+        assert sc.identical(measurement._data_array.coords[coordinate[0]], new_positions)
+
+    @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
+    def test_positions_setter_rebinned_doesnt_update_original(self, valid_data_array, coordinate):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.rebin(dimensions={coordinate[0]: 2})
+        # Then
+        new_positions = sc.arange(coordinate[0], 0, 28, 8, unit='m')
+        setattr(measurement, coordinate, new_positions)
+        # Expect
+        assert sc.identical(getattr(measurement, coordinate), new_positions)
+        assert sc.identical(measurement._data_array.coords[coordinate[0]], new_positions)
+        # Original data array should remain unchanged
+        assert sc.identical(
+            measurement._full_data_array.coords[coordinate[0]],
+            valid_data_array.coords[coordinate[0]],
+        )
+
+    @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
+    def test_positions_setter_invalid(self, valid_data_array_no_xy_coords, coordinate):
+        # When
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
+        # Then Expect
+        with pytest.raises(ValueError, match=f'Cannot set {coordinate} before setting all physical coordinate positions.'):
+            setattr(measurement, coordinate, sc.arange('x', 0, 10, 1, unit='m'))
+
+    # Just a single test, other test-cases is covered by from_tiff_stack tests as both uses _validate_provided_coord()
+    @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
+    def test_positions_setter_invalid_coordinate(self, valid_data_array, coordinate):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(TypeError, match=f'{coordinate} must be a scipp Variable.'):
+            setattr(measurement, coordinate, 'not_a_valid_type')
+
+    def test_set_physical_coord_positions_valid(self, valid_data_array_no_xy_coords):
+        # When
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
+        new_x_positions = sc.arange('x', 0, 14, 2, unit='m')
+        new_y_positions = sc.arange('y', 0, 14, 2, unit='m')
+        # Then
+        measurement.set_physical_coord_positions(x_positions=new_x_positions, y_positions=new_y_positions)
+        # Expect
+        assert sc.identical(measurement.x_positions, new_x_positions)
+        assert sc.identical(measurement.y_positions, new_y_positions)
+        assert sc.identical(measurement._data_array.coords['x'], new_x_positions)
+        assert sc.identical(measurement._data_array.coords['y'], new_y_positions)
+        assert measurement._has_physical_coords
+
+    # Just a single test for each, other test-cases is covered by from_tiff_stack tests as both uses _validate_provided_coord()
+    @pytest.mark.parametrize(
+        'coordinates, coordinate_wrong',
+        [
+            ('x_positions', ('Wrong', sc.arange('y', 0, 14, 2, unit='m'))),
+            ('y_positions', (sc.arange('x', 0, 14, 2, unit='m'), 'Wrong')),
+        ],
+        ids=['missing_x_positions', 'missing_y_positions'],
+    )
+    def test_set_physical_coord_positions_invalid(self, valid_data_array_no_xy_coords, coordinates, coordinate_wrong):
+        # When
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
+        # Then Expect
+        with pytest.raises(TypeError, match=f'{coordinates} must be a scipp Variable.'):
+            measurement.set_physical_coord_positions(x_positions=coordinate_wrong[0], y_positions=coordinate_wrong[1])
+
+    def test_delete_physical_coord_positions(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        measurement.delete_physical_coord_positions()
+        # Expect
+        assert 'x' not in measurement._data_array.coords
+        assert 'y' not in measurement._data_array.coords
+        assert not measurement._has_physical_coords
+
+    def test_delete_physical_coord_positions_no_coords(self, valid_data_array_no_xy_coords):
+        # When
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
+        # Then Expect
+        with pytest.raises(ValueError, match='Cannot delete physical coordinate positions because they are not set.'):
+            measurement.delete_physical_coord_positions()
+
+    def test_time_of_flights(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        assert sc.identical(measurement.time_of_flights, sc.arange('t', 0, 10, 1, unit='s'))
+        assert measurement.time_of_flights is not measurement._data_array.coords['tof']  # Ensure a copy was returned
+
+    def test_time_of_flights_setter_valid(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        new_tof = sc.arange('t', 0, 20, 2, unit='s')
+        # Then
+        measurement.time_of_flights = new_tof
+        # Expect
+        assert sc.identical(measurement.time_of_flights, new_tof)
+        assert sc.identical(measurement._data_array.coords['tof'], new_tof)
+
+    def test_time_of_flights_setter_rebinned_doesnt_update_original(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.rebin(dimensions={'x': 2})
+        # Then
+        new_tof = sc.arange('t', 0, 20, 2, unit='s')
+        measurement.time_of_flights = new_tof
+        # Expect
+        assert sc.identical(measurement.time_of_flights, new_tof)
+        assert sc.identical(measurement._data_array.coords['tof'], new_tof)
+        # Original data array should remain unchanged
+        assert sc.identical(
+            measurement._full_data_array.coords['tof'],
+            valid_data_array.coords['tof'],
+        )
+
+    # Just a single test, other test-cases is covered by from_tiff_stack tests as both uses _validate_provided_coord()
+    def test_time_of_flights_setter_invalid_coord(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(TypeError, match='time_of_flights must be a scipp Variable.'):
+            measurement.time_of_flights = 'not_a_valid_type'
+
+    def test_time_of_flights_setter_negative_values(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        new_tof = sc.arange('t', -5, 5, 1, unit='s')
+        # Then Expect
+        with pytest.raises(ValueError, match='time_of_flight values must be non-negative.'):
+            measurement.time_of_flights = new_tof
+
     def test_rebin_full(self, valid_data_array):
         # When
         measurement = Measurement(data_array=valid_data_array)
@@ -416,14 +592,11 @@ class TestMeasurement:
         measurement.rebin(dimensions={'y': 2})
         # Expect
         assert measurement._data_array.sizes['y'] == 3
-        assert sc.any(measurement._data_array.masks['non_finite']).value is result
+        assert sc.any(measurement._data_array.masks['non_finite']).value == result
 
-    def test_rebin_no_xy_coords(self, valid_data_array):
+    def test_rebin_no_xy_coords(self, valid_data_array_no_xy_coords):
         # When
-        data_array_no_xy_coords = valid_data_array.copy(deep=True)
-        del data_array_no_xy_coords.coords['x']
-        del data_array_no_xy_coords.coords['y']
-        measurement = Measurement(data_array=data_array_no_xy_coords)
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
         # Then
         measurement.rebin(dimensions={'x': 2, 'y': 3})
         # Expect

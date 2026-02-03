@@ -157,20 +157,22 @@ class TestRectROI:
         with pytest.raises(ValueError, match='Cannot delete physical coordinate ranges because they are not set.'):
             roi.delete_physical_coord_range()
 
-    @pytest.mark.parametrize('attribute, value', [
-        ('x_pixel_start', 10), 
-        ('x_pixel_end', 50), 
-        ('y_pixel_start', 20), 
-        ('y_pixel_end', 80)],
-            ids=['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'])
+    @pytest.mark.parametrize(
+        'attribute, value',
+        [('x_pixel_start', 10), ('x_pixel_end', 50), ('y_pixel_start', 20), ('y_pixel_end', 80)],
+        ids=['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
+    )
     def test_pixel_coordinate_getter(self, roi_basic, attribute, value):
         # When
         roi = roi_basic
         # Then Expect
         assert getattr(roi, attribute) == value
 
-    @pytest.mark.parametrize('attribute', ['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
-                             ids=['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'])
+    @pytest.mark.parametrize(
+        'attribute',
+        ['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
+        ids=['x_pixel_start', 'x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
+    )
     def test_pixel_coordinate_setter(self, roi_basic, attribute):
         # When
         roi = roi_basic
@@ -179,8 +181,9 @@ class TestRectROI:
         # Expect
         assert getattr(roi, attribute) == 15
 
-    @pytest.mark.parametrize('attribute', ['x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
-                             ids=['x_pixel_end', 'y_pixel_start', 'y_pixel_end'])
+    @pytest.mark.parametrize(
+        'attribute', ['x_pixel_end', 'y_pixel_start', 'y_pixel_end'], ids=['x_pixel_end', 'y_pixel_start', 'y_pixel_end']
+    )
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
@@ -197,12 +200,16 @@ class TestRectROI:
         with pytest.raises(error, match=message):
             setattr(roi, attribute, invalid_value)
 
-    @pytest.mark.parametrize('attribute, scalar', [
-        ('x_start', sc.scalar(0.0, unit='m')), 
-        ('x_end', sc.scalar(10.0, unit='m')), 
-        ('y_start', sc.scalar(0.0, unit='m')), 
-        ('y_end', sc.scalar(5.0, unit='m'))], 
-        ids=['x_start', 'x_end', 'y_start', 'y_end'])
+    @pytest.mark.parametrize(
+        'attribute, scalar',
+        [
+            ('x_start', sc.scalar(0.0, unit='m')),
+            ('x_end', sc.scalar(10.0, unit='m')),
+            ('y_start', sc.scalar(0.0, unit='m')),
+            ('y_end', sc.scalar(5.0, unit='m')),
+        ],
+        ids=['x_start', 'x_end', 'y_start', 'y_end'],
+    )
     def test_physical_coordinate_getter(self, roi_with_physical_coords, attribute, scalar):
         # When
         roi = roi_with_physical_coords
@@ -210,8 +217,9 @@ class TestRectROI:
         assert sc.identical(getattr(roi, attribute), scalar)
         assert getattr(roi, attribute) is not getattr(roi, f'_{attribute}')  # Ensure a copy is returned
 
-    @pytest.mark.parametrize('attribute', ['x_start', 'x_end', 'y_start', 'y_end'],
-                             ids=['x_start', 'x_end', 'y_start', 'y_end'])
+    @pytest.mark.parametrize(
+        'attribute', ['x_start', 'x_end', 'y_start', 'y_end'], ids=['x_start', 'x_end', 'y_start', 'y_end']
+    )
     def test_physical_coordinate_setter(self, roi_with_physical_coords, attribute):
         # When
         roi = roi_with_physical_coords
@@ -221,8 +229,9 @@ class TestRectROI:
         # Expect
         assert sc.identical(getattr(roi, attribute), new_value)
 
-    @pytest.mark.parametrize('attribute', ['x_start', 'x_end', 'y_start', 'y_end'],
-                             ids=['x_start', 'x_end', 'y_start', 'y_end'])
+    @pytest.mark.parametrize(
+        'attribute', ['x_start', 'x_end', 'y_start', 'y_end'], ids=['x_start', 'x_end', 'y_start', 'y_end']
+    )
     def test_physical_coordinate_setter_setting_single_coordinate(self, roi_basic, attribute):
         # When
         roi = roi_basic
@@ -230,8 +239,9 @@ class TestRectROI:
         with pytest.raises(ValueError, match=f'Cannot set {attribute} before setting all physical coordinate ranges.'):
             setattr(roi, attribute, sc.scalar(1.0, unit='m'))
 
-    @pytest.mark.parametrize('attribute', ['x_start', 'x_end', 'y_start', 'y_end'],
-                             ids=['x_start', 'x_end', 'y_start', 'y_end'])
+    @pytest.mark.parametrize(
+        'attribute', ['x_start', 'x_end', 'y_start', 'y_end'], ids=['x_start', 'x_end', 'y_start', 'y_end']
+    )
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
