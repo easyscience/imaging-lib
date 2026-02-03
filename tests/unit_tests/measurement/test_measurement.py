@@ -5,6 +5,7 @@ import numpy as np
 import plopp as pp
 import pytest
 import scipp as sc
+from scipp import DimensionError
 
 from easyimaging import Measurement
 
@@ -23,7 +24,7 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array, unique_name='test_measurement', display_name='Test Measurement')
         # Expect
         assert measurement._data_array is not valid_data_array  # Ensure a copy was made
-        assert sc.any(measurement._data_array.masks['non_finite']).value is False
+        assert not sc.any(measurement._data_array.masks['non_finite']).value
         del measurement._data_array.coords['x_pixels']
         del measurement._data_array.coords['y_pixels']
         del measurement._data_array.masks['non_finite']
@@ -31,6 +32,7 @@ class TestMeasurement:
         assert measurement.unique_name == 'test_measurement'
         assert measurement.display_name == 'Test Measurement'
         assert not hasattr(measurement, '_rebinned_data_array')
+        assert measurement._has_physical_coords
 
     def test_init_valid_data_array_no_xy_coords(self, valid_data_array):
         # When
@@ -46,6 +48,7 @@ class TestMeasurement:
         assert measurement._data_array.coords.is_edges('x_pixels')
         assert 'y_pixels' in measurement._data_array.coords
         assert measurement._data_array.coords.is_edges('y_pixels')
+        assert not measurement._has_physical_coords
 
     def test_init_valid_data_array_coordinate_not_edges(self, valid_data_array):
         # When
@@ -59,6 +62,7 @@ class TestMeasurement:
         # Expect
         assert sc.identical(measurement._data_array.coords['x'], sc.arange('x', -0.5, 6.5, 1, unit='m'))
         assert sc.identical(measurement._data_array.coords['y'], sc.arange('y', -0.5, 6.5, 1, unit='m'))
+        assert measurement._has_physical_coords
 
     @pytest.mark.parametrize('value', [np.nan, np.inf], ids=['nan', 'inf'])
     def test_init_valid_data_array_with_nonfinite_values(self, valid_data_array, value):
@@ -68,8 +72,8 @@ class TestMeasurement:
         # Then
         measurement = Measurement(data_array=data_array_with_nonfinite)
         # Expect
-        assert sc.any(measurement._data_array.masks['non_finite']).value is True
-        assert measurement._data_array.masks['non_finite']['x', 0]['y', 0]['t', 0].value is True
+        assert sc.any(measurement._data_array.masks['non_finite']).value
+        assert measurement._data_array.masks['non_finite']['x', 0]['y', 0]['t', 0].value
 
     def test_init_invalid_data_array_type(self):
         # When Then
@@ -79,9 +83,9 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'new_tof_coordinate, error, expected_message',
         [
-            (None, ValueError, "data array must contain 'tof' coordinate for time-of-flight information."),
-            (sc.scalar(5.0, unit='s'), ValueError, "data array must contain 'tof' coordinate for time-of-flight information."),
-            (sc.arange('x', 0, 6, 1, unit='s'), ValueError, "'tof' coordinate must be of dimension 't'."),
+            (None, ValueError, "data array must have a 'tof' coordinate for time-of-flight information."),
+            (sc.scalar(5.0, unit='s'), DimensionError, "'tof' coordinate must be of dimension 't'."),
+            (sc.arange('x', 0, 6, 1, unit='s'), DimensionError, "'tof' coordinate must be of dimension 't'."),
             (
                 sc.arange('t', 0, 10, 1, unit='m'),
                 sc.UnitError,
@@ -110,8 +114,8 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'new_x_coordinate, error, expected_message',
         [
-            (sc.scalar(5.0, unit='m'), ValueError, "data array must contain 'x' coordinate for pixels."),
-            (sc.arange('t', 0, 10, 1, unit='m'), ValueError, "'x' coordinate must be of dimension 'x'."),
+            (sc.scalar(5.0, unit='m'), DimensionError, "'x' coordinate must be of dimension 'x'"),
+            (sc.arange('t', 0, 10, 1, unit='m'), DimensionError, "'x' coordinate must be of dimension 'x'."),
             (sc.arange('x', 0, 6, 1, unit='s'), sc.UnitError, "'x' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
         ],
         ids=[
@@ -131,8 +135,8 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'new_y_coordinate, error, expected_message',
         [
-            (sc.scalar(5.0, unit='m'), ValueError, "data array must contain 'y' coordinate for pixels."),
-            (sc.arange('t', 0, 10, 1, unit='m'), ValueError, "'y' coordinate must be of dimension 'y'."),
+            (sc.scalar(5.0, unit='m'), DimensionError, "'y' coordinate must be of dimension 'y'."),
+            (sc.arange('t', 0, 10, 1, unit='m'), DimensionError, "'y' coordinate must be of dimension 'y'."),
             (sc.arange('y', 0, 6, 1, unit='s'), sc.UnitError, "'y' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
         ],
         ids=[

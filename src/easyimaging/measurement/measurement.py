@@ -12,6 +12,7 @@ import numpy as np
 import plopp as pp
 import scipp as sc
 from easyscience.base_classes import NewBase
+from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
 
@@ -37,24 +38,24 @@ class Measurement(NewBase):
         if not isinstance(data_array, sc.DataArray):
             raise TypeError('data_array must be an instance of scipp.DataArray.')
 
-        self._validate_data_array_coordinate(data_array, 'tof', 'time-of-flight information', 't', 'time', 's')
+        if 'tof' in data_array.coords:
+            self._validate_data_array_coordinate(data_array, 'tof', 't', 'time', 's')
+        else:
+            raise ValueError("data array must have a 'tof' coordinate for time-of-flight information.")
 
         if any(data_array.coords['tof'].to(unit='s') < sc.scalar(0, unit='s')):
             raise ValueError('time_of_flight values must be non-negative.')
 
-        if 'x' in data_array.coords:
-            self._validate_data_array_coordinate(data_array, 'x', 'pixels', 'x', 'length', 'm')
-            self._pixel_positions_x = data_array.coords['x']
-        elif 'x' not in data_array.dims:
-            raise ValueError("data array must have an 'x' dimension.")
-
-        if 'y' in data_array.coords:
-            self._validate_data_array_coordinate(data_array, 'y', 'pixels', 'y', 'length', 'm')
-            self._pixel_positions_y = data_array.coords['y']
-        elif 'y' not in data_array.dims:
-            raise ValueError("data array must have an 'y' dimension.")
-
-        self._time_of_flight = data_array.coords['tof']
+        if 'x' in data_array.coords and 'y' in data_array.coords:
+            self._validate_data_array_coordinate(data_array, 'x', 'x', 'length', 'm')
+            self._validate_data_array_coordinate(data_array, 'y', 'y', 'length', 'm')
+            self._has_physical_coords = True
+        elif 'x' not in data_array.dims or 'y' not in data_array.dims:
+            raise DimensionError("data array must have both 'x' and 'y' dimensions.")
+        elif 'x' not in data_array.coords and 'y' not in data_array.coords:
+            self._has_physical_coords = False
+        else:
+            raise ValueError("data array must have both 'x' and 'y' coordinates or neither.")
 
         super().__init__(unique_name=unique_name, display_name=display_name)
 
@@ -416,15 +417,12 @@ class Measurement(NewBase):
         self,
         data_array: sc.DataArray,
         coord_name: str,
-        coord_context: str,
         expected_dim: str,
         expected_dim_string: str,
         expected_unit: str,
     ) -> None:
-        if data_array.coords.get(coord_name) is None or data_array.coords[coord_name].shape == ():
-            raise ValueError(f"data array must contain '{coord_name}' coordinate for {coord_context}.")
-        if data_array.coords[coord_name].dim != expected_dim:
-            raise ValueError(f"'{coord_name}' coordinate must be of dimension '{expected_dim}'.")
+        if data_array.coords[coord_name].dims != (expected_dim,):
+            raise DimensionError(f"'{coord_name}' coordinate must be of dimension '{expected_dim}'.")
         try:
             data_array.coords[coord_name].to(unit=expected_unit)
         except UnitError:
