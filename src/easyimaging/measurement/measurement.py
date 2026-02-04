@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import ess.imaging as essimaging
-import matplotlib
 import numpy as np
 import plopp as pp
 import scipp as sc
@@ -15,6 +14,8 @@ from easyscience.base_classes import NewBase
 from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
+
+from .regions import RectROI
 
 Numeric = int | float
 
@@ -450,9 +451,9 @@ class Measurement(NewBase):
         else:
             plot.show()
 
-    def slider_plot(self, **kwargs) -> None:
+    def slicer_plot(self, **kwargs) -> None:
         """
-        Launch an interactive slider plot for exploring the measurement data.
+        Launch an interactive slicer plot for exploring the measurement data.
 
         This method uses the plopp library for interactive slicing:
         https://scipp.github.io/plopp/plotting/slicer-plot.html
@@ -475,13 +476,7 @@ class Measurement(NewBase):
         slicer_kwargs_defaults.update(kwargs)
 
         if self._is_notebook():
-            if matplotlib.get_backend() == 'widget':
-                return pp.slicer(self._data_array, keep=['x', 'y'], **slicer_kwargs_defaults)
-            else:
-                raise RuntimeError(
-                    'Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks. \n'
-                    'To set it, run "%matplotlib widget" in a notebook cell before launching the slicer.'
-                )
+            return pp.slicer(self._data_array, keep=['x', 'y'], **slicer_kwargs_defaults)
         else:
             raise RuntimeError('Interactive slicer is only supported in Jupyter notebooks.')
 
@@ -511,41 +506,65 @@ class Measurement(NewBase):
         inspector_kwargs_defaults.update(kwargs)
 
         if self._is_notebook():
-            if matplotlib.get_backend() == 'widget':
-                return pp.inspector(self._data_array, dim='t', orientation='vertical', **inspector_kwargs_defaults)
-            else:
-                raise RuntimeError(
-                    'Interactive spectrum inspector requires the matplotlib "widget" backend in Jupyter notebooks. \n'  # noqa: E501
-                    'To set it, run "%matplotlib widget" in a notebook cell before launching the inspector.'
-                )
+            return pp.inspector(self._data_array, dim='t', orientation='vertical', **inspector_kwargs_defaults)
         else:
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
 
-    # def spectrum(self, roi: RectROI = None) -> sc.DataArray:
-    #     """
-    #     Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
-    #     If no ROI is provided, the spectrum is calculated over the entire image.
+    def spectrum(self, roi: RectROI | str | None = None) -> sc.DataArray:
+        """
+        Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
+        If no ROI is provided, the spectrum is calculated over the entire image.
 
-    #     Parameters
-    #     ----------
-    #     roi : RectROI
-    #         The region of interest for which to extract the spectrum.
+        Parameters
+        ----------
+        roi : RectROI | str | None
+            The region of interest for which to extract the spectrum.
+            If a string is provided, it should be the unique name of a predefined ROI.
 
-    #     Returns
-    #     -------
-    #     sc.DataArray
-    #         A DataArray containing the spectrum data.
-    #     """
-    #     if roi is not None and not isinstance(roi, RectROI):
-    #         raise TypeError('roi must be an instance of RectROI or None.')
+        Returns
+        -------
+        sc.DataArray
+            A DataArray containing the spectrum data.
+        """
+        return self._spectrum(roi=roi, copy=True)
 
-    #     if roi is None:
-    #         spectrum_data = self._data_array.mean(dim=['x', 'y'])
-    #     elif 'x' in self._data_array.coords and 'y' in self._data_array.coords:
-    #         x_slice, y_slice = roi.slice()
-    #     else:
-    #         x_slice, y_slice = roi.pixel_slice()
-    #     return self._data_array['x', x_slice]['y', y_slice].mean(dim=['x', 'y'])
+    def _spectrum(self, roi: RectROI | str | None = None, copy: bool = False) -> sc.DataArray:
+        """
+        Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
+        If no ROI is provided, the spectrum is calculated over the entire image.
+
+        Parameters
+        ----------
+        roi : RectROI | str | None
+            The region of interest for which to extract the spectrum.
+            If a string is provided, it should be the unique name of a predefined ROI.
+
+        copy : bool
+            Whether to return a copy of the spectrum data.
+
+        Returns
+        -------
+        sc.DataArray
+            A DataArray containing the spectrum data.
+        """
+        if roi is not None and not isinstance(roi, (RectROI, str)):
+            raise TypeError('roi must be a string, None, or an instance of RectROI.')
+        
+        if isinstance(roi, str):
+            roi_object = next((r for r in self._regions_of_interest if r.unique_name == roi), None)
+            if roi_object is None:
+                raise ValueError(f"An ROI with unique name '{roi}' not found among the measurements list of ROIs.")
+            roi = roi_object
+
+        if roi is None:
+            spectrum_data = self._data_array.mean(dim=['x', 'y'])
+        elif self._has_physical_coords and roi._has_physical_coords:
+            x_slice, y_slice = roi.slice()
+            spectrum_data = self._data_array['x', x_slice]['y', y_slice].mean(dim=['x', 'y'])
+        else:
+            x_slice, y_slice = roi.pixel_slice()
+            spectrum_data = self._data_array['x_pixels', x_slice]['y_pixels', y_slice].mean(dim=['x', 'y'])
+        return spectrum_data.copy() if copy else spectrum_data
 
     def _is_notebook(self) -> bool:
         """

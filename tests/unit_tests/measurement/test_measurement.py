@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import matplotlib
 import numpy as np
 import plopp as pp
 import pytest
@@ -8,6 +9,7 @@ import scipp as sc
 from scipp import DimensionError
 
 from easyimaging import Measurement
+from easyimaging.measurement.regions import RectROI
 
 
 class TestMeasurement:
@@ -24,6 +26,13 @@ class TestMeasurement:
         tof = sc.arange('t', 0, 10, 1, unit='s')
         data = sc.zeros(dims=('x', 'y', 't'), shape=(6, 6, 10))
         return sc.DataArray(data=data, coords={'tof': tof})
+
+    @pytest.fixture
+    def use_noninteractive_backend(self):
+        # Sets a non-interactive backend to Matplotlib for testing.
+        #matplotlib.use('module://ipympl.backend_nbagg')
+        matplotlib.use('Agg')
+        pp.backends['2d'] = 'matplotlib'
 
     def test_init_valid_data_array(self, valid_data_array):
         # When Then
@@ -192,7 +201,7 @@ class TestMeasurement:
         assert 'x' in measurement._data_array.coords
         assert 'y' in measurement._data_array.coords
         assert 'non_finite' in measurement._data_array.masks
-        assert sc.any(measurement._data_array.masks['non_finite']).value is True
+        assert sc.any(measurement._data_array.masks['non_finite']).value
 
     def test_from_scitiff_invalid_path_type(self):
         # When Then Expect
@@ -267,6 +276,7 @@ class TestMeasurement:
             filename='small_tiff.tiff',
             time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
             x_positions=coord,
+            y_positions=sc.arange('y', 0, 1020, 20, unit='cm'),
         )
         # Expect
         assert 'x' in measurement._data_array.coords
@@ -289,6 +299,7 @@ class TestMeasurement:
             filename='small_tiff.tiff',
             time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
             y_positions=coord,
+            x_positions=sc.arange('x', 0, 510, 10, unit='cm'),
         )
         # Expect
         assert 'y' in measurement._data_array.coords
@@ -724,9 +735,14 @@ class TestMeasurement:
 
     # Without making image comparisons, this is the best we can do to test the plot function
     @pytest.mark.parametrize('time_of_flight', [None, 0, sc.scalar(5.0, unit='s')], ids=['sum', 'indice', 'scipp_scalar'])
-    def test_plot(self, valid_data_array, time_of_flight):
+    def test_plot(self, valid_data_array, time_of_flight, use_noninteractive_backend, monkeypatch):
         # When
         measurement = Measurement(data_array=valid_data_array)
+
+        def mock_is_notebook():
+            return True
+        
+        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
         # Then Expect
         measurement.plot(time_of_flight=time_of_flight)  # Just ensure no exception is raised
 
@@ -749,46 +765,34 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
         with pytest.raises(RuntimeError, match='Interactive slicer is only supported in Jupyter notebooks.'):
-            measurement.slider_plot()
+            measurement.slicer_plot()
 
-    def test_slicer_fails_without_matplotlib_widget_backend(self, valid_data_array, monkeypatch):
+    def test_slicer_fails_without_interactive_backend(self, valid_data_array, use_noninteractive_backend, monkeypatch):
         # When
         measurement = Measurement(data_array=valid_data_array)
 
         def mock_is_notebook():
             return True
 
-        def mock_get_backend():
-            return 'not_widget_backend'
-
-        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
         monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
 
         # Then Expect
         with pytest.raises(
-            RuntimeError, match='Interactive slicer requires the matplotlib "widget" backend in Jupyter notebooks.'
-        ):  # noqa: E501
-            measurement.slider_plot()
+            RuntimeError, match='The slicer can only be used with an interactive backend. Use `%matplotlib widget` at the start of your notebook.'  # noqa: E501
+            ):
+            measurement.slicer_plot()
 
-    def test_slicer_runs_in_notebook_with_widget_backend(self, valid_data_array, monkeypatch):
+    def test_slicer_runs_in_notebook_with_interactive_backend(self, valid_data_array, use_noninteractive_backend, monkeypatch):
         # When
         measurement = Measurement(data_array=valid_data_array)
 
         def mock_is_notebook():
             return True
 
-        def mock_get_backend():
-            return 'widget'
-
-        mock_slicer_widget = MagicMock()
-
-        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
         monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-        monkeypatch.setattr(pp, 'slicer', mock_slicer_widget)
+        matplotlib.use('module://ipympl.backend_nbagg')
         # Then Expect
-        slicer_widget = measurement.slider_plot()
-        assert slicer_widget is not None
-        assert mock_slicer_widget.assert_called_once
+        measurement.slicer_plot()   # Just ensure no exception is raised
 
     def test_spectrum_inspector_fails_outside_notebook(self, valid_data_array):
         # When
@@ -816,7 +820,7 @@ class TestMeasurement:
         ):  # noqa: E501
             measurement.spectrum_inspector()
 
-    def test_spectrum_inspector_runs_in_notebook_with_widget_backend(self, valid_data_array, monkeypatch):
+    def test_spectrum_inspector_runs_in_notebook_with_widget_backend(self, valid_data_array, monkeypatch, _use_ipympl):
         # When
         measurement = Measurement(data_array=valid_data_array)
 
@@ -826,12 +830,22 @@ class TestMeasurement:
         def mock_get_backend():
             return 'widget'
 
-        mock_spectrum_widget = MagicMock()
+        #mock_spectrum_widget = MagicMock()
 
         monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
         monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-        monkeypatch.setattr(pp, 'inspector', mock_spectrum_widget)
+        #monkeypatch.setattr(pp, 'inspector', mock_spectrum_widget)
         # Then Expect
         spectrum_widget = measurement.spectrum_inspector()
         assert spectrum_widget is not None
-        assert mock_spectrum_widget.assert_called_once
+        #assert mock_spectrum_widget.assert_called_once
+
+    def test_spectrum_valid(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        roi = RectROI(xmin=1, xmax=4, ymin=2, ymax=5)
+        spectrum = measurement.spectrum
+        # Then Expect
+        assert isinstance(spectrum, sc.DataArray)
+        assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
+        assert sc.identical(spectrum.data, sc.sum(measurement._data_array, dim=['x', 'y']))

@@ -52,7 +52,10 @@ dev = [
     "pytest>=5.2",
     "pytest-cov>=3.0.0",
     "ruff",
-    "tox-gh-actions"
+    "tox-gh-actions",
+    "ipython==9.7.0",
+    "matplotlib==3.10.7",
+    "ipympl==0.9.8",
 ]
 docs = [
     "doc8",

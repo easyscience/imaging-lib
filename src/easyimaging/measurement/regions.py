@@ -106,7 +106,7 @@ class RectROI(NewBase):
         if self._has_physical_coords:
             return slice(self.x_start, self.x_end), slice(self.y_start, self.y_end)
         else:
-            return self.pixel_slice()
+            raise ValueError('Physical coordinate ranges are not set for this ROI.')
 
     @property
     def x_pixel_start(self) -> int:
