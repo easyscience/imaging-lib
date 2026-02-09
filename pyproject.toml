@@ -28,7 +28,8 @@ classifiers = [
 ]
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "easyscience>=2.0.0",
+    #"easyscience@git+https://github.com/easyscience/corelib#egg=easylist2",
+    #"easyscience>=2.0.0",
     "scitiff",
     "essimaging",
     "plopp",

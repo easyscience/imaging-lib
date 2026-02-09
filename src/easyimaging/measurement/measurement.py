@@ -10,6 +10,7 @@ import ess.imaging as essimaging
 import numpy as np
 import plopp as pp
 import scipp as sc
+from easyscience.base_classes import EasyList
 from easyscience.base_classes import NewBase
 from scipp import DimensionError
 from scipp import UnitError
@@ -71,7 +72,8 @@ class Measurement(NewBase):
         self._full_data_array.coords['x_pixels'] = sc.arange('x', 0, self._full_data_array.sizes['x'] + 1, 1)
         self._full_data_array.coords['y_pixels'] = sc.arange('y', 0, self._full_data_array.sizes['y'] + 1, 1)
 
-        self._regions_of_interest = []
+        self._regions_of_interest = EasyList(protected_types=(RectROI,))
+
         non_finite_mask = ~sc.isfinite(self._full_data_array.data)
         self._full_data_array.masks['non_finite'] = non_finite_mask
 
@@ -340,6 +342,17 @@ class Measurement(NewBase):
             raise ValueError('time_of_flight values must be non-negative.')
         self._data_array.coords['tof'] = value
 
+    @property
+    def regions_of_interest(self) -> EasyList[RectROI]:
+        """
+        Get the list of regions of interest (ROIs) defined for this measurement.
+        """
+        return self._regions_of_interest
+    
+    @regions_of_interest.setter
+    def regions_of_interest(self, value: EasyList[RectROI]) -> None:
+        raise AttributeError('Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.')  # noqa: E501
+
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """
         Rebin the measurement image stack. This operation reduces the resolution of the data by combining adjacent pixels or time bins.
@@ -519,7 +532,7 @@ class Measurement(NewBase):
         ----------
         roi : RectROI | str | None
             The region of interest for which to extract the spectrum.
-            If a string is provided, it should be the unique name of a predefined ROI.
+            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
 
         Returns
         -------
@@ -537,7 +550,7 @@ class Measurement(NewBase):
         ----------
         roi : RectROI | str | None
             The region of interest for which to extract the spectrum.
-            If a string is provided, it should be the unique name of a predefined ROI.
+            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
 
         copy : bool
             Whether to return a copy of the spectrum data.
@@ -551,12 +564,11 @@ class Measurement(NewBase):
             raise TypeError('roi must be a string, None, or an instance of RectROI.')
         
         if isinstance(roi, str):
-            roi_object = next((r for r in self._regions_of_interest if r.unique_name == roi), None)
-            if roi_object is None:
-                raise ValueError(f"An ROI with unique name '{roi}' not found among the measurements list of ROIs.")
-            roi = roi_object
-
-        if roi is None:
+            if roi in self.regions_of_interest:
+                roi = self.regions_of_interest[roi]
+            else:
+                raise KeyError(f"ROI with unique name '{roi}' not found in the measurement's list of ROIs.")
+        elif roi is None:
             spectrum_data = self._data_array.mean(dim=['x', 'y'])
         elif self._has_physical_coords and roi._has_physical_coords:
             x_slice, y_slice = roi.slice()

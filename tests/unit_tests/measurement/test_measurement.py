@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import MutableSequence
 from unittest.mock import MagicMock
 
 import matplotlib
@@ -6,6 +7,7 @@ import numpy as np
 import plopp as pp
 import pytest
 import scipp as sc
+from easyscience.base_classes import EasyList
 from scipp import DimensionError
 
 from easyimaging import Measurement
@@ -34,6 +36,21 @@ class TestMeasurement:
         matplotlib.use('Agg')
         pp.backends['2d'] = 'matplotlib'
 
+    @pytest.fixture
+    def valid_roi(self):
+        x_pixel_range = (1, 4)
+        y_pixel_range = (2, 5)
+        x_range = (sc.scalar(1.0, unit='m'), sc.scalar(4.0, unit='m'))
+        y_range = (sc.scalar(2.0, unit='m'), sc.scalar(5.0, unit='m'))
+        return RectROI(
+            x_pixel_range=x_pixel_range,
+            y_pixel_range=y_pixel_range,
+            x_range=x_range,
+            y_range=y_range,
+            unique_name='test_roi',
+            display_name='Test ROI',
+        )
+
     def test_init_valid_data_array(self, valid_data_array):
         # When Then
         measurement = Measurement(data_array=valid_data_array, unique_name='test_measurement', display_name='Test Measurement')
@@ -48,6 +65,8 @@ class TestMeasurement:
         assert measurement.display_name == 'Test Measurement'
         assert not hasattr(measurement, '_rebinned_data_array')
         assert measurement._has_physical_coords
+        assert isinstance(measurement.regions_of_interest, MutableSequence)
+        assert len(measurement.regions_of_interest) == 0
 
     def test_init_valid_data_array_no_xy_coords(self, valid_data_array_no_xy_coords):
         # When  Then
@@ -553,6 +572,56 @@ class TestMeasurement:
         with pytest.raises(ValueError, match='time_of_flight values must be non-negative.'):
             measurement.time_of_flights = new_tof
 
+    def test_regions_of_interest(self, valid_data_array, valid_roi):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        roi_name = valid_roi.unique_name
+        # Then
+        measurement.regions_of_interest.append(valid_roi)
+        # Expect
+        assert len(measurement.regions_of_interest) == 1
+        assert valid_roi in measurement.regions_of_interest
+        assert roi_name in measurement.regions_of_interest
+        assert measurement.regions_of_interest[0] is valid_roi
+        assert measurement.regions_of_interest[roi_name] is valid_roi
+
+    def test_regions_of_interest_removal_by_index(self, valid_data_array, valid_roi):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.regions_of_interest.append(valid_roi)
+        # Then
+        del measurement.regions_of_interest[0]
+        # Expect
+        assert len(measurement.regions_of_interest) == 0
+        assert valid_roi not in measurement.regions_of_interest
+
+    def test_regions_of_interest_removal_by_name(self, valid_data_array, valid_roi):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.regions_of_interest.append(valid_roi)
+        # Then
+        del measurement.regions_of_interest[valid_roi.unique_name]
+        # Expect
+        assert len(measurement.regions_of_interest) == 0
+        assert valid_roi not in measurement.regions_of_interest
+
+    def test_regions_of_interest_clear(self, valid_data_array, valid_roi):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.regions_of_interest.append(valid_roi)
+        # Then
+        measurement.regions_of_interest.clear()
+        # Expect
+        assert len(measurement.regions_of_interest) == 0
+        assert valid_roi not in measurement.regions_of_interest
+
+    def test_regions_of_interest_setter(self, valid_data_array, valid_roi):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(AttributeError, match='Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.'):  # noqa: E501
+            measurement.regions_of_interest = EasyList([valid_roi])
+
     def test_rebin_full(self, valid_data_array):
         # When
         measurement = Measurement(data_array=valid_data_array)
@@ -849,3 +918,14 @@ class TestMeasurement:
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
         assert sc.identical(spectrum.data, sc.sum(measurement._data_array, dim=['x', 'y']))
+
+    def test_spectrum(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        spectrum = measurement.spectrum
+        # Expect
+        assert isinstance(spectrum, sc.DataArray)
+        assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
+        expected_spectrum = sc.mean(valid_data_array, dim=['x', 'y'])
+        assert sc.identical(spectrum.data, expected_spectrum.data)
