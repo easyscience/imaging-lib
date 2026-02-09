@@ -348,10 +348,12 @@ class Measurement(NewBase):
         Get the list of regions of interest (ROIs) defined for this measurement.
         """
         return self._regions_of_interest
-    
+
     @regions_of_interest.setter
     def regions_of_interest(self, value: EasyList[RectROI]) -> None:
-        raise AttributeError('Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.')  # noqa: E501
+        raise AttributeError(
+            'Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.'  # noqa: E501
+        )  # noqa: E501
 
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """
@@ -541,7 +543,7 @@ class Measurement(NewBase):
         """
         if roi is not None and not isinstance(roi, (RectROI, str)):
             raise TypeError('roi must be a string, None, or an instance of RectROI.')
-        
+
         if isinstance(roi, str):
             if roi in self.regions_of_interest:
                 roi = self.regions_of_interest[roi]
@@ -556,6 +558,41 @@ class Measurement(NewBase):
             x_slice, y_slice = roi.pixel_slice()
             spectrum_data = self._data_array['x_pixels', x_slice]['y_pixels', y_slice].mean(dim=['x', 'y'])
         return spectrum_data
+
+    def spectrum_plot(self, roi: RectROI | str | None = None, **kwargs) -> None:
+        """
+        Plot the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
+        If no ROI is provided, the spectrum is calculated over the entire image.
+
+        This method uses the plopp library for plotting:
+        https://scipp.github.io/plopp/plotting/line-plot.html
+
+        Parameters
+        ----------
+        roi : RectROI | str | None
+            The region of interest for which to plot the spectrum.
+            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
+        kwargs : dict
+            Additional keyword arguments to pass to the plotting function.
+            See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
+        """
+        spectrum_data = self.spectrum(roi=roi)
+
+        plot_kwargs_defaults = {
+            'title': self.display_name + ' - Spectrum',
+            'xlabel': 'Time of Flight',
+            'ylabel': 'Transmission',
+            'ymin': 0.0,
+            'ymax': 3.0,
+        }
+        # Overwrite defaults with any user-provided kwargs
+        plot_kwargs_defaults.update(kwargs)
+
+        if self._is_notebook():
+            return spectrum_data.plot(**plot_kwargs_defaults)
+        else:
+            plot = spectrum_data.plot(**plot_kwargs_defaults)
+            plot.show()
 
     def _is_notebook(self) -> bool:
         """

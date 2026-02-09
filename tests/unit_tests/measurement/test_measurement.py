@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import MutableSequence
-from unittest.mock import MagicMock
 
 import matplotlib
 import numpy as np
@@ -32,7 +31,7 @@ class TestMeasurement:
     @pytest.fixture
     def use_noninteractive_backend(self):
         # Sets a non-interactive backend to Matplotlib for testing.
-        #matplotlib.use('module://ipympl.backend_nbagg')
+        # matplotlib.use('module://ipympl.backend_nbagg')
         matplotlib.use('Agg')
         pp.backends['2d'] = 'matplotlib'
 
@@ -619,7 +618,10 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(AttributeError, match='Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.'):  # noqa: E501
+        with pytest.raises(
+            AttributeError,
+            match='Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.',  # noqa: E501
+        ):  # noqa: E501
             measurement.regions_of_interest = EasyList([valid_roi])
 
     def test_rebin_full(self, valid_data_array):
@@ -810,7 +812,7 @@ class TestMeasurement:
 
         def mock_is_notebook():
             return True
-        
+
         monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
         # Then Expect
         measurement.plot(time_of_flight=time_of_flight)  # Just ensure no exception is raised
@@ -847,8 +849,9 @@ class TestMeasurement:
 
         # Then Expect
         with pytest.raises(
-            RuntimeError, match='The slicer can only be used with an interactive backend. Use `%matplotlib widget` at the start of your notebook.'  # noqa: E501
-            ):
+            RuntimeError,
+            match='The slicer can only be used with an interactive backend. Use `%matplotlib widget` at the start of your notebook.',  # noqa: E501
+        ):
             measurement.slicer_plot()
 
     def test_slicer_runs_in_notebook_with_interactive_backend(self, valid_data_array, use_noninteractive_backend, monkeypatch):
@@ -861,7 +864,7 @@ class TestMeasurement:
         monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
         matplotlib.use('module://ipympl.backend_nbagg')
         # Then Expect
-        measurement.slicer_plot()   # Just ensure no exception is raised
+        measurement.slicer_plot()  # Just ensure no exception is raised
 
     def test_spectrum_inspector_fails_outside_notebook(self, valid_data_array):
         # When
@@ -899,15 +902,15 @@ class TestMeasurement:
         def mock_get_backend():
             return 'widget'
 
-        #mock_spectrum_widget = MagicMock()
+        # mock_spectrum_widget = MagicMock()
 
         monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
         monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-        #monkeypatch.setattr(pp, 'inspector', mock_spectrum_widget)
+        # monkeypatch.setattr(pp, 'inspector', mock_spectrum_widget)
         # Then Expect
         spectrum_widget = measurement.spectrum_inspector()
         assert spectrum_widget is not None
-        #assert mock_spectrum_widget.assert_called_once
+        # assert mock_spectrum_widget.assert_called_once
 
     def test_spectrum_valid(self, valid_data_array):
         # When
@@ -919,7 +922,7 @@ class TestMeasurement:
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
         # Since we set a 3x3 block to zero, the mean should be 0.75 for each tof value
-        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.75)
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.75)
 
     def test_spectrum_valid_with_pixel_roi(self, valid_data_array):
         # When
@@ -932,7 +935,7 @@ class TestMeasurement:
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
         # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
-        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.625)
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.625)
 
     def test_spectrum_valid_with_physical_roi(self, valid_data_array):
         # When
@@ -948,8 +951,8 @@ class TestMeasurement:
             y_pixel_range=(1, 6),
             x_range=(sc.scalar(6, unit='m'), sc.scalar(18, unit='m')),
             y_range=(sc.scalar(4, unit='m'), sc.scalar(8, unit='m')),
-        ) # This ROI corresponds to the same pixels as the previous test, but defined using physical coordinates.
-        # The pixel coordinates are set differently from the physical coordinates to ensure that the physical coordinates 
+        )  # This ROI corresponds to the same pixels as the previous test, but defined using physical coordinates.
+        # The pixel coordinates are set differently from the physical coordinates to ensure that the physical coordinates
         # are actually used in the spectrum calculation and not just ignored.
         # Then
         spectrum = measurement.spectrum(roi=roi)
@@ -957,7 +960,7 @@ class TestMeasurement:
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
         # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
-        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.625)
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.625)
 
     def test_spectrum_valid_roi_by_name(self, valid_data_array):
         # When
@@ -971,7 +974,7 @@ class TestMeasurement:
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
         # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
-        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.625)
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.625)
 
     def test_spectrum_identical_after_rebin(self, valid_data_array):
         # If the roi is defined such that it includes whole rebinned pixels, then the spectrum should be identical before and after rebinning  # noqa: E501
@@ -989,15 +992,15 @@ class TestMeasurement:
         # If the roi is defined such that it includes partial rebinned pixels, then the spectrum should not be identical before and after rebinning  # noqa: E501
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 5)) 
+        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 5))
         spectrum_before_rebin = measurement.spectrum(roi=roi)
         # Then
         measurement.rebin(dimensions={'x': 2, 'y': 2})
         spectrum_after_rebin = measurement.spectrum(roi=roi)
         # Expect
         assert not sc.identical(spectrum_before_rebin, spectrum_after_rebin)
-        assert sc.identical(spectrum_before_rebin.data, sc.ones(dims=['t'], shape=[10])*0.5)
-        assert sc.identical(spectrum_after_rebin.data, sc.ones(dims=['t'], shape=[10])*0.4375)
+        assert sc.identical(spectrum_before_rebin.data, sc.ones(dims=['t'], shape=[10]) * 0.5)
+        assert sc.identical(spectrum_after_rebin.data, sc.ones(dims=['t'], shape=[10]) * 0.4375)
 
     def test_spectrum_invalid_roi_type(self, valid_data_array):
         # When
@@ -1010,5 +1013,7 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(KeyError, match="ROI with unique name 'non_existent_roi' not found in the measurement's list of ROIs."):  # noqa: E501
+        with pytest.raises(
+            KeyError, match="ROI with unique name 'non_existent_roi' not found in the measurement's list of ROIs."
+        ):  # noqa: E501
             measurement.spectrum(roi='non_existent_roi')

@@ -134,6 +134,7 @@ class RectROI(NewBase):
     def y_pixel_start(self, value: int):
         self._check_index(value, 'y_pixel_start')
         self._y_pixel_start = sc.scalar(value)
+
     @property
     def y_pixel_end(self) -> int:
         return self._y_pixel_end.value
