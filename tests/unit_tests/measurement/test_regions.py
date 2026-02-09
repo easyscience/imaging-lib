@@ -265,3 +265,28 @@ class TestRectROI:
         # Then Expect
         with pytest.raises(error, match=message):
             setattr(roi, attribute, invalid_value)
+
+    def test_pixel_slice(self, roi_basic):
+        # When
+        roi = roi_basic
+        # Then
+        pixel_slice = roi.pixel_slice()
+        # Expect
+        assert pixel_slice[0] == slice(sc.scalar(10), sc.scalar(50))
+        assert pixel_slice[1] == slice(sc.scalar(20), sc.scalar(80))
+
+    def test_slice_valid(self, roi_with_physical_coords):
+        # When
+        roi = roi_with_physical_coords
+        # Then
+        physical_slice = roi.slice()
+        # Expect
+        assert physical_slice[0] == slice(sc.scalar(0.0, unit='m'), sc.scalar(10.0, unit='m'))
+        assert physical_slice[1] == slice(sc.scalar(0.0, unit='m'), sc.scalar(5.0, unit='m'))
+
+    def test_slice_no_physical_coords_set(self, roi_basic):
+        # When
+        roi = roi_basic
+        # Then Expect
+        with pytest.raises(ValueError, match='Physical coordinate ranges are not set for this ROI.'):
+            roi.slice()

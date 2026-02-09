@@ -58,8 +58,8 @@ class RectROI(NewBase):
         for index in tuple(x_pixel_range) + tuple(y_pixel_range):
             if index < 0:
                 raise ValueError('Pixel indices must be non-negative integers.')  # Do I need this check?
-        self._x_pixel_start, self._x_pixel_end = x_pixel_range
-        self._y_pixel_start, self._y_pixel_end = y_pixel_range
+        self._x_pixel_start, self._x_pixel_end = sc.array(values=x_pixel_range, dims='x')
+        self._y_pixel_start, self._y_pixel_end = sc.array(values=y_pixel_range, dims='y')
 
     def set_physical_coord_range(
         self, x_range: Sequence[sc.Variable, sc.Variable], y_range: Sequence[sc.Variable, sc.Variable]
@@ -95,7 +95,7 @@ class RectROI(NewBase):
         Returns:
             slice: Two (x,y) slice objects representing the pixel range of the ROI.
         """
-        return slice(self.x_pixel_start, self.x_pixel_end), slice(self.y_pixel_start, self.y_pixel_end)
+        return slice(self._x_pixel_start, self._x_pixel_end), slice(self._y_pixel_start, self._y_pixel_end)
 
     def slice(self) -> slice:
         """Get the slice corresponding to the ROI, using physical coordinates if available.
@@ -104,45 +104,44 @@ class RectROI(NewBase):
             slice: Two (x,y) slice objects representing the range of the ROI.
         """
         if self._has_physical_coords:
-            return slice(self.x_start, self.x_end), slice(self.y_start, self.y_end)
+            return slice(self._x_start, self._x_end), slice(self._y_start, self._y_end)
         else:
             raise ValueError('Physical coordinate ranges are not set for this ROI.')
 
     @property
     def x_pixel_start(self) -> int:
-        return self._x_pixel_start
+        return self._x_pixel_start.value
 
     @x_pixel_start.setter
     def x_pixel_start(self, value: int):
         self._check_index(value, 'x_pixel_start')
-        self._x_pixel_start = value
+        self._x_pixel_start = sc.scalar(value)
 
     @property
     def x_pixel_end(self) -> int:
-        return self._x_pixel_end
+        return self._x_pixel_end.value
 
     @x_pixel_end.setter
     def x_pixel_end(self, value: int):
         self._check_index(value, 'x_pixel_end')
-        self._x_pixel_end = value
+        self._x_pixel_end = sc.scalar(value)
 
     @property
     def y_pixel_start(self) -> int:
-        return self._y_pixel_start
+        return self._y_pixel_start.value
 
     @y_pixel_start.setter
     def y_pixel_start(self, value: int):
         self._check_index(value, 'y_pixel_start')
-        self._y_pixel_start = value
-
+        self._y_pixel_start = sc.scalar(value)
     @property
     def y_pixel_end(self) -> int:
-        return self._y_pixel_end
+        return self._y_pixel_end.value
 
     @y_pixel_end.setter
     def y_pixel_end(self, value: int):
         self._check_index(value, 'y_pixel_end')
-        self._y_pixel_end = value
+        self._y_pixel_end = sc.scalar(value)
 
     @property
     def x_start(self) -> sc.Variable:

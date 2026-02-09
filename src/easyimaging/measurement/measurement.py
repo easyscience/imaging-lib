@@ -539,27 +539,6 @@ class Measurement(NewBase):
         sc.DataArray
             A DataArray containing the spectrum data.
         """
-        return self._spectrum(roi=roi, copy=True)
-
-    def _spectrum(self, roi: RectROI | str | None = None, copy: bool = False) -> sc.DataArray:
-        """
-        Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
-        If no ROI is provided, the spectrum is calculated over the entire image.
-
-        Parameters
-        ----------
-        roi : RectROI | str | None
-            The region of interest for which to extract the spectrum.
-            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
-
-        copy : bool
-            Whether to return a copy of the spectrum data.
-
-        Returns
-        -------
-        sc.DataArray
-            A DataArray containing the spectrum data.
-        """
         if roi is not None and not isinstance(roi, (RectROI, str)):
             raise TypeError('roi must be a string, None, or an instance of RectROI.')
         
@@ -568,7 +547,7 @@ class Measurement(NewBase):
                 roi = self.regions_of_interest[roi]
             else:
                 raise KeyError(f"ROI with unique name '{roi}' not found in the measurement's list of ROIs.")
-        elif roi is None:
+        if roi is None:
             spectrum_data = self._data_array.mean(dim=['x', 'y'])
         elif self._has_physical_coords and roi._has_physical_coords:
             x_slice, y_slice = roi.slice()
@@ -576,7 +555,7 @@ class Measurement(NewBase):
         else:
             x_slice, y_slice = roi.pixel_slice()
             spectrum_data = self._data_array['x_pixels', x_slice]['y_pixels', y_slice].mean(dim=['x', 'y'])
-        return spectrum_data.copy() if copy else spectrum_data
+        return spectrum_data
 
     def _is_notebook(self) -> bool:
         """

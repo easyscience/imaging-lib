@@ -20,7 +20,7 @@ class TestMeasurement:
         tof = sc.arange('t', 0, 10, 1, unit='s')
         x = sc.arange('x', 0, 7, 1, unit='m')
         y = sc.arange('y', 0, 7, 1, unit='m')
-        data = sc.zeros(dims=('x', 'y', 't'), shape=(6, 6, 10))
+        data = sc.ones(dims=['x', 'y', 't'], shape=[6, 6, 10])
         return sc.DataArray(data=data, coords={'tof': tof, 'x': x, 'y': y})
 
     @pytest.fixture
@@ -911,21 +911,104 @@ class TestMeasurement:
 
     def test_spectrum_valid(self, valid_data_array):
         # When
-        measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(xmin=1, xmax=4, ymin=2, ymax=5)
-        spectrum = measurement.spectrum
-        # Then Expect
-        assert isinstance(spectrum, sc.DataArray)
-        assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
-        assert sc.identical(spectrum.data, sc.sum(measurement._data_array, dim=['x', 'y']))
-
-    def test_spectrum(self, valid_data_array):
-        # When
+        valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
         # Then
-        spectrum = measurement.spectrum
+        spectrum = measurement.spectrum()
         # Expect
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
-        expected_spectrum = sc.mean(valid_data_array, dim=['x', 'y'])
-        assert sc.identical(spectrum.data, expected_spectrum.data)
+        # Since we set a 3x3 block to zero, the mean should be 0.75 for each tof value
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.75)
+
+    def test_spectrum_valid_with_pixel_roi(self, valid_data_array):
+        # When
+        valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
+        measurement = Measurement(data_array=valid_data_array)
+        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
+        # Then
+        spectrum = measurement.spectrum(roi=roi)
+        # Expect
+        assert isinstance(spectrum, sc.DataArray)
+        assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
+        # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.625)
+
+    def test_spectrum_valid_with_physical_roi(self, valid_data_array):
+        # When
+        valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
+        measurement = Measurement(data_array=valid_data_array)
+        # Make the physical coordinates different from the pixel coordinates to ensure they are used correctly in the spectrum calculation  # noqa: E501
+        measurement.set_physical_coord_positions(
+            x_positions=sc.arange('x', 0, 21, 3, unit='m'),
+            y_positions=sc.arange('y', 0, 14, 2, unit='m'),
+        )
+        roi = RectROI(
+            x_pixel_range=(1, 6),
+            y_pixel_range=(1, 6),
+            x_range=(sc.scalar(6, unit='m'), sc.scalar(18, unit='m')),
+            y_range=(sc.scalar(4, unit='m'), sc.scalar(8, unit='m')),
+        ) # This ROI corresponds to the same pixels as the previous test, but defined using physical coordinates.
+        # The pixel coordinates are set differently from the physical coordinates to ensure that the physical coordinates 
+        # are actually used in the spectrum calculation and not just ignored.
+        # Then
+        spectrum = measurement.spectrum(roi=roi)
+        # Expect
+        assert isinstance(spectrum, sc.DataArray)
+        assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
+        # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.625)
+
+    def test_spectrum_valid_roi_by_name(self, valid_data_array):
+        # When
+        valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
+        measurement = Measurement(data_array=valid_data_array)
+        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi')
+        # Then
+        measurement.regions_of_interest.append(roi)
+        spectrum = measurement.spectrum(roi='test_roi')
+        # Expect
+        assert isinstance(spectrum, sc.DataArray)
+        assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
+        # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
+        assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10])*0.625)
+
+    def test_spectrum_identical_after_rebin(self, valid_data_array):
+        # If the roi is defined such that it includes whole rebinned pixels, then the spectrum should be identical before and after rebinning  # noqa: E501
+        valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
+        measurement = Measurement(data_array=valid_data_array)
+        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
+        spectrum_before_rebin = measurement.spectrum(roi=roi)
+        # Then
+        measurement.rebin(dimensions={'x': 2, 'y': 2})
+        spectrum_after_rebin = measurement.spectrum(roi=roi)
+        # Expect
+        assert sc.identical(spectrum_before_rebin, spectrum_after_rebin)
+
+    def test_spectrum_not_identical_after_rebin(self, valid_data_array):
+        # If the roi is defined such that it includes partial rebinned pixels, then the spectrum should not be identical before and after rebinning  # noqa: E501
+        valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
+        measurement = Measurement(data_array=valid_data_array)
+        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 5)) 
+        spectrum_before_rebin = measurement.spectrum(roi=roi)
+        # Then
+        measurement.rebin(dimensions={'x': 2, 'y': 2})
+        spectrum_after_rebin = measurement.spectrum(roi=roi)
+        # Expect
+        assert not sc.identical(spectrum_before_rebin, spectrum_after_rebin)
+        assert sc.identical(spectrum_before_rebin.data, sc.ones(dims=['t'], shape=[10])*0.5)
+        assert sc.identical(spectrum_after_rebin.data, sc.ones(dims=['t'], shape=[10])*0.4375)
+
+    def test_spectrum_invalid_roi_type(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(TypeError, match='roi must be a string, None, or an instance of RectROI.'):
+            measurement.spectrum(roi=3.4)
+
+    def test_spectrum_invalid_roi_name(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(KeyError, match="ROI with unique name 'non_existent_roi' not found in the measurement's list of ROIs."):  # noqa: E501
+            measurement.spectrum(roi='non_existent_roi')
