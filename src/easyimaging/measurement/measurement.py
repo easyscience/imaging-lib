@@ -521,7 +521,7 @@ class Measurement(NewBase):
         inspector_kwargs_defaults.update(kwargs)
 
         if self._is_notebook():
-            return pp.inspector(self._data_array, dim='t', orientation='vertical', **inspector_kwargs_defaults)
+            return pp.inspector(self._data_array, dim='t', orientation='vertical', operation='mean', **inspector_kwargs_defaults)
         else:
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
 

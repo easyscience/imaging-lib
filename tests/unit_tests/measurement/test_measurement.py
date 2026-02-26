@@ -934,7 +934,7 @@ class TestMeasurement:
         # Expect
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
-        # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
+        # Only 5 out of the 8 pixels in the ROI are non-zero, so the mean should be 0.625 for each tof value
         assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.625)
 
     def test_spectrum_valid_with_physical_roi(self, valid_data_array):
@@ -959,7 +959,7 @@ class TestMeasurement:
         # Expect
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
-        # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
+        # Only 5 out of the 8 pixels in the ROI are non-zero, so the mean should be 0.625 for each tof value
         assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.625)
 
     def test_spectrum_valid_roi_by_name(self, valid_data_array):
@@ -973,7 +973,7 @@ class TestMeasurement:
         # Expect
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
-        # Only 5 out of the 8 pixels in the ROI are zero, so the mean should be 0.625 for each tof value
+        # Only 5 out of the 8 pixels in the ROI are non-zero, so the mean should be 0.625 for each tof value
         assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.625)
 
     def test_spectrum_identical_after_rebin(self, valid_data_array):
@@ -1001,6 +1001,22 @@ class TestMeasurement:
         assert not sc.identical(spectrum_before_rebin, spectrum_after_rebin)
         assert sc.identical(spectrum_before_rebin.data, sc.ones(dims=['t'], shape=[10]) * 0.5)
         assert sc.identical(spectrum_after_rebin.data, sc.ones(dims=['t'], shape=[10]) * 0.4375)
+
+    @pytest.mark.parametrize('value', [np.nan, np.inf], ids=['nan', 'inf'])
+    def test_spectrum_roi_with_masked_data(self, valid_data_array, value):
+        # When
+        valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
+        valid_data_array['x', 3]['y', 3] = sc.full(value=value, dims=['t'], shape=[10])
+        measurement = Measurement(data_array=valid_data_array)
+        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
+        # Then
+        spectrum = measurement.spectrum(roi=roi)
+        # Expect
+        assert isinstance(spectrum, sc.DataArray)
+        print(measurement._data_array.data['t', 0])
+        assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
+        # Only 4 out of the 7 pixels in the ROI are zero, so the mean should be 4/6 for each tof value
+        assert sc.identical(spectrum.data, sc.full(value=4.0/7.0,dims=['t'], shape=[10]))
 
     def test_spectrum_invalid_roi_type(self, valid_data_array):
         # When

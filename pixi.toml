@@ -51,5 +51,5 @@ docs-clean = "rm -rf docs/_build/"
 [pypi-dependencies] # == [feature.default.pypi-dependencies]
 # Editable install of the package itself
 easyimaging = { path = ".", editable = true }
-easyscience = { git = "https://github.com/easyscience/corelib", branch = "easylist2" }
+easyscience = { git = "https://github.com/easyscience/corelib", branch = "develop" }
 
