@@ -201,6 +201,21 @@ class TestRectROI:
             setattr(roi, attribute, invalid_value)
 
     @pytest.mark.parametrize(
+        'attribute',
+        [
+            'x_start',
+            'x_end',
+            'y_start',
+            'y_end',
+        ])
+    def test_physical_coordinate_getter_not_set_raises(self, roi_basic, attribute):
+        # When
+        roi = roi_basic
+        # Then Expect
+        with pytest.raises(ValueError, match='Physical coordinate ranges are not set for this ROI.'):
+            getattr(roi, attribute)
+
+    @pytest.mark.parametrize(
         'attribute, scalar',
         [
             ('x_start', sc.scalar(0.0, unit='m')),

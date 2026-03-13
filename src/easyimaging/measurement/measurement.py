@@ -13,7 +13,6 @@ import plopp as pp
 import scipp as sc
 from easyscience.base_classes import EasyList
 from easyscience.base_classes import NewBase
-from plopp.widgets import RectangleTool
 from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
@@ -397,16 +396,6 @@ class Measurement(NewBase):
                 )  # noqa: E501
             sizes[dim] = int(self._data_array.sizes[dim] // value)  # Convert to target size
         temp_array = essimaging.tools.analysis.resize(self._data_array, sizes=sizes, method='mean')
-        # ------------------------------ To be removed when scipp supports resizing with coordinates. -------------------------
-        if 'x' in dimensions:
-            temp_array.coords['x_pixels'] = self._data_array.coords['x_pixels'][:: dimensions['x']]  # Bin-edge
-            if 'x' in self._full_data_array.coords:
-                temp_array.coords['x'] = self._data_array.coords['x'][:: dimensions['x']]  # Bin-edge
-        if 'y' in dimensions:
-            temp_array.coords['y_pixels'] = self._data_array.coords['y_pixels'][:: dimensions['y']]  # Bin-edge
-            if 'y' in self._full_data_array.coords:
-                temp_array.coords['y'] = self._data_array.coords['y'][:: dimensions['y']]  # Bin-edge
-        # ---------------------------------------------------------------------------------------------------------------------
         non_finite_mask = ~sc.isfinite(temp_array.data)
         temp_array.masks['non_finite'] = non_finite_mask
         self._rebinned_data_array = temp_array
