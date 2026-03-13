@@ -146,7 +146,10 @@ class RectROI(NewBase):
 
     @property
     def x_start(self) -> sc.Variable:
-        return self._x_start.copy()
+        if self._has_physical_coords:
+            return self._x_start.copy()
+        else:
+            raise ValueError('Physical coordinate ranges are not set for this ROI.')
 
     @x_start.setter
     def x_start(self, value: sc.Variable):
@@ -156,7 +159,10 @@ class RectROI(NewBase):
 
     @property
     def x_end(self) -> sc.Variable:
-        return self._x_end.copy()
+        if self._has_physical_coords:
+            return self._x_end.copy()
+        else:
+            raise ValueError('Physical coordinate ranges are not set for this ROI.')
 
     @x_end.setter
     def x_end(self, value: sc.Variable):
@@ -166,7 +172,10 @@ class RectROI(NewBase):
 
     @property
     def y_start(self) -> sc.Variable:
-        return self._y_start.copy()
+        if self._has_physical_coords:
+            return self._y_start.copy()
+        else:
+            raise ValueError('Physical coordinate ranges are not set for this ROI.')
 
     @y_start.setter
     def y_start(self, value: sc.Variable):
@@ -176,7 +185,10 @@ class RectROI(NewBase):
 
     @property
     def y_end(self) -> sc.Variable:
-        return self._y_end.copy()
+        if self._has_physical_coords:
+            return self._y_end.copy()
+        else:
+            raise ValueError('Physical coordinate ranges are not set for this ROI.')
 
     @y_end.setter
     def y_end(self, value: sc.Variable):

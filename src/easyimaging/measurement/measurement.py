@@ -3,6 +3,7 @@
 #  © 2021-2026 Contributors to the EasyImaging project <https://github.com/easyScience/EasyImaging>
 from __future__ import annotations
 
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -12,10 +13,12 @@ import plopp as pp
 import scipp as sc
 from easyscience.base_classes import EasyList
 from easyscience.base_classes import NewBase
+from plopp.widgets import RectangleTool
 from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
 
+from ..utils import _to_edges
 from .regions import RectROI
 
 Numeric = int | float
@@ -63,9 +66,9 @@ class Measurement(NewBase):
 
         # Ensure x and y coordinates are in edge format for consistent ROIs across rebinning
         if self._has_physical_coords and not self._full_data_array.coords.is_edges('x'):
-            self._full_data_array.coords['x'] = Measurement._to_edges(self._full_data_array.coords['x'])
+            self._full_data_array.coords['x'] = _to_edges(self._full_data_array.coords['x'])
         if self._has_physical_coords and not self._full_data_array.coords.is_edges('y'):
-            self._full_data_array.coords['y'] = Measurement._to_edges(self._full_data_array.coords['y'])
+            self._full_data_array.coords['y'] = _to_edges(self._full_data_array.coords['y'])
 
         # Fallback for when no x/y coordinates are provided
         # For tracking original pixels when rebinning, add pixel indices as coordinates
@@ -214,7 +217,7 @@ class Measurement(NewBase):
         if not self._has_physical_coords:
             raise ValueError(
                 'Cannot set x_positions before setting all physical coordinate positions. '
-                'Please use the set_physical_coord_range method.'
+                'Please use the set_physical_coord_positions method.'
             )
         value = self._validate_provided_coord(
             self._data_array,
@@ -250,7 +253,7 @@ class Measurement(NewBase):
         if not self._has_physical_coords:
             raise ValueError(
                 'Cannot set y_positions before setting all physical coordinate positions. '
-                'Please use the set_physical_coord_range method.'
+                'Please use the set_physical_coord_positions method.'
             )
         value = self._validate_provided_coord(
             self._data_array,
@@ -375,7 +378,7 @@ class Measurement(NewBase):
             return
         sizes = dimensions.copy()
         if 't' in dimensions:
-            raise ValueError("Rebinning of the time-of-flight ('t') dimension is yet not supported.")
+            raise ValueError("Rebinning of the time-of-flight ('t') dimension is not yet supported.")
         for dim, value in dimensions.items():
             if not isinstance(dim, str):
                 raise TypeError(f'Dimension keys must be strings. Got {type(dim)} for {dim} instead.')
@@ -446,6 +449,7 @@ class Measurement(NewBase):
             'cmin': 0.0,
             'cmax': 3.0,
             'mask_color': 'red',
+            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
         }
         # Overwrite defaults with any user-provided kwargs
         plot_kwargs_defaults.update(kwargs)
@@ -485,13 +489,15 @@ class Measurement(NewBase):
             'cmin': 0.0,
             'cmax': 3.0,
             'mask_color': 'red',
-            'coords': 'tof',
+            'keep': ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
+            'mode': 'single',
+            'coords' : ['x_pixels', 'y_pixels', 'tof'] if not self._has_physical_coords else ['x', 'y', 'tof'],
         }
         # Overwrite defaults with any user-provided kwargs
         slicer_kwargs_defaults.update(kwargs)
 
         if self._is_notebook():
-            return pp.slicer(self._data_array, keep=['x', 'y'], **slicer_kwargs_defaults)
+            return pp.slicer(self._data_array, **slicer_kwargs_defaults)
         else:
             raise RuntimeError('Interactive slicer is only supported in Jupyter notebooks.')
 
@@ -516,15 +522,157 @@ class Measurement(NewBase):
             'mask_color': 'red',
             'ymax': 3.0,
             'ymin': 0.0,
+            'dim': 't',
+            'orientation': 'vertical',
+            'operation': 'mean',
+            'mode': 'point',
+            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
         }
         # Overwrite defaults with any user-provided kwargs
         inspector_kwargs_defaults.update(kwargs)
 
         if self._is_notebook():
-            return pp.inspector(self._data_array, dim='t', orientation='vertical', operation='mean', **inspector_kwargs_defaults)
+            return pp.inspector(self._data_array, **inspector_kwargs_defaults)
         else:
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
 
+    def roi_creator(self, **kwargs) -> None:
+        """
+        Launch an interactive ROI creator for defining regions of interest on the measurement data.
+
+        This method uses the plopp library for interactive ROI creation:
+        https://scipp.github.io/plopp/plotting/roi-selector.html
+
+        Controls:
+        - Left-click to make new rectangles
+        - Left-click and hold on rectangle vertices to resize rectangle
+        - Right-click and hold to drag/move the entire rectangle
+        - Middle-click to delete rectangle
+
+        Parameters
+        ----------
+        kwargs : dict
+            Additional keyword arguments to pass to the ROI creator function.
+            See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
+        """
+
+        if not self._is_notebook():
+            raise RuntimeError('Interactive ROI creator is only supported in Jupyter notebooks.')
+
+        roi_selector_kwargs_defaults = {
+            'title': self.display_name + ' - ROI Creator',
+            'clabel': 'Transmission',
+            'cmin': 0.0,
+            'cmax': 3.0,
+            'mask_color': 'red',
+            'ymax': 3.0,
+            'ymin': 0.0,
+            'dim': 't',
+            'orientation': 'vertical',
+            'operation': 'mean',
+            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
+        }
+        # Overwrite defaults with any user-provided kwargs
+        roi_selector_kwargs_defaults.update(kwargs)
+            
+        plots = pp.inspector(
+            self._data_array, 
+            mode='rectangle',
+            **roi_selector_kwargs_defaults
+            )
+
+        # -------------------------------------------------------------------------------------------------
+        # -------------------------- Plot the existing ROIs on the plot -----------------------------------
+        # -------------------------------------------------------------------------------------------------
+
+        for roi in self.regions_of_interest:
+            if self._has_physical_coords and roi._has_physical_coords:
+                x_start = roi.x_start.to(unit=self._data_array.coords['x'].unit).value
+                y_start = roi.y_start.to(unit=self._data_array.coords['y'].unit).value
+                x_end = roi.x_end.to(unit=self._data_array.coords['x'].unit).value
+                y_end = roi.y_end.to(unit=self._data_array.coords['y'].unit).value
+            elif self._has_physical_coords and not roi._has_physical_coords:
+                x_slice, y_slice = roi.pixel_slice()
+                sliced_array = self._data_array['x_pixels', x_slice]['y_pixels', y_slice]
+                x_start = sliced_array.coords['x'].min().value
+                y_start = sliced_array.coords['y'].min().value
+                x_end = sliced_array.coords['x'].max().value
+                y_end = sliced_array.coords['y'].max().value
+            else:
+                x_start = roi.x_pixel_start
+                y_start = roi.y_pixel_start
+                x_end = roi.x_pixel_end
+                y_end = roi.y_pixel_end
+            plots[0].toolbar['inspect']._tool.start()
+            plots[0].toolbar['inspect']._tool.click(x=x_start, y=y_start, button=1) # button 1 is left-click
+            plots[0].toolbar['inspect']._tool.click(x=x_end, y=y_end, button=1)
+            plots[0].toolbar['inspect']._tool.start()
+            if hasattr(roi, '_rect_ids'):
+                roi._rect_ids.append(plots[0].toolbar['inspect']._tool.children[-1].id)  # Store the rectangle ID for reference when dragging corners  # noqa: E501
+            else:
+                roi._rect_ids = [plots[0].toolbar['inspect']._tool.children[-1].id]
+
+        # -------------------------------------------------------------------------------------------------
+        # ------------- Define callbacks for creating, editing, and deleting ROIs -------------------------
+        # -------------------------------------------------------------------------------------------------
+
+        # The callback to be used by the Scipp RectangleTool when drawing a new rectangle.
+        def create_rectangle_roi(rect, roi_list, data_array):
+            # Get the pixel and physical coordinate ranges from the rectangle vertices using the helper method.
+            x_pixel_range, y_pixel_range, x_range, y_range = Measurement._ranges_from_rectangle(rect, data_array)
+            new_roi = RectROI(
+                x_pixel_range=x_pixel_range,
+                y_pixel_range=y_pixel_range,
+                x_range=x_range,
+                y_range=y_range,
+            )
+            new_roi._rect_ids = [rect.id]  # Store the rectangle ID for reference when dragging corners
+            roi_list.append(new_roi)
+
+        # The callback to be used by the Scipp RectangleTool when dragging the corners of an existing rectangle.
+        def edit_rectangle_roi(rect, roi_list, data_array):
+            x_pixel_range, y_pixel_range, x_range, y_range = Measurement._ranges_from_rectangle(rect, data_array)
+            # Find the ROI corresponding to the rectangle being edited based on the stored rectangle ID.
+            for roi in roi_list:
+                if hasattr(roi, '_rect_ids') and rect.id in roi._rect_ids:
+                    matching_roi = roi
+                    break
+
+            matching_roi.set_pixel_coord_range(x_pixel_range, y_pixel_range)
+            if x_range is not None:
+                matching_roi.set_physical_coord_range(x_range, y_range)
+
+        def delete_rectangle_roi(rect, roi_list):
+            for roi in roi_list:
+                if hasattr(roi, '_rect_ids') and rect.id in roi._rect_ids:
+                    roi_list.remove(roi)
+                    break
+
+        # -------------------------------------------------------------------------------------------------
+        # -------------------------- Connect the callbacks to the RectangleTool ---------------------------
+        # -------------------------------------------------------------------------------------------------
+
+        plots[0].toolbar['inspect']._tool.on_create(partial(
+            create_rectangle_roi, 
+            roi_list=self.regions_of_interest, 
+            data_array=self._data_array
+            ))
+        
+        plots[0].toolbar['inspect']._tool.on_change(partial(
+            edit_rectangle_roi, 
+            roi_list=self.regions_of_interest,
+            data_array=self._data_array
+            ))
+        
+        plots[0].toolbar['inspect']._tool.on_remove(partial(
+            delete_rectangle_roi,
+            roi_list=self.regions_of_interest
+            ))
+
+        plots[0].toolbar['inspect'].tooltip = 'Activate ROI creator tool'
+
+        return plots
+        
     def spectrum(self, roi: RectROI | str | None = None) -> sc.DataArray:
         """
         Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
@@ -626,22 +774,6 @@ class Measurement(NewBase):
                 f"'{coord_name}' coordinate must have a unit of {expected_dim_string}, such as ('{expected_unit}')."
             ) from None  # noqa: E501
 
-    # Does this need to be moved somewhere else? Maybe Corelib?
-    @staticmethod
-    def _to_edges(centers: sc.Variable) -> sc.Variable:
-        """
-        Convenience method to convert center coordinates to edge coordinates.
-        """
-        interior_edges = sc.midpoints(centers)
-        return sc.concat(
-            [
-                2 * centers[0] - interior_edges[0],
-                interior_edges,
-                2 * centers[-1] - interior_edges[-1],
-            ],
-            dim=centers.dim,
-        )
-
     @staticmethod
     def _validate_provided_coord(
         data_array: sc.DataArray,
@@ -663,3 +795,29 @@ class Measurement(NewBase):
         except UnitError:
             raise UnitError(f"{coord_name} must have a unit of {expected_dim_string}, such as '{expected_unit}'.") from None
         return coord
+
+    @staticmethod
+    def _ranges_from_rectangle(rect, data_array: sc.DataArray) -> tuple[tuple[int, int], None] | tuple[tuple[int, int], tuple[sc.Variable, sc.Variable]]:  # noqa: E501
+        # To be used in the roi_selector method to convert the rectangle vertices to pixel and 
+        # physical coordinate ranges for the new ROI.
+        x_vertex_list, y_vertex_list = rect.vertices
+        if 'x' not in data_array.coords: # If 'x' exists, so does 'y' due to our constructor.
+            x_pixel_range = (int(min(x_vertex_list)), int(max(x_vertex_list)))
+            y_pixel_range = (int(min(y_vertex_list)), int(max(y_vertex_list)))
+            x_range = None
+            y_range = None
+        # Otherwise they're physical coordinates that we need to convert to pixel indices for the ROI.
+        else:
+            x_unit = data_array.coords['x'].unit
+            y_unit = data_array.coords['y'].unit
+            x_range = (sc.scalar(min(x_vertex_list), unit=x_unit), sc.scalar(max(x_vertex_list), unit=x_unit))
+            y_range = (sc.scalar(min(y_vertex_list), unit=y_unit), sc.scalar(max(y_vertex_list), unit=y_unit))
+
+            sliced_data_array = data_array['x', x_range[0]:x_range[1]]['y', y_range[0]:y_range[1]]
+
+            sliced_x_pixels = sliced_data_array.coords['x_pixels'].values
+            sliced_y_pixels = sliced_data_array.coords['y_pixels'].values
+            x_pixel_range = (int(min(sliced_x_pixels)), int(max(sliced_x_pixels)))
+            y_pixel_range = (int(min(sliced_y_pixels)), int(max(sliced_y_pixels)))
+
+        return x_pixel_range, y_pixel_range, x_range, y_range
