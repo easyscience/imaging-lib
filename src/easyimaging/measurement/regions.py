@@ -197,6 +197,9 @@ class RectROI(NewBase):
         self._y_end = value
 
     def _check_input_sequence(self, value: Sequence, name: str, typename: str, expected_type: any) -> None:
+        """
+        Check if the input value is a sequence of the expected type and length.
+        """
         if not isinstance(value, Sequence) or len(value) != 2:
             raise TypeError(f'{name} must be a tuple or a list of two {typename}, got a {type(value).__name__}.')
         if not (isinstance(value[0], expected_type) and isinstance(value[1], expected_type)):
@@ -206,12 +209,18 @@ class RectROI(NewBase):
             )
 
     def _check_index(self, value: int, name: str) -> None:
+        """
+        Check if the input value is a valid index (non-negative integer).
+        """
         if not isinstance(value, int):
             raise TypeError(f'{name} indice must be an integer.')
         if value < 0:
             raise ValueError(f'{name} indice must be non-negative.')
 
     def _check_scalar(self, value: sc.Variable, name: str) -> None:
+        """
+        Check if the input value is a scipp scalar with a unit of length.
+        """
         if value.dims:
             raise ValueError(f'{name} must be a scipp scalar (0-dimensional Variable).')
         try:
@@ -221,6 +230,9 @@ class RectROI(NewBase):
             raise UnitError(f"{name} must be a scipp scalar with a unit of length (e.g., 'm').") from e
 
     def _single_coord_setter_check(self, value: sc.Variable, name: str) -> None:
+        """
+        Check if the input value is a scipp scalar and if physical coordinates are set.
+        """
         if not isinstance(value, sc.Variable):
             raise TypeError(f'{name} must be a scipp scalar.')
         if not self._has_physical_coords:

@@ -1,3 +1,4 @@
+from copy import copy
 from pathlib import Path
 from typing import MutableSequence
 
@@ -466,7 +467,7 @@ class TestMeasurement:
         with pytest.raises(ValueError, match=f'Cannot set {coordinate} before setting all physical coordinate positions.'):
             setattr(measurement, coordinate, sc.arange('x', 0, 10, 1, unit='m'))
 
-    # Just a single test, other test-cases is covered by from_tiff_stack tests as both uses _validate_provided_coord()
+    # Just a single test, other test-cases are covered by from_tiff_stack tests as both use _validate_provided_coord()
     @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
     def test_positions_setter_invalid_coordinate(self, valid_data_array, coordinate):
         # When
@@ -489,7 +490,7 @@ class TestMeasurement:
         assert sc.identical(measurement._data_array.coords['y'], new_y_positions)
         assert measurement._has_physical_coords
 
-    # Just a single test for each, other test-cases is covered by from_tiff_stack tests as both uses _validate_provided_coord()
+    # Just a single test for each, other test-cases are covered by from_tiff_stack tests as both use _validate_provided_coord()
     @pytest.mark.parametrize(
         'coordinates, coordinate_wrong',
         [
@@ -587,12 +588,15 @@ class TestMeasurement:
     def test_regions_of_interest_removal_by_index(self, valid_data_array, valid_roi):
         # When
         measurement = Measurement(data_array=valid_data_array)
+        extra_roi = copy(valid_roi)
         measurement.regions_of_interest.append(valid_roi)
+        measurement.regions_of_interest.append(extra_roi)  # Add a second ROI to ensure only the correct one is removed
         # Then
         del measurement.regions_of_interest[0]
         # Expect
-        assert len(measurement.regions_of_interest) == 0
+        assert len(measurement.regions_of_interest) == 1
         assert valid_roi not in measurement.regions_of_interest
+        assert extra_roi in measurement.regions_of_interest
 
     def test_regions_of_interest_removal_by_name(self, valid_data_array, valid_roi):
         # When
