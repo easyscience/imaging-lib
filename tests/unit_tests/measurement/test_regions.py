@@ -305,3 +305,86 @@ class TestRectROI:
         # Then Expect
         with pytest.raises(ValueError, match='Physical coordinate ranges are not set for this ROI.'):
             roi.slice()
+
+    def test_to_dict_only_pixel_ranges(self, roi_basic):
+        # When Then
+        roi_dict = roi_basic.to_dict()
+        # Expect
+        assert roi_dict['x_pixel_range'] == [roi_basic.x_pixel_start, roi_basic.x_pixel_end]
+        assert roi_dict['y_pixel_range'] == [roi_basic.y_pixel_start, roi_basic.y_pixel_end]
+
+    def test_to_dict_with_physical_coords(self, roi_with_physical_coords):
+        # When Then
+        roi_dict = roi_with_physical_coords.to_dict()
+        # Expect
+        assert roi_dict['x_pixel_range'] == [roi_with_physical_coords.x_pixel_start, roi_with_physical_coords.x_pixel_end]
+        assert roi_dict['y_pixel_range'] == [roi_with_physical_coords.y_pixel_start, roi_with_physical_coords.y_pixel_end]
+        assert isinstance(roi_dict['x_range'], list) and len(roi_dict['x_range']) == 2
+        assert isinstance(roi_dict['y_range'], list) and len(roi_dict['y_range']) == 2
+        assert isinstance(roi_dict['x_range'][0], dict) and roi_dict['x_range'][0]['@module'] == 'scipp'
+        assert isinstance(roi_dict['y_range'][0], dict) and roi_dict['y_range'][0]['@module'] == 'scipp'
+        assert roi_dict['display_name'] == roi_with_physical_coords.display_name
+        assert roi_dict['unique_name'] == roi_with_physical_coords.unique_name
+
+    def test_to_dict_skip_parameter(self, roi_with_physical_coords):
+        # When Then
+        roi_dict = roi_with_physical_coords.to_dict(skip='unique_name')
+        # Expect
+        assert 'unique_name' not in roi_dict
+
+    def test_from_dict_only_pixel_ranges(self):
+        # Given
+        input_dict = {
+            '@module': 'easyimaging.measurement.regions',
+            '@class': 'RectROI',
+            'x_pixel_range': [10, 50],
+            'y_pixel_range': [20, 80],
+        }
+        # When Then
+        roi = RectROI.from_dict(input_dict)
+        # Expect
+        assert roi.x_pixel_start == 10
+        assert roi.x_pixel_end == 50
+        assert roi.y_pixel_start == 20
+        assert roi.y_pixel_end == 80
+        assert roi._has_physical_coords is False
+
+    def test_from_dict_with_physical_coords(self, roi_with_physical_coords):
+        # Given
+        roi = roi_with_physical_coords
+        input_dict = roi.to_dict(skip='unique_name')  # Skip unique_name to allow auto-generation in from_dict
+        # When Then
+        roi_from_dict = RectROI.from_dict(input_dict)
+        # Expect
+        assert roi_from_dict.x_pixel_start == roi.x_pixel_start
+        assert roi_from_dict.x_pixel_end == roi.x_pixel_end
+        assert roi_from_dict.y_pixel_start == roi.y_pixel_start
+        assert roi_from_dict.y_pixel_end == roi.y_pixel_end
+        assert roi_from_dict._has_physical_coords is True
+        assert sc.identical(roi_from_dict.x_start, roi.x_start)
+        assert sc.identical(roi_from_dict.x_end, roi.x_end)
+        assert sc.identical(roi_from_dict.y_start, roi.y_start)
+        assert sc.identical(roi_from_dict.y_end, roi.y_end)
+        assert 'unique_name' not in input_dict
+        assert roi_from_dict.display_name == roi.display_name
+        assert roi_from_dict.unique_name != roi.unique_name
+
+    def test_copy(self, roi_with_physical_coords):
+        # When
+        roi = roi_with_physical_coords
+        # Then
+        roi_copy = roi.__copy__()
+        # Expect
+        assert roi_copy is not roi  # Ensure it's a different instance
+        assert roi_copy.x_pixel_start == roi.x_pixel_start
+        assert roi_copy.x_pixel_end == roi.x_pixel_end
+        assert roi_copy.y_pixel_start == roi.y_pixel_start
+        assert roi_copy.y_pixel_end == roi.y_pixel_end
+        assert roi_copy._has_physical_coords == roi._has_physical_coords
+        if roi._has_physical_coords:
+            assert sc.identical(roi_copy.x_start, roi.x_start)
+            assert sc.identical(roi_copy.x_end, roi.x_end)
+            assert sc.identical(roi_copy.y_start, roi.y_start)
+            assert sc.identical(roi_copy.y_end, roi.y_end)
+        assert roi_copy.display_name == roi.display_name
+        assert roi_copy.unique_name != roi.unique_name  # unique_name should be different in the copy

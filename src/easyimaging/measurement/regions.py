@@ -3,6 +3,9 @@
 #  © 2021-2026 Contributors to the EasyImaging project <https://github.com/easyScience/EasyImaging>
 from __future__ import annotations
 
+from typing import Any
+from typing import Dict
+from typing import List
 from typing import Sequence
 
 import scipp as sc
@@ -240,6 +243,45 @@ class RectROI(NewBase):
                 f'Cannot set {name} before setting all physical coordinate ranges. '
                 'Please use the set_physical_coord_range method.'
             )
+
+    def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
+        """Convert the RectROI instance to a dictionary representation."""
+        if skip is None:
+            skip = []
+        elif isinstance(skip, str):
+            skip = [skip]
+        skip = list(skip)  # Create a copy of the skip list to avoid modifying the original
+        skip.extend(['x_pixel_range', 'y_pixel_range', 'x_range', 'y_range'])
+        out_dict = super().to_dict(skip=skip)
+        out_dict['x_pixel_range'] = [int(self.x_pixel_start), int(self.x_pixel_end)]
+        out_dict['y_pixel_range'] = [int(self.y_pixel_start), int(self.y_pixel_end)]
+        if self._has_physical_coords:
+            out_dict['x_range'] = [{'@module': 'scipp',
+                                    '@version': sc.__version__,
+                                    '@class' : 'scalar',
+                                    'dict' : sc.to_dict(self.x_start)}, 
+                                    {'@module': 'scipp',
+                                    '@version': sc.__version__,
+                                    '@class' : 'scalar',
+                                    'dict' : sc.to_dict(self.x_end)}]
+            out_dict['y_range'] = [{'@module': 'scipp',
+                                    '@version': sc.__version__,
+                                    '@class' : 'scalar',
+                                    'dict' : sc.to_dict(self.y_start)}, 
+                                    {'@module': 'scipp',
+                                    '@version': sc.__version__,
+                                    '@class' : 'scalar',
+                                    'dict' : sc.to_dict(self.y_end)}]
+        return out_dict
+
+    @classmethod
+    def from_dict(cls, input_dict: Dict[str, Any]) -> RectROI:
+        """Create a RectROI instance from a dictionary representation."""
+        temp_dict = input_dict.copy()
+        if 'x_range' in input_dict and 'y_range' in input_dict:
+            temp_dict['x_range'] = [sc.from_dict(item['dict']) for item in input_dict['x_range']]
+            temp_dict['y_range'] = [sc.from_dict(item['dict']) for item in input_dict['y_range']]
+        return super().from_dict(temp_dict)
 
     def __repr__(self) -> str:
         repr_str = (
