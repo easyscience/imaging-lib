@@ -7,6 +7,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Sequence
+from typing import Tuple
 
 import scipp as sc
 from easyscience.base_classes import NewBase
@@ -22,10 +23,10 @@ class RectROI(NewBase):
 
     def __init__(
         self,
-        x_pixel_range: tuple[int, int],
-        y_pixel_range: tuple[int, int],
-        x_range: tuple[sc.Variable, sc.Variable] | None = None,
-        y_range: tuple[sc.Variable, sc.Variable] | None = None,
+        x_pixel_range: Sequence[int],
+        y_pixel_range: Sequence[int],
+        x_range: Sequence[sc.Variable] | None = None,
+        y_range: Sequence[sc.Variable] | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> None:
@@ -33,10 +34,10 @@ class RectROI(NewBase):
         Initialize a RectROI instance.
 
         Parameters:
-        x_pixel_range (tuple[int, int]): The pixel range for the x-coordinate.
-        y_pixel_range (tuple[int, int]): The pixel range for the y-coordinate.
-        x_range (tuple[sc.Variable, sc.Variable], optional): The physical coordinate range for the x-axis.
-        y_range (tuple[sc.Variable, sc.Variable], optional): The physical coordinate range for the y-axis.
+        x_pixel_range (Sequence[int]): The pixel range for the x-coordinate.
+        y_pixel_range (Sequence[int]): The pixel range for the y-coordinate.
+        x_range (Sequence[sc.Variable], optional): The physical coordinate range for the x-axis.
+        y_range (Sequence[sc.Variable], optional): The physical coordinate range for the y-axis.
         unique_name (str | None, optional): A unique identifier for the ROI. Defaults to RectROI appended by a unique integer.
         display_name (str | None, optional): A pretty name for the ROI. Defaults to the unique_name if not provided.
         """
@@ -50,11 +51,15 @@ class RectROI(NewBase):
         else:
             raise ValueError('Both x_range and y_range must be provided together or not at all.')
 
-    def set_pixel_coord_range(self, x_pixel_range: Sequence[int, int], y_pixel_range: Sequence[int, int]) -> None:
+    def set_pixel_coord_range(
+            self, 
+            x_pixel_range: Sequence[int], 
+            y_pixel_range: Sequence[int]
+            ) -> None:
         """Set the pixel coordinate ranges for the ROI.
         Parameters:
-            x_pixel_range (tuple[int, int]): The start and end pixel coordinates in the x direction.
-            y_pixel_range (tuple[int, int]): The start and end pixel coordinates in the y direction.
+            x_pixel_range (Sequence[int]): The start and end pixel coordinates in the x direction.
+            y_pixel_range (Sequence[int]): The start and end pixel coordinates in the y direction.
         """
         self._check_input_sequence(x_pixel_range, 'x_pixel_range', 'integers', int)
         self._check_input_sequence(y_pixel_range, 'y_pixel_range', 'integers', int)
@@ -65,12 +70,14 @@ class RectROI(NewBase):
         self._y_pixel_start, self._y_pixel_end = sc.array(values=y_pixel_range, dims='y')
 
     def set_physical_coord_range(
-        self, x_range: Sequence[sc.Variable, sc.Variable], y_range: Sequence[sc.Variable, sc.Variable]
+        self, 
+        x_range: Sequence[sc.Variable], 
+        y_range: Sequence[sc.Variable]
     ) -> None:
         """Set the physical coordinate ranges for the ROI.
         Parameters:
-            x_range (tuple[sc.Variable, sc.Variable]): The start and end physical coordinates in the x direction.
-            y_range (tuple[sc.Variable, sc.Variable]): The start and end physical coordinates in the y direction.
+            x_range (Sequence[sc.Variable]): The start and end physical coordinates in the x direction.
+            y_range (Sequence[sc.Variable]): The start and end physical coordinates in the y direction.
         """
 
         self._check_input_sequence(x_range, 'x_range', 'scipp scalars', sc.Variable)
@@ -92,19 +99,19 @@ class RectROI(NewBase):
         else:
             raise ValueError('Cannot delete physical coordinate ranges because they are not set.')
 
-    def pixel_slice(self) -> slice:
+    def pixel_slice(self) -> Tuple[slice, slice]:
         """Get the pixel slice corresponding to the ROI.
 
         Returns:
-            slice: Two (x,y) slice objects representing the pixel range of the ROI.
+            tuple: Two (x,y) slice objects representing the pixel range of the ROI.
         """
         return slice(self._x_pixel_start, self._x_pixel_end), slice(self._y_pixel_start, self._y_pixel_end)
 
-    def slice(self) -> slice:
+    def slice(self) -> Tuple[slice, slice]:
         """Get the slice corresponding to the ROI, using physical coordinates if available.
 
         Returns:
-            slice: Two (x,y) slice objects representing the range of the ROI.
+            tuple: Two (x,y) slice objects representing the range of the ROI.
         """
         if self._has_physical_coords:
             return slice(self._x_start, self._x_end), slice(self._y_start, self._y_end)
@@ -216,9 +223,9 @@ class RectROI(NewBase):
         Check if the input value is a valid index (non-negative integer).
         """
         if not isinstance(value, int):
-            raise TypeError(f'{name} indice must be an integer.')
+            raise TypeError(f'{name} index must be an integer.')
         if value < 0:
-            raise ValueError(f'{name} indice must be non-negative.')
+            raise ValueError(f'{name} index must be non-negative.')
 
     def _check_scalar(self, value: sc.Variable, name: str) -> None:
         """

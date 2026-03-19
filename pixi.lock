@@ -2521,7 +2521,7 @@ packages:
 - pypi: ./
   name: easyimaging
   version: 0.0.0
-  sha256: 41fe180ce88332e2c98073ad818e9a168d37bb386e2acc89392ede5e106ff76d
+  sha256: 7c3352d2b1507d8033339bb15a75a2b463e5c959c4e7600b825428e71dd76df7
   requires_dist:
   - essimaging
   - ncrystal[composer]
@@ -2550,7 +2550,7 @@ packages:
   - sphinx-book-theme ; extra == 'docs'
   - sphinx-gallery ; extra == 'docs'
   - toml ; extra == 'docs'
-  requires_python: '>=3.11,<3.14'
+  requires_python: '>=3.11,<3.15'
 - pypi: git+https://github.com/easyscience/corelib?branch=develop#667df5ff820625377493fe1d87d592095f3ad60f
   name: easyscience
   version: 2.2.0+dev2

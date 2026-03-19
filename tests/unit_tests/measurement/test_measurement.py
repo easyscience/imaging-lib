@@ -326,7 +326,7 @@ class TestMeasurement:
 
     @pytest.mark.parametrize(
         'path, error',
-        [(150, TypeError), ('non_existent_file.tiff', FileNotFoundError)],
+        [(150, TypeError), ('non_existent_file.tiff', RuntimeError)],
         ids=['invalid_path_type', 'non_existent_file'],
     )
     def test_from_tiff_stack_invalid_path(self, path, error):
@@ -340,7 +340,7 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'coord, error, expected_message',
         [
-            ('not_a_valid_type', TypeError, 'time_of_flight must be a scipp Variable or a numpy Array.'),
+            ('not_a_valid_type', TypeError, 'time_of_flight must be a scipp Variable or a numpy ndarray.'),
             (
                 sc.arange('t', 0, 5, 1, unit='s'),
                 ValueError,
@@ -365,7 +365,7 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'coord, error, expected_message',
         [
-            ('not_a_valid_type', TypeError, 'x_positions must be a scipp Variable or a numpy Array.'),
+            ('not_a_valid_type', TypeError, 'x_positions must be a scipp Variable or a numpy ndarray.'),
             (
                 sc.arange('x', 0, 10, 1, unit='m'),
                 ValueError,
@@ -391,7 +391,7 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'coord, error, expected_message',
         [
-            ('not_a_valid_type', TypeError, 'y_positions must be a scipp Variable or a numpy Array.'),
+            ('not_a_valid_type', TypeError, 'y_positions must be a scipp Variable or a numpy ndarray.'),
             (
                 sc.arange('y', 0, 10, 1, unit='m'),
                 ValueError,
@@ -602,16 +602,22 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         measurement.regions_of_interest.append(valid_roi)
+        extra_roi = copy(valid_roi)
+        measurement.regions_of_interest.append(extra_roi)
         # Then
         del measurement.regions_of_interest[valid_roi.unique_name]
         # Expect
-        assert len(measurement.regions_of_interest) == 0
+        assert len(measurement.regions_of_interest) == 1
         assert valid_roi not in measurement.regions_of_interest
+        assert extra_roi in measurement.regions_of_interest
+
 
     def test_regions_of_interest_clear(self, valid_data_array, valid_roi):
         # When
         measurement = Measurement(data_array=valid_data_array)
         measurement.regions_of_interest.append(valid_roi)
+        extra_roi = copy(valid_roi)
+        measurement.regions_of_interest.append(extra_roi)
         # Then
         measurement.regions_of_interest.clear()
         # Expect
@@ -807,6 +813,13 @@ class TestMeasurement:
         del measurement._data_array.coords['y_pixels']
         del measurement._data_array.masks['non_finite']
         assert sc.identical(measurement._data_array, valid_data_array)
+
+    def test_revert_rebin_no_rebin(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.warns(UserWarning, match='No rebinning to revert. The data array is already in its original state.'):
+            measurement.revert_rebin()
 
     # Without making image comparisons, this is the best we can do to test the plot function
     @pytest.mark.parametrize('time_of_flight', [None, 0, sc.scalar(5.0, unit='s')], ids=['sum', 'indice', 'scipp_scalar'])

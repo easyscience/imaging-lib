@@ -3,9 +3,9 @@
 #  © 2021-2026 Contributors to the EasyImaging project <https://github.com/easyScience/EasyImaging>
 from __future__ import annotations
 
+import warnings
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import ess.imaging as essimaging
 import numpy as np
@@ -17,13 +17,11 @@ from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
 
+from ..utils import _is_notebook
 from ..utils import _to_edges
 from .regions import RectROI
 
 Numeric = int | float
-
-if TYPE_CHECKING:
-    pass
 
 
 class Measurement(NewBase):
@@ -116,9 +114,9 @@ class Measurement(NewBase):
     def from_tiff_stack(
         cls,
         filename: str | Path,
-        time_of_flights: sc.Variable | np.array,
-        x_positions: sc.Variable | np.array | None = None,
-        y_positions: sc.Variable | np.array | None = None,
+        time_of_flights: sc.Variable | np.ndarray,
+        x_positions: sc.Variable | np.ndarray | None = None,
+        y_positions: sc.Variable | np.ndarray | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> Measurement:
@@ -129,13 +127,13 @@ class Measurement(NewBase):
         ----------
         filename : str | Path
             Path to the TIFF stack file.
-        time_of_flights : sc.Variable | np.array
+        time_of_flights : sc.Variable | np.ndarray
             Array of time-of-flight values corresponding to the frames in the TIFF stack.
             If a numpy array is provided, the unit is assumed to be seconds.
-        x_positions : sc.Variable | np.array | None
+        x_positions : sc.Variable | np.ndarray | None
             Array of x-coordinate positions for the pixels.
             If a numpy array is provided, the unit is assumed to be meters.
-        y_positions : sc.Variable | np.array | None
+        y_positions : sc.Variable | np.ndarray | None
             Array of y-coordinate positions for the pixels.
             If a numpy array is provided, the unit is assumed to be meters.
         unique_name : str | None
@@ -153,7 +151,7 @@ class Measurement(NewBase):
         try:
             data_array = load_scitiff(filename)['image']
         except Exception as e:
-            raise FileNotFoundError(f"Failed to load TIFF stack file '{filename}': {e}") from e
+            raise RuntimeError(f"Failed to load TIFF stack file '{filename}': {e}") from e
 
         try:
             data_array = data_array.rename_dims({'dim_0': 't', 'dim_1': 'y', 'dim_2': 'x'})
@@ -362,8 +360,6 @@ class Measurement(NewBase):
         Rebin the measurement image stack. This operation reduces the resolution of the data by combining adjacent pixels or time bins.
         The rebinned dimensions must be evenly divisible by their specific rebin factor.
 
-        To revert to the original data, provide a dictionary with all rebin factors set to 1.
-
         Parameters
         ----------
         dimensions : dict[str, int]
@@ -387,7 +383,6 @@ class Measurement(NewBase):
                 )
             if isinstance(value, float) and value.is_integer():  # I allow eg. 2.0 as well as 2
                 value = int(value)
-                dimensions[dim] = value  # This line can be removed when scipp resize support resizing with coordinates
             if not isinstance(value, int) or value < 1:
                 raise ValueError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 1.")
             if self._full_data_array.sizes[dim] % value != 0:
@@ -404,13 +399,15 @@ class Measurement(NewBase):
         """
         Revert any rebinning applied to the measurement data, restoring it to its original resolution.
         """
-        if self._rebinned_data_array is not None:
+        if hasattr(self, '_rebinned_data_array'):
             del self._rebinned_data_array
+        else:
+            warnings.warn('No rebinning to revert. The data array is already in its original state.', UserWarning)
 
     def plot(self, time_of_flight: int | sc.Variable | None = None, **kwargs) -> None:
         """
         Plot the measurement image at a specific time-of-flight.
-        If no time-of-flight is provided, the plot will sum over all time-of-flight values.
+        If no time-of-flight is provided, the plot will average over all time-of-flight values.
 
         This method uses the plopp library for plotting:
         https://scipp.github.io/plopp/plotting/image-plot.html
@@ -418,13 +415,13 @@ class Measurement(NewBase):
         Parameters
         ----------
         time_of_flight : int | sc.Variable | None
-            The time-of-flight value to plot. If None, the time-of-flight axis is summed up.
+            The time-of-flight value to plot. If None, the time-of-flight axis is averaged.
         kwargs : dict
             Additional keyword arguments to pass to the plotting function.
             See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
         """
         if time_of_flight is None:
-            title_suffix = ' (summed over TOF)'
+            title_suffix = ' (averaged over TOF)'
         elif isinstance(time_of_flight, int):
             title_suffix = f' at TOF index {time_of_flight}'
         elif isinstance(time_of_flight, sc.Variable):
@@ -454,7 +451,7 @@ class Measurement(NewBase):
                 raise UnitError("time_of_flight variable must have a unit of time such as 's'") from None
         else:
             raise TypeError('time_of_flight must be an integer, scipp Variable, or None.')
-        if self._is_notebook():
+        if _is_notebook():
             return plot
         else:
             plot.show()
@@ -485,7 +482,7 @@ class Measurement(NewBase):
         # Overwrite defaults with any user-provided kwargs
         slicer_kwargs_defaults.update(kwargs)
 
-        if self._is_notebook():
+        if _is_notebook():
             return pp.slicer(self._data_array, **slicer_kwargs_defaults)
         else:
             raise RuntimeError('Interactive slicer is only supported in Jupyter notebooks.')
@@ -520,7 +517,7 @@ class Measurement(NewBase):
         # Overwrite defaults with any user-provided kwargs
         inspector_kwargs_defaults.update(kwargs)
 
-        if self._is_notebook():
+        if _is_notebook():
             return pp.inspector(self._data_array, **inspector_kwargs_defaults)
         else:
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
@@ -545,7 +542,7 @@ class Measurement(NewBase):
             See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
         """
 
-        if not self._is_notebook():
+        if not _is_notebook():
             raise RuntimeError('Interactive ROI creator is only supported in Jupyter notebooks.')
 
         roi_selector_kwargs_defaults = {
@@ -725,26 +722,11 @@ class Measurement(NewBase):
         # Overwrite defaults with any user-provided kwargs
         plot_kwargs_defaults.update(kwargs)
 
-        if self._is_notebook():
+        if _is_notebook():
             return spectrum_data.plot(**plot_kwargs_defaults)
         else:
             plot = spectrum_data.plot(**plot_kwargs_defaults)
             plot.show()
-
-    def _is_notebook(self) -> bool:
-        """
-        Check if the code is running in a Jupyter notebook environment.
-        """
-        try:
-            shell = get_ipython().__class__.__name__  # pyright: ignore[reportUndefinedVariable]
-            if shell == 'ZMQInteractiveShell':
-                return True  # Jupyter notebook or qtconsole
-            elif shell == 'TerminalInteractiveShell':
-                return False  # Terminal running IPython
-            else:
-                return False  # Other type (possibly other IDE)
-        except NameError:
-            return False  # Probably standard Python interpreter
 
     def _validate_data_array_coordinate(
         self,
@@ -766,7 +748,7 @@ class Measurement(NewBase):
     @staticmethod
     def _validate_provided_coord(
         data_array: sc.DataArray,
-        coord: sc.Variable | np.array,
+        coord: sc.Variable | np.ndarray,
         coord_name: str,
         dim: str,
         length_context: str,
@@ -774,7 +756,7 @@ class Measurement(NewBase):
         expected_unit: str,
     ) -> sc.Variable:
         if not isinstance(coord, (sc.Variable, np.ndarray)):
-            raise TypeError(f'{coord_name} must be a scipp Variable or a numpy Array.')
+            raise TypeError(f'{coord_name} must be a scipp Variable or a numpy ndarray.')
         if len(coord) not in (data_array.sizes[dim], data_array.sizes[dim] + 1):
             raise ValueError(f'Length of {coord_name} array does not match the number of {length_context}.')
         if isinstance(coord, np.ndarray):
