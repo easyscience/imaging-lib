@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import MutableSequence
 
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import plopp as pp
 import pytest
@@ -20,20 +21,53 @@ class TestMeasurement:
         tof = sc.arange('t', 0, 10, 1, unit='s')
         x = sc.arange('x', 0, 7, 1, unit='m')
         y = sc.arange('y', 0, 7, 1, unit='m')
-        data = sc.ones(dims=['x', 'y', 't'], shape=[6, 6, 10])
-        return sc.DataArray(data=data, coords={'tof': tof, 'x': x, 'y': y})
+        data = sc.ones(dims=['y', 'x', 't'], shape=[6, 6, 10])
+        return sc.DataArray(data=data, coords={'tof': tof, 'y': y, 'x': x,})
 
     @pytest.fixture
     def valid_data_array_no_xy_coords(self):
         tof = sc.arange('t', 0, 10, 1, unit='s')
-        data = sc.zeros(dims=('x', 'y', 't'), shape=(6, 6, 10))
+        data = sc.zeros(dims=('y', 'x', 't'), shape=(6, 6, 10))
         return sc.DataArray(data=data, coords={'tof': tof})
+
+    # @pytest.fixture(autouse=True)
+    # def _reset_mpl_defaults(self):
+    #     matplotlib.rcdefaults()
+    #     matplotlib.use('Agg')
+    #     pp.backends.reset()
+
+    @pytest.fixture(autouse=True)
+    def _close_figures(self):
+        """
+        Force closing all figures after each test case.
+        Otherwise, the figures consume a lot of memory and matplotlib complains.
+        """
+        yield
+        for fig in map(plt.figure, plt.get_fignums()):
+            plt.close(fig)
+
+    @pytest.fixture
+    def plot_setup(self, monkeypatch):
+        # reset_mpl_defaults
+        matplotlib.rcdefaults()
+        matplotlib.use('Agg')
+        pp.backends.reset()
+
+        # Sets an interactive backend to Matplotlib for testing.
+        matplotlib.use('module://ipympl.backend_nbagg')
+        #matplotlib.use('Agg')
+        pp.backends['2d'] = 'matplotlib'
+
+        # Mock the notebook check to enable the plot.
+        def mock_is_notebook():
+            return True
+        monkeypatch.setattr('easyimaging.measurement.measurement._is_notebook', mock_is_notebook)
 
     @pytest.fixture
     def use_noninteractive_backend(self):
         # Sets a non-interactive backend to Matplotlib for testing.
-        # matplotlib.use('module://ipympl.backend_nbagg')
-        matplotlib.use('Agg')
+        matplotlib.use('module://ipympl.backend_nbagg')
+        #matplotlib.use('Agg')
         pp.backends['2d'] = 'matplotlib'
 
     @pytest.fixture
@@ -822,23 +856,73 @@ class TestMeasurement:
             measurement.revert_rebin()
 
     # Without making image comparisons, this is the best we can do to test the plot function
-    @pytest.mark.parametrize('time_of_flight', [None, 0, sc.scalar(5.0, unit='s')], ids=['sum', 'indice', 'scipp_scalar'])
-    def test_plot(self, valid_data_array, time_of_flight, use_noninteractive_backend, monkeypatch):
+    @pytest.mark.parametrize('time_of_flight, title', 
+        [
+            (None, '(averaged over TOF)'), 
+            (0, 'at TOF index 0'), 
+            (sc.scalar(5.0, unit='s'), 'at TOF=5.0 s')
+            ], 
+            ids=['sum', 'indice', 'scipp_scalar'])
+    def test_plot_coordinates(self, valid_data_array, time_of_flight, title, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.plot(time_of_flight=time_of_flight)
+        # Expect
+        assert fig.canvas.dims['x'] == 'x'
+        assert fig.canvas.dims['y'] == 'y'
+        assert fig.canvas.units['x'] == 'm'
+        assert fig.canvas.units['y'] == 'm'
+        assert fig.canvas.title == measurement.display_name + ' ' + title
+        assert fig.canvas.xlabel == 'x [m]'
+        assert fig.canvas.ylabel == 'y [m]'
+        assert fig.canvas.cblabel == 'Transmission'
+        assert fig.view.colormapper.vmax == 1.1
+        assert fig.view.colormapper.vmin == 0.0
 
-        def mock_is_notebook():
-            return True
+    def test_plot_automatic_cmax(self, valid_data_array, plot_setup):
+        # When
+        valid_data_array.data *= 10.0  # Scale data to ensure max is above 1.0
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.plot()
+        # Expect
+        assert fig.view.colormapper.vmax == 3.0
+        assert fig.view.colormapper.vmin == 0.0
 
-        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-        # Then Expect
-        measurement.plot(time_of_flight=time_of_flight)  # Just ensure no exception is raised
+    def test_plot_user_overwrite(self, valid_data_array, plot_setup):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.plot(xlabel = 'Custom X label')
+        # Expect
+        assert fig.canvas.xlabel == 'Custom X label'
+        assert fig.canvas.ylabel == 'y [m]'
+
+    def test_plot_pixels(self, valid_data_array, plot_setup):
+        # When
+        valid_data_array.coords.pop('x')
+        valid_data_array.coords.pop('y')
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.plot()
+        # Expect
+        assert fig.canvas.dims['x'] == 'x_pixels'
+        assert fig.canvas.dims['y'] == 'y_pixels'
+        assert fig.canvas.units['x'] == ''
+        assert fig.canvas.units['y'] == ''
+        assert fig.canvas.title == measurement.display_name + ' (averaged over TOF)'
+        assert fig.canvas.xlabel == 'x_pixels [dimensionless]'
+        assert fig.canvas.ylabel == 'y_pixels [dimensionless]'
+        assert fig.canvas.cblabel == 'Transmission'
+        assert fig.view.colormapper.vmax == 1.1
+        assert fig.view.colormapper.vmin == 0.0
 
     def test_plot_invalid_time_of_flight_type(self, valid_data_array):
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(TypeError, match='time_of_flight must be an integer, scipp Variable, or None.'):
+        with pytest.raises(TypeError, match='time_of_flight must be an integer, scipp scalar, or None.'):
             measurement.plot(time_of_flight='not_a_valid_type')
 
     def test_plot_invalid_time_of_flight_unit(self, valid_data_array):
@@ -855,33 +939,50 @@ class TestMeasurement:
         with pytest.raises(RuntimeError, match='Interactive slicer is only supported in Jupyter notebooks.'):
             measurement.slicer_plot()
 
-    def test_slicer_fails_without_interactive_backend(self, valid_data_array, use_noninteractive_backend, monkeypatch):
+    def test_slicer_pixels(self, valid_data_array, plot_setup):
+        # When
+        valid_data_array.coords.pop('x')
+        valid_data_array.coords.pop('y')
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.slicer_plot()
+        # Expect
+        assert fig.canvas.dims['x'] == 'x_pixels'
+        assert fig.canvas.dims['y'] == 'y_pixels'
+        assert fig.canvas.units['x'] == ''
+        assert fig.canvas.units['y'] == ''
+        assert fig.canvas.title == measurement.display_name + ' - Time of Flight Slicer'
+        assert fig.canvas.xlabel == 'x_pixels [dimensionless]'
+        assert fig.canvas.ylabel == 'y_pixels [dimensionless]'
+        assert fig.canvas.cblabel == 'Transmission'
+        assert fig.view.colormapper.vmax == 1.1
+        assert fig.view.colormapper.vmin == 0.0
+
+    def test_slicer_coordinates(self, valid_data_array, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.slicer_plot()
+        # Expect
+        assert fig.canvas.dims['x'] == 'x'
+        assert fig.canvas.dims['y'] == 'y'
+        assert fig.canvas.units['x'] == 'm'
+        assert fig.canvas.units['y'] == 'm'
+        assert fig.canvas.title == measurement.display_name + ' - Time of Flight Slicer'
+        assert fig.canvas.xlabel == 'x [m]'
+        assert fig.canvas.ylabel == 'y [m]'
+        assert fig.canvas.cblabel == 'Transmission'
+        assert fig.view.colormapper.vmax == 1.1
+        assert fig.view.colormapper.vmin == 0.0
 
-        def mock_is_notebook():
-            return True
-
-        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-
-        # Then Expect
-        with pytest.raises(
-            RuntimeError,
-            match='The slicer can only be used with an interactive backend. Use `%matplotlib widget` at the start of your notebook.',  # noqa: E501
-        ):
-            measurement.slicer_plot()
-
-    def test_slicer_runs_in_notebook_with_interactive_backend(self, valid_data_array, use_noninteractive_backend, monkeypatch):
+    def test_slicer_user_overwrite(self, valid_data_array, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
-
-        def mock_is_notebook():
-            return True
-
-        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-        matplotlib.use('module://ipympl.backend_nbagg')
-        # Then Expect
-        measurement.slicer_plot()  # Just ensure no exception is raised
+        # Then
+        fig = measurement.slicer_plot(xlabel = 'Custom X label')
+        # Expect
+        assert fig.canvas.xlabel == 'Custom X label'
+        assert fig.canvas.ylabel == 'y [m]'
 
     def test_spectrum_inspector_fails_outside_notebook(self, valid_data_array):
         # When
@@ -890,44 +991,95 @@ class TestMeasurement:
         with pytest.raises(RuntimeError, match='Interactive spectrum inspector is only supported in Jupyter notebooks.'):
             measurement.spectrum_inspector()
 
-    def test_spectrum_inspector_fails_without_matplotlib_widget_backend(self, valid_data_array, monkeypatch):
+    def test_spectrum_inspector(self, valid_data_array, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
+        # Then
+        figs = measurement.spectrum_inspector()
+        # Simulate clicking on the plot to inspect the spectrum at that point
+        figs[0].toolbar['inspect']._tool.start()
+        figs[0].toolbar['inspect']._tool.click(x=2.5, y=2.5, button=1)
+        figs[0].toolbar['inspect']._tool.stop()
+        # Expect
+        assert figs[0].canvas.dims['x'] == 'x'
+        assert figs[0].canvas.dims['y'] == 'y'
+        assert figs[0].canvas.units['x'] == 'm'
+        assert figs[0].canvas.units['y'] == 'm'
+        assert figs[0].canvas.title == measurement.display_name + ' - Spectrum Inspector'
+        assert figs[0].canvas.xlabel == 'x [m]'
+        assert figs[0].canvas.ylabel == 'y [m]'
+        assert figs[0].canvas.cblabel == 'Transmission'
+        assert figs[0].view.colormapper.vmax == 1.1
+        assert figs[0].view.colormapper.vmin == 0.0
+        assert figs[1].canvas.ymax == 1.1
 
-        def mock_is_notebook():
-            return True
-
-        def mock_get_backend():
-            return 'not_widget_backend'
-
-        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
-        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-
-        # Then Expect
-        with pytest.raises(
-            RuntimeError, match='Interactive spectrum inspector requires the matplotlib "widget" backend in Jupyter notebooks.'
-        ):  # noqa: E501
-            measurement.spectrum_inspector()
-
-    def test_spectrum_inspector_runs_in_notebook_with_widget_backend(self, valid_data_array, monkeypatch, _use_ipympl):
+    def test_spectrum_inspector_user_overwrite(self, valid_data_array, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
+        # Then
+        figs = measurement.spectrum_inspector(xlabel='Custom X label')
+        # Expect
+        assert figs[0].canvas.xlabel == 'Custom X label'
+        assert figs[0].canvas.ylabel == 'y [m]'
 
-        def mock_is_notebook():
-            return True
+    def test_spectrum_inspector_pixels(self, valid_data_array, plot_setup):
+        # When
+        valid_data_array.coords.pop('x')
+        valid_data_array.coords.pop('y')
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        figs = measurement.spectrum_inspector()
+        figs[0].toolbar['inspect']._tool.start()
+        figs[0].toolbar['inspect']._tool.click(x=2.5, y=2.5, button=1)
+        figs[0].toolbar['inspect']._tool.stop()
+        # Expect
+        assert figs[0].canvas.dims['x'] == 'x_pixels'
+        assert figs[0].canvas.dims['y'] == 'y_pixels'
+        assert figs[0].canvas.units['x'] == ''
+        assert figs[0].canvas.units['y'] == ''
+        assert figs[0].canvas.title == measurement.display_name + ' - Spectrum Inspector'
+        assert figs[0].canvas.xlabel == 'x_pixels [dimensionless]'
+        assert figs[0].canvas.ylabel == 'y_pixels [dimensionless]'
+        assert figs[0].canvas.cblabel == 'Transmission'
+        assert figs[0].view.colormapper.vmax == 1.1
+        assert figs[0].view.colormapper.vmin == 0.0
+        assert figs[1].canvas.ymax == 1.1
 
-        def mock_get_backend():
-            return 'widget'
+    def test_roi_creator_looks(self, valid_data_array, plot_setup):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        figs = measurement.roi_creator()
+        # Expect
+        assert figs[0].canvas.dims['x'] == 'x'
+        assert figs[0].canvas.dims['y'] == 'y'
+        assert figs[0].canvas.units['x'] == 'm'
+        assert figs[0].canvas.units['y'] == 'm'
+        assert figs[0].canvas.title == measurement.display_name + ' - ROI Creator'
+        assert figs[0].canvas.xlabel == 'x [m]'
+        assert figs[0].canvas.ylabel == 'y [m]'
+        assert figs[0].canvas.cblabel == 'Transmission'
+        assert figs[0].view.colormapper.vmax == 1.1
+        assert figs[0].view.colormapper.vmin == 0.0
 
-        # mock_spectrum_widget = MagicMock()
-
-        monkeypatch.setattr('matplotlib.get_backend', mock_get_backend)
-        monkeypatch.setattr(measurement, '_is_notebook', mock_is_notebook)
-        # monkeypatch.setattr(pp, 'inspector', mock_spectrum_widget)
-        # Then Expect
-        spectrum_widget = measurement.spectrum_inspector()
-        assert spectrum_widget is not None
-        # assert mock_spectrum_widget.assert_called_once
+    def test_roi_creator_create_roi(self, valid_data_array, plot_setup):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        figs = measurement.roi_creator()
+        # Draw a rectangle
+        figs[0].toolbar['inspect']._tool.start()
+        figs[0].toolbar['inspect']._tool.click(x=2.5, y=2.5, button=1)
+        figs[0].toolbar['inspect']._tool.click(x=5.0, y=5.0, button=1)
+        figs[0].toolbar['inspect']._tool.stop()
+        # Expect
+        assert figs[1].canvas.ymax == 1.1
+        assert len(measurement.regions_of_interest) == 1
+        roi = measurement.regions_of_interest[0]
+        assert isinstance(roi, RectROI)
+        assert roi.x_pixel_range == (2, 5)
+        assert roi.y_pixel_range == (2, 5)
+        assert roi._has_physical_coords
 
     def test_spectrum_valid(self, valid_data_array):
         # When

@@ -425,18 +425,13 @@ class Measurement(NewBase):
         elif isinstance(time_of_flight, int):
             title_suffix = f' at TOF index {time_of_flight}'
         elif isinstance(time_of_flight, sc.Variable):
-            title_suffix = f' at TOF={time_of_flight}'
+            title_suffix = f' at TOF={time_of_flight.value} {time_of_flight.unit}'
         else:
-            title_suffix = ''
+            raise TypeError('time_of_flight must be an integer, scipp scalar, or None.')
 
-        plot_kwargs_defaults = {
-            'title': self.display_name + title_suffix,
-            'clabel': 'Transmission',
-            'cmin': 0.0,
-            'cmax': 3.0,
-            'mask_color': 'red',
-            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
-        }
+        plot_kwargs_defaults = self._plot_defaults()
+        plot_kwargs_defaults['title'] = self.display_name + title_suffix
+
         # Overwrite defaults with any user-provided kwargs
         plot_kwargs_defaults.update(kwargs)
 
@@ -449,8 +444,7 @@ class Measurement(NewBase):
                 plot = self._data_array['tof', time_of_flight].plot(**plot_kwargs_defaults)
             except UnitError:
                 raise UnitError("time_of_flight variable must have a unit of time such as 's'") from None
-        else:
-            raise TypeError('time_of_flight must be an integer, scipp Variable, or None.')
+
         if _is_notebook():
             return plot
         else:
@@ -469,16 +463,14 @@ class Measurement(NewBase):
             Additional keyword arguments to pass to the slicer function.
             See https://scipp.github.io/plopp/generated/plopp.slicer.html for options.
         """
-        slicer_kwargs_defaults = {
+        slicer_kwargs_defaults = self._plot_defaults()
+        slicer_kwargs_defaults.update({
             'title': self.display_name + ' - Time of Flight Slicer',
-            'clabel': 'Transmission',
-            'cmin': 0.0,
-            'cmax': 3.0,
-            'mask_color': 'red',
             'keep': ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
-            'mode': 'single',
-            'coords' : ['x_pixels', 'y_pixels', 'tof'] if not self._has_physical_coords else ['x', 'y', 'tof'],
-        }
+            'mode': 'single'
+        })
+        slicer_kwargs_defaults['coords'].append('tof')
+
         # Overwrite defaults with any user-provided kwargs
         slicer_kwargs_defaults.update(kwargs)
 
@@ -500,20 +492,16 @@ class Measurement(NewBase):
             Additional keyword arguments to pass to the inspector function.
             See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
         """
-        inspector_kwargs_defaults = {
+        inspector_kwargs_defaults = self._plot_defaults()
+        inspector_kwargs_defaults['ymax'] = inspector_kwargs_defaults['cmax']
+        inspector_kwargs_defaults.update({
             'title': self.display_name + ' - Spectrum Inspector',
-            'clabel': 'Transmission',
-            'cmin': 0.0,
-            'cmax': 3.0,
-            'mask_color': 'red',
-            'ymax': 3.0,
             'ymin': 0.0,
             'dim': 't',
             'orientation': 'vertical',
             'operation': 'mean',
             'mode': 'point',
-            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
-        }
+        })
         # Overwrite defaults with any user-provided kwargs
         inspector_kwargs_defaults.update(kwargs)
 
@@ -545,25 +533,21 @@ class Measurement(NewBase):
         if not _is_notebook():
             raise RuntimeError('Interactive ROI creator is only supported in Jupyter notebooks.')
 
-        roi_selector_kwargs_defaults = {
+        roi_selector_kwargs_defaults = self._plot_defaults()
+        roi_selector_kwargs_defaults['ymax'] = roi_selector_kwargs_defaults['cmax']
+        roi_selector_kwargs_defaults.update({
             'title': self.display_name + ' - ROI Creator',
-            'clabel': 'Transmission',
-            'cmin': 0.0,
-            'cmax': 3.0,
-            'mask_color': 'red',
-            'ymax': 3.0,
             'ymin': 0.0,
             'dim': 't',
             'orientation': 'vertical',
             'operation': 'mean',
-            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
-        }
+            'mode': 'rectangle',
+        })
         # Overwrite defaults with any user-provided kwargs
         roi_selector_kwargs_defaults.update(kwargs)
             
         plots = pp.inspector(
             self._data_array, 
-            mode='rectangle',
             **roi_selector_kwargs_defaults
             )
 
@@ -592,7 +576,7 @@ class Measurement(NewBase):
             plots[0].toolbar['inspect']._tool.start()
             plots[0].toolbar['inspect']._tool.click(x=x_start, y=y_start, button=1) # button 1 is left-click
             plots[0].toolbar['inspect']._tool.click(x=x_end, y=y_end, button=1)
-            plots[0].toolbar['inspect']._tool.start()
+            plots[0].toolbar['inspect']._tool.stop()
             if hasattr(roi, '_rect_ids'):
                 roi._rect_ids.append(plots[0].toolbar['inspect']._tool.children[-1].id)  # Store the rectangle ID for reference when dragging corners  # noqa: E501
             else:
@@ -792,3 +776,16 @@ class Measurement(NewBase):
             y_pixel_range = (int(min(sliced_y_pixels)), int(max(sliced_y_pixels)))
 
         return x_pixel_range, y_pixel_range, x_range, y_range
+
+    def _plot_defaults(self):
+        return {
+            'title': self.display_name,
+            'clabel': 'Transmission',
+            'cmin': 0.0,
+            'cmax': min(3.0, float(self._data_array.max().value * 1.1)),
+            'mask_color': 'red',
+            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
+        }
+
+    def __repr__(self):
+        return f"{self.display_name} with shape {self._data_array.shape} and regions of interest: {[roi.display_name for roi in self.regions_of_interest]}"  # noqa: E501
