@@ -187,9 +187,9 @@ class TestRectROI:
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
-            (-5, ValueError, 'indice must be non-negative'),  # Negative integer
-            (3.5, TypeError, 'indice must be an integer'),  # Float
-            ('10', TypeError, 'indice must be an integer'),  # String
+            (-5, ValueError, 'index must be non-negative'),  # Negative integer
+            (3.5, TypeError, 'index must be an integer'),  # Float
+            ('10', TypeError, 'index must be an integer'),  # String
         ],
         ids=['negative_integer', 'float', 'string'],
     )
@@ -207,7 +207,8 @@ class TestRectROI:
             'x_end',
             'y_start',
             'y_end',
-        ])
+        ],
+    )
     def test_physical_coordinate_getter_not_set_raises(self, roi_basic, attribute):
         # When
         roi = roi_basic

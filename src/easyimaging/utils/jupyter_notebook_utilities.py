@@ -1,4 +1,3 @@
-
 def _is_notebook() -> bool:
     """
     Check if the code is running in a Jupyter notebook environment.
@@ -13,4 +12,3 @@ def _is_notebook() -> bool:
             return False  # Other type (possibly other IDE)
     except NameError:
         return False  # Probably standard Python interpreter
-    

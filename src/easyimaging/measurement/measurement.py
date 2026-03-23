@@ -464,11 +464,13 @@ class Measurement(NewBase):
             See https://scipp.github.io/plopp/generated/plopp.slicer.html for options.
         """
         slicer_kwargs_defaults = self._plot_defaults()
-        slicer_kwargs_defaults.update({
-            'title': self.display_name + ' - Time of Flight Slicer',
-            'keep': ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
-            'mode': 'single'
-        })
+        slicer_kwargs_defaults.update(
+            {
+                'title': self.display_name + ' - Time of Flight Slicer',
+                'keep': ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
+                'mode': 'single',
+            }
+        )
         slicer_kwargs_defaults['coords'].append('tof')
 
         # Overwrite defaults with any user-provided kwargs
@@ -494,14 +496,16 @@ class Measurement(NewBase):
         """
         inspector_kwargs_defaults = self._plot_defaults()
         inspector_kwargs_defaults['ymax'] = inspector_kwargs_defaults['cmax']
-        inspector_kwargs_defaults.update({
-            'title': self.display_name + ' - Spectrum Inspector',
-            'ymin': 0.0,
-            'dim': 't',
-            'orientation': 'vertical',
-            'operation': 'mean',
-            'mode': 'point',
-        })
+        inspector_kwargs_defaults.update(
+            {
+                'title': self.display_name + ' - Spectrum Inspector',
+                'ymin': 0.0,
+                'dim': 't',
+                'orientation': 'vertical',
+                'operation': 'mean',
+                'mode': 'point',
+            }
+        )
         # Overwrite defaults with any user-provided kwargs
         inspector_kwargs_defaults.update(kwargs)
 
@@ -535,21 +539,20 @@ class Measurement(NewBase):
 
         roi_selector_kwargs_defaults = self._plot_defaults()
         roi_selector_kwargs_defaults['ymax'] = roi_selector_kwargs_defaults['cmax']
-        roi_selector_kwargs_defaults.update({
-            'title': self.display_name + ' - ROI Creator',
-            'ymin': 0.0,
-            'dim': 't',
-            'orientation': 'vertical',
-            'operation': 'mean',
-            'mode': 'rectangle',
-        })
+        roi_selector_kwargs_defaults.update(
+            {
+                'title': self.display_name + ' - ROI Creator',
+                'ymin': 0.0,
+                'dim': 't',
+                'orientation': 'vertical',
+                'operation': 'mean',
+                'mode': 'rectangle',
+            }
+        )
         # Overwrite defaults with any user-provided kwargs
         roi_selector_kwargs_defaults.update(kwargs)
-            
-        plots = pp.inspector(
-            self._data_array, 
-            **roi_selector_kwargs_defaults
-            )
+
+        plots = pp.inspector(self._data_array, **roi_selector_kwargs_defaults)
 
         # -------------------------------------------------------------------------------------------------
         # -------------------------- Plot the existing ROIs on the plot -----------------------------------
@@ -574,11 +577,13 @@ class Measurement(NewBase):
                 x_end = roi.x_pixel_end
                 y_end = roi.y_pixel_end
             plots[0].toolbar['inspect']._tool.start()
-            plots[0].toolbar['inspect']._tool.click(x=x_start, y=y_start, button=1) # button 1 is left-click
+            plots[0].toolbar['inspect']._tool.click(x=x_start, y=y_start, button=1)  # button 1 is left-click
             plots[0].toolbar['inspect']._tool.click(x=x_end, y=y_end, button=1)
             plots[0].toolbar['inspect']._tool.stop()
             if hasattr(roi, '_rect_ids'):
-                roi._rect_ids.append(plots[0].toolbar['inspect']._tool.children[-1].id)  # Store the rectangle ID for reference when dragging corners  # noqa: E501
+                roi._rect_ids.append(
+                    plots[0].toolbar['inspect']._tool.children[-1].id
+                )  # Store the rectangle ID for reference when dragging corners  # noqa: E501
             else:
                 roi._rect_ids = [plots[0].toolbar['inspect']._tool.children[-1].id]
 
@@ -622,27 +627,20 @@ class Measurement(NewBase):
         # -------------------------- Connect the callbacks to the RectangleTool ---------------------------
         # -------------------------------------------------------------------------------------------------
 
-        plots[0].toolbar['inspect']._tool.on_create(partial(
-            create_rectangle_roi, 
-            roi_list=self.regions_of_interest, 
-            data_array=self._data_array
-            ))
-        
-        plots[0].toolbar['inspect']._tool.on_change(partial(
-            edit_rectangle_roi, 
-            roi_list=self.regions_of_interest,
-            data_array=self._data_array
-            ))
-        
-        plots[0].toolbar['inspect']._tool.on_remove(partial(
-            delete_rectangle_roi,
-            roi_list=self.regions_of_interest
-            ))
+        plots[0].toolbar['inspect']._tool.on_create(
+            partial(create_rectangle_roi, roi_list=self.regions_of_interest, data_array=self._data_array)
+        )
+
+        plots[0].toolbar['inspect']._tool.on_change(
+            partial(edit_rectangle_roi, roi_list=self.regions_of_interest, data_array=self._data_array)
+        )
+
+        plots[0].toolbar['inspect']._tool.on_remove(partial(delete_rectangle_roi, roi_list=self.regions_of_interest))
 
         plots[0].toolbar['inspect'].tooltip = 'Activate ROI creator tool'
 
         return plots
-        
+
     def spectrum(self, roi: RectROI | str | None = None) -> sc.DataArray:
         """
         Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
@@ -752,11 +750,13 @@ class Measurement(NewBase):
         return coord
 
     @staticmethod
-    def _ranges_from_rectangle(rect, data_array: sc.DataArray) -> tuple[tuple[int, int], None] | tuple[tuple[int, int], tuple[sc.Variable, sc.Variable]]:  # noqa: E501
-        # To be used in the roi_selector method to convert the rectangle vertices to pixel and 
+    def _ranges_from_rectangle(
+        rect, data_array: sc.DataArray
+    ) -> tuple[tuple[int, int], None] | tuple[tuple[int, int], tuple[sc.Variable, sc.Variable]]:  # noqa: E501
+        # To be used in the roi_selector method to convert the rectangle vertices to pixel and
         # physical coordinate ranges for the new ROI.
         x_vertex_list, y_vertex_list = rect.vertices
-        if 'x' not in data_array.coords: # If 'x' exists, so does 'y' due to our constructor.
+        if 'x' not in data_array.coords:  # If 'x' exists, so does 'y' due to our constructor.
             x_pixel_range = (int(min(x_vertex_list)), int(max(x_vertex_list)))
             y_pixel_range = (int(min(y_vertex_list)), int(max(y_vertex_list)))
             x_range = None
@@ -768,7 +768,7 @@ class Measurement(NewBase):
             x_range = (sc.scalar(min(x_vertex_list), unit=x_unit), sc.scalar(max(x_vertex_list), unit=x_unit))
             y_range = (sc.scalar(min(y_vertex_list), unit=y_unit), sc.scalar(max(y_vertex_list), unit=y_unit))
 
-            sliced_data_array = data_array['x', x_range[0]:x_range[1]]['y', y_range[0]:y_range[1]]
+            sliced_data_array = data_array['x', x_range[0] : x_range[1]]['y', y_range[0] : y_range[1]]
 
             sliced_x_pixels = sliced_data_array.coords['x_pixels'].values
             sliced_y_pixels = sliced_data_array.coords['y_pixels'].values
@@ -784,8 +784,8 @@ class Measurement(NewBase):
             'cmin': 0.0,
             'cmax': min(3.0, float(self._data_array.max().value * 1.1)),
             'mask_color': 'red',
-            'coords' : ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
+            'coords': ['x_pixels', 'y_pixels'] if not self._has_physical_coords else ['x', 'y'],
         }
 
     def __repr__(self):
-        return f"{self.display_name} with shape {self._data_array.shape} and regions of interest: {[roi.display_name for roi in self.regions_of_interest]}"  # noqa: E501
+        return f'{self.display_name} with shape {self._data_array.shape} and regions of interest: {[roi.display_name for roi in self.regions_of_interest]}'  # noqa: E501

@@ -51,11 +51,7 @@ class RectROI(NewBase):
         else:
             raise ValueError('Both x_range and y_range must be provided together or not at all.')
 
-    def set_pixel_coord_range(
-            self, 
-            x_pixel_range: Sequence[int], 
-            y_pixel_range: Sequence[int]
-            ) -> None:
+    def set_pixel_coord_range(self, x_pixel_range: Sequence[int], y_pixel_range: Sequence[int]) -> None:
         """Set the pixel coordinate ranges for the ROI.
         Parameters:
             x_pixel_range (Sequence[int]): The start and end pixel coordinates in the x direction.
@@ -69,11 +65,7 @@ class RectROI(NewBase):
         self._x_pixel_start, self._x_pixel_end = sc.array(values=x_pixel_range, dims='x')
         self._y_pixel_start, self._y_pixel_end = sc.array(values=y_pixel_range, dims='y')
 
-    def set_physical_coord_range(
-        self, 
-        x_range: Sequence[sc.Variable], 
-        y_range: Sequence[sc.Variable]
-    ) -> None:
+    def set_physical_coord_range(self, x_range: Sequence[sc.Variable], y_range: Sequence[sc.Variable]) -> None:
         """Set the physical coordinate ranges for the ROI.
         Parameters:
             x_range (Sequence[sc.Variable]): The start and end physical coordinates in the x direction.
@@ -263,22 +255,14 @@ class RectROI(NewBase):
         out_dict['x_pixel_range'] = [int(self.x_pixel_start), int(self.x_pixel_end)]
         out_dict['y_pixel_range'] = [int(self.y_pixel_start), int(self.y_pixel_end)]
         if self._has_physical_coords:
-            out_dict['x_range'] = [{'@module': 'scipp',
-                                    '@version': sc.__version__,
-                                    '@class' : 'scalar',
-                                    'dict' : sc.to_dict(self.x_start)}, 
-                                    {'@module': 'scipp',
-                                    '@version': sc.__version__,
-                                    '@class' : 'scalar',
-                                    'dict' : sc.to_dict(self.x_end)}]
-            out_dict['y_range'] = [{'@module': 'scipp',
-                                    '@version': sc.__version__,
-                                    '@class' : 'scalar',
-                                    'dict' : sc.to_dict(self.y_start)}, 
-                                    {'@module': 'scipp',
-                                    '@version': sc.__version__,
-                                    '@class' : 'scalar',
-                                    'dict' : sc.to_dict(self.y_end)}]
+            out_dict['x_range'] = [
+                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.x_start)},
+                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.x_end)},
+            ]
+            out_dict['y_range'] = [
+                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.y_start)},
+                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.y_end)},
+            ]
         return out_dict
 
     @classmethod

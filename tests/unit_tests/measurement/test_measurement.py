@@ -22,7 +22,14 @@ class TestMeasurement:
         x = sc.arange('x', 0, 7, 1, unit='m')
         y = sc.arange('y', 0, 7, 1, unit='m')
         data = sc.ones(dims=['y', 'x', 't'], shape=[6, 6, 10])
-        return sc.DataArray(data=data, coords={'tof': tof, 'y': y, 'x': x,})
+        return sc.DataArray(
+            data=data,
+            coords={
+                'tof': tof,
+                'y': y,
+                'x': x,
+            },
+        )
 
     @pytest.fixture
     def valid_data_array_no_xy_coords(self):
@@ -55,19 +62,20 @@ class TestMeasurement:
 
         # Sets an interactive backend to Matplotlib for testing.
         matplotlib.use('module://ipympl.backend_nbagg')
-        #matplotlib.use('Agg')
+        # matplotlib.use('Agg')
         pp.backends['2d'] = 'matplotlib'
 
         # Mock the notebook check to enable the plot.
         def mock_is_notebook():
             return True
+
         monkeypatch.setattr('easyimaging.measurement.measurement._is_notebook', mock_is_notebook)
 
     @pytest.fixture
     def use_noninteractive_backend(self):
         # Sets a non-interactive backend to Matplotlib for testing.
         matplotlib.use('module://ipympl.backend_nbagg')
-        #matplotlib.use('Agg')
+        # matplotlib.use('Agg')
         pp.backends['2d'] = 'matplotlib'
 
     @pytest.fixture
@@ -645,7 +653,6 @@ class TestMeasurement:
         assert valid_roi not in measurement.regions_of_interest
         assert extra_roi in measurement.regions_of_interest
 
-
     def test_regions_of_interest_clear(self, valid_data_array, valid_roi):
         # When
         measurement = Measurement(data_array=valid_data_array)
@@ -856,13 +863,11 @@ class TestMeasurement:
             measurement.revert_rebin()
 
     # Without making image comparisons, this is the best we can do to test the plot function
-    @pytest.mark.parametrize('time_of_flight, title', 
-        [
-            (None, '(averaged over TOF)'), 
-            (0, 'at TOF index 0'), 
-            (sc.scalar(5.0, unit='s'), 'at TOF=5.0 s')
-            ], 
-            ids=['sum', 'indice', 'scipp_scalar'])
+    @pytest.mark.parametrize(
+        'time_of_flight, title',
+        [(None, '(averaged over TOF)'), (0, 'at TOF index 0'), (sc.scalar(5.0, unit='s'), 'at TOF=5.0 s')],
+        ids=['sum', 'indice', 'scipp_scalar'],
+    )
     def test_plot_coordinates(self, valid_data_array, time_of_flight, title, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
@@ -894,7 +899,7 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then
-        fig = measurement.plot(xlabel = 'Custom X label')
+        fig = measurement.plot(xlabel='Custom X label')
         # Expect
         assert fig.canvas.xlabel == 'Custom X label'
         assert fig.canvas.ylabel == 'y [m]'
@@ -979,7 +984,7 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then
-        fig = measurement.slicer_plot(xlabel = 'Custom X label')
+        fig = measurement.slicer_plot(xlabel='Custom X label')
         # Expect
         assert fig.canvas.xlabel == 'Custom X label'
         assert fig.canvas.ylabel == 'y [m]'
@@ -1045,6 +1050,13 @@ class TestMeasurement:
         assert figs[0].view.colormapper.vmin == 0.0
         assert figs[1].canvas.ymax == 1.1
 
+    def test_roi_creator_fails_outside_notebook(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(RuntimeError, match='Interactive ROI creator is only supported in Jupyter notebooks.'):
+            measurement.roi_creator()
+
     def test_roi_creator_looks(self, valid_data_array, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
@@ -1062,7 +1074,16 @@ class TestMeasurement:
         assert figs[0].view.colormapper.vmax == 1.1
         assert figs[0].view.colormapper.vmin == 0.0
 
-    def test_roi_creator_create_roi(self, valid_data_array, plot_setup):
+    def test_roi_creator_user_overwrite(self, valid_data_array, plot_setup):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        figs = measurement.roi_creator(xlabel='Custom X label')
+        # Expect
+        assert figs[0].canvas.xlabel == 'Custom X label'
+        assert figs[0].canvas.ylabel == 'y [m]'
+
+    def test_roi_creator_create_roi_physical_coordinates(self, valid_data_array, plot_setup):
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then
@@ -1077,9 +1098,62 @@ class TestMeasurement:
         assert len(measurement.regions_of_interest) == 1
         roi = measurement.regions_of_interest[0]
         assert isinstance(roi, RectROI)
-        assert roi.x_pixel_range == (2, 5)
-        assert roi.y_pixel_range == (2, 5)
+        assert roi.x_pixel_start == 2
+        assert roi.x_pixel_end == 5
+        assert roi.y_pixel_start == 2
+        assert roi.y_pixel_end == 5
+        assert roi.x_start == sc.scalar(2.5, unit='m')
+        assert roi.x_end == sc.scalar(5, unit='m')
+        assert roi.y_start == sc.scalar(2.5, unit='m')
+        assert roi.y_end == sc.scalar(5, unit='m')
         assert roi._has_physical_coords
+
+    def test_roi_creator_create_roi_pixel_coordinates(self, valid_data_array, plot_setup):
+        # When
+        valid_data_array.coords.pop('x')
+        valid_data_array.coords.pop('y')
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        figs = measurement.roi_creator()
+        # Draw a rectangle
+        figs[0].toolbar['inspect']._tool.start()
+        figs[0].toolbar['inspect']._tool.click(x=2.5, y=2.5, button=1)
+        figs[0].toolbar['inspect']._tool.click(x=5.0, y=5.0, button=1)
+        figs[0].toolbar['inspect']._tool.stop()
+        # Expect
+        assert figs[1].canvas.ymax == 1.1
+        assert len(measurement.regions_of_interest) == 1
+        roi = measurement.regions_of_interest[0]
+        assert isinstance(roi, RectROI)
+        assert roi.x_pixel_start == 2
+        assert roi.x_pixel_end == 5
+        assert roi.y_pixel_start == 2
+        assert roi.y_pixel_end == 5
+        assert not roi._has_physical_coords
+
+    """
+    Currently, the click() method does not work for middle buttons or for holding buttons down.
+    So we cannot test the edit or delete functionality of the ROI creator.
+    """
+
+    # def test_roi_creator_delete_roi_both_physical_coords(self, valid_data_array, plot_setup):
+    #     # When
+    #     measurement = Measurement(data_array=valid_data_array)
+    #     roi = RectROI(
+    #         x_pixel_range=(2, 5),
+    #         y_pixel_range=(2, 5),
+    #         x_range=(sc.scalar(2.5, unit='m'), sc.scalar(5, unit='m')),
+    #         y_range=(sc.scalar(2.5, unit='m'), sc.scalar(5, unit='m')))
+    #     measurement.regions_of_interest.append(roi)
+    #     # Then
+    #     figs = measurement.roi_creator()
+    #     # Move the rectangle
+    #     figs[0].toolbar['inspect']._tool.start()
+    #     figs[0].toolbar['inspect']._tool.click(x=3, y=3, button=2)
+    #     figs[0].toolbar['inspect']._tool.click(x=4, y=4, button=2)
+    #     figs[0].toolbar['inspect']._tool.stop()
+    #     # Expect
+    #     assert len(measurement.regions_of_interest) == 0
 
     def test_spectrum_valid(self, valid_data_array):
         # When
@@ -1171,6 +1245,12 @@ class TestMeasurement:
         assert sc.identical(spectrum_before_rebin.data, sc.ones(dims=['t'], shape=[10]) * 0.5)
         assert sc.identical(spectrum_after_rebin.data, sc.ones(dims=['t'], shape=[10]) * 0.4375)
 
+    """
+    Currently fails due to an issue in scipp:
+    https://github.com/scipp/scipp/issues/3841
+    """
+
+    @pytest.mark.skip(reason='Currently fails due to an issue in scipp')
     @pytest.mark.parametrize('value', [np.nan, np.inf], ids=['nan', 'inf'])
     def test_spectrum_roi_with_masked_data(self, valid_data_array, value):
         # When
@@ -1185,7 +1265,7 @@ class TestMeasurement:
         print(measurement._data_array.data['t', 0])
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
         # Only 4 out of the 7 pixels in the ROI are zero, so the mean should be 4/6 for each tof value
-        assert sc.identical(spectrum.data, sc.full(value=4.0/7.0,dims=['t'], shape=[10]))
+        assert sc.identical(spectrum.data, sc.full(value=4.0 / 7.0, dims=['t'], shape=[10]))
 
     def test_spectrum_invalid_roi_type(self, valid_data_array):
         # When
