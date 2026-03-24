@@ -1,3 +1,4 @@
+import warnings
 from copy import copy
 from pathlib import Path
 from typing import MutableSequence
@@ -21,7 +22,7 @@ class TestMeasurement:
         tof = sc.arange('t', 0, 10, 1, unit='s')
         x = sc.arange('x', 0, 7, 1, unit='m')
         y = sc.arange('y', 0, 7, 1, unit='m')
-        data = sc.ones(dims=['y', 'x', 't'], shape=[6, 6, 10])
+        data = sc.ones(dims=['t', 'y', 'x'], shape=[10, 6, 6])
         return sc.DataArray(
             data=data,
             coords={
@@ -34,14 +35,8 @@ class TestMeasurement:
     @pytest.fixture
     def valid_data_array_no_xy_coords(self):
         tof = sc.arange('t', 0, 10, 1, unit='s')
-        data = sc.zeros(dims=('y', 'x', 't'), shape=(6, 6, 10))
+        data = sc.zeros(dims=('t', 'y', 'x'), shape=(10, 6, 6))
         return sc.DataArray(data=data, coords={'tof': tof})
-
-    # @pytest.fixture(autouse=True)
-    # def _reset_mpl_defaults(self):
-    #     matplotlib.rcdefaults()
-    #     matplotlib.use('Agg')
-    #     pp.backends.reset()
 
     @pytest.fixture(autouse=True)
     def _close_figures(self):
@@ -455,6 +450,68 @@ class TestMeasurement:
                 time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
                 y_positions=coord,
             )
+
+    def test_save_scitiff_downcast(self, valid_data_array, tmp_path):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.warns(UserWarning, match="The data array is of type float64, which is not directly supported by the SciTIFF format. It will be downcast to float32 when saving, which may result in loss of precision."):  # noqa: E501
+            measurement.save_scitiff(tmp_path / 'test.tiff')
+        assert 'non_finite' in measurement._data_array.masks
+
+    def test_save_scitiff(self, valid_data_array, tmp_path):
+        # When
+        data_array = valid_data_array.astype('float32')
+        measurement = Measurement(data_array=data_array)
+        # Then Expect
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # Ensure no warnings are raised for valid data type
+            measurement.save_scitiff(tmp_path / 'test.tiff')
+        assert 'non_finite' in measurement._data_array.masks
+
+    def test_save_scitiff_path_object(self, valid_data_array, tmp_path):
+        # When
+        data_array = valid_data_array.astype('float32')
+        measurement = Measurement(data_array=data_array)
+        path = Path(tmp_path) / 'test.tiff'
+        # Then Expect
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # Ensure no warnings are raised for valid data type
+            measurement.save_scitiff(path)
+        assert 'non_finite' in measurement._data_array.masks
+
+    def test_save_scitiff_invalid_filename_type(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(TypeError, match='filename must be a string or Path object.'):
+            measurement.save_scitiff(12345)
+        assert 'non_finite' in measurement._data_array.masks
+
+    def test_save_scitiff_non_existent_directory(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(RuntimeError, match="Failed to save SciTIFF file 'non_existent_directory/test.tiff'"):
+            measurement.save_scitiff('non_existent_directory/test.tiff')
+        assert 'non_finite' in measurement._data_array.masks
+
+    def test_save_scitiff_rebinned_data_array(self, valid_data_array, tmp_path):
+        # When
+        data_array = valid_data_array.astype('float32')
+        measurement = Measurement(data_array=data_array)
+        measurement.rebin(dimensions={'x': 2, 'y': 2})
+        # Then
+        measurement.save_scitiff(tmp_path / 'test.tiff')
+        loaded_measurement = Measurement.from_scitiff(tmp_path / 'test.tiff')
+        # Expect
+        assert sc.identical(loaded_measurement._data_array.coords['x_pixels'], sc.arange('x', 0, 4, 1))
+        assert sc.identical(loaded_measurement._data_array.coords['y_pixels'], sc.arange('y', 0, 4, 1))
+        loaded_measurement._data_array.coords.pop('x_pixels')
+        loaded_measurement._data_array.coords.pop('y_pixels')
+        measurement._data_array.coords.pop('x_pixels')
+        measurement._data_array.coords.pop('y_pixels')
+        assert sc.identical(loaded_measurement._data_array, measurement._data_array)
 
     @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
     def test_positions(self, valid_data_array, coordinate):

@@ -16,6 +16,7 @@ from easyscience.base_classes import NewBase
 from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
+from scitiff import save_scitiff
 
 from ..utils import _is_notebook
 from ..utils import _to_edges
@@ -177,6 +178,33 @@ class Measurement(NewBase):
 
         instance = cls(data_array=data_array, unique_name=unique_name, display_name=display_name)
         return instance
+
+    def save_scitiff(self, filename: str | Path) -> None:
+        """
+        Save the measurement data to a SciTIFF file with its time-of-flight and physical coordinate information.
+        Note that it is the rebinned data array that is saved if rebinning has been applied.
+
+        Parameters
+        ----------
+        filename : str | Path
+            Path to the output SciTIFF file.
+        """
+        if not isinstance(filename, (str, Path)):
+            raise TypeError('filename must be a string or Path object.')
+        try:
+            nan_mask = self._data_array.masks.pop('non_finite')
+            if str(self._data_array.dtype)=='float64':
+                warnings.warn(
+                    "The data array is of type float64, which is not directly supported by the SciTIFF format. "
+                    "It will be downcast to float32 when saving, which may result in loss of precision. "
+                )
+                save_scitiff(self._data_array.astype('float32'), filename)
+            else:
+                save_scitiff(self._data_array, filename)
+        except Exception as e:
+            raise RuntimeError(f"Failed to save SciTIFF file '{filename}': {e}") from e
+        finally:
+            self._data_array.masks['non_finite'] = nan_mask  # Ensure mask is restored
 
     @property
     def _data_array(self) -> sc.DataArray:
