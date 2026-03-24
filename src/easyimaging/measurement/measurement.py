@@ -193,10 +193,10 @@ class Measurement(NewBase):
             raise TypeError('filename must be a string or Path object.')
         try:
             nan_mask = self._data_array.masks.pop('non_finite')
-            if str(self._data_array.dtype)=='float64':
+            if str(self._data_array.dtype) == 'float64':
                 warnings.warn(
-                    "The data array is of type float64, which is not directly supported by the SciTIFF format. "
-                    "It will be downcast to float32 when saving, which may result in loss of precision. "
+                    'The data array is of type float64, which is not directly supported by the SciTIFF format. '
+                    'It will be downcast to float32 when saving, which may result in loss of precision. '
                 )
                 save_scitiff(self._data_array.astype('float32'), filename)
             else:
@@ -205,6 +205,21 @@ class Measurement(NewBase):
             raise RuntimeError(f"Failed to save SciTIFF file '{filename}': {e}") from e
         finally:
             self._data_array.masks['non_finite'] = nan_mask  # Ensure mask is restored
+
+    @property
+    def data_array_copy(self) -> sc.DataArray:
+        """
+        Get the current data array of the measurement, either rebinned or the original full resolution.
+        Note that this will make a full copy of the data array, so it should be used with caution for large datasets.
+        """
+        return self._data_array.copy(deep=True)
+
+    @data_array_copy.setter
+    def data_array_copy(self, value: sc.DataArray) -> None:
+        raise AttributeError(
+            'Cannot set data_array, it is a read-only property. '
+            'Please make a new Measurement instance if you want to use a different data array.'
+        )
 
     @property
     def _data_array(self) -> sc.DataArray:
@@ -380,8 +395,9 @@ class Measurement(NewBase):
     @regions_of_interest.setter
     def regions_of_interest(self, value: EasyList[RectROI]) -> None:
         raise AttributeError(
-            'Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.'  # noqa: E501
-        )  # noqa: E501
+            'Cannot set regions_of_interest, it is a read-only property. '
+            'Please simply add or remove ROIs directly from the list.'
+        )
 
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """

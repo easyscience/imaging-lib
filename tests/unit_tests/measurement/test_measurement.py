@@ -455,7 +455,11 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.warns(UserWarning, match="The data array is of type float64, which is not directly supported by the SciTIFF format. It will be downcast to float32 when saving, which may result in loss of precision."):  # noqa: E501
+        with pytest.warns(
+            UserWarning,
+            match='The data array is of type float64, which is not directly supported by the SciTIFF format. '
+            'It will be downcast to float32 when saving, which may result in loss of precision.',
+        ):  # noqa: E501
             measurement.save_scitiff(tmp_path / 'test.tiff')
         assert 'non_finite' in measurement._data_array.masks
 
@@ -465,7 +469,7 @@ class TestMeasurement:
         measurement = Measurement(data_array=data_array)
         # Then Expect
         with warnings.catch_warnings():
-            warnings.simplefilter("error")  # Ensure no warnings are raised for valid data type
+            warnings.simplefilter('error')  # Ensure no warnings are raised for valid data type
             measurement.save_scitiff(tmp_path / 'test.tiff')
         assert 'non_finite' in measurement._data_array.masks
 
@@ -476,7 +480,7 @@ class TestMeasurement:
         path = Path(tmp_path) / 'test.tiff'
         # Then Expect
         with warnings.catch_warnings():
-            warnings.simplefilter("error")  # Ensure no warnings are raised for valid data type
+            warnings.simplefilter('error')  # Ensure no warnings are raised for valid data type
             measurement.save_scitiff(path)
         assert 'non_finite' in measurement._data_array.masks
 
@@ -512,6 +516,23 @@ class TestMeasurement:
         measurement._data_array.coords.pop('x_pixels')
         measurement._data_array.coords.pop('y_pixels')
         assert sc.identical(loaded_measurement._data_array, measurement._data_array)
+
+    def test_data_array_copy(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        assert sc.identical(measurement.data_array_copy, measurement._data_array)
+        assert measurement.data_array_copy is not measurement._data_array  # Ensure a copy was returned
+
+    def test_data_array_copy_write(self, valid_data_array):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then Expect
+        with pytest.raises(
+            AttributeError,
+            match='Cannot set data_array, it is a read-only property. Please make a new Measurement instance if you want to use a different data array.',  # noqa: E501
+        ):
+            measurement.data_array_copy = copy(measurement._data_array)
 
     @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
     def test_positions(self, valid_data_array, coordinate):
