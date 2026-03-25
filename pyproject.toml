@@ -26,9 +26,9 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Development Status :: 3 - Alpha"
 ]
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.11,<3.14"
 dependencies = [
-    #"easyscience>=2.0.0",
+    "easyscience>=2.2.0",
     "scitiff",
     "essimaging",
     "plopp",

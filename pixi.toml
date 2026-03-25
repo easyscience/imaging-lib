@@ -4,7 +4,7 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [dependencies]
-python = ">=3.11,<3.15"
+python = ">=3.11,<3.14"
 
 [feature.dev.pypi-dependencies]
 # Development dependencies
@@ -51,5 +51,4 @@ docs-clean = "rm -rf docs/_build/"
 [pypi-dependencies] # == [feature.default.pypi-dependencies]
 # Editable install of the package itself
 easyimaging = { path = ".", editable = true }
-easyscience = { git = "https://github.com/easyscience/corelib", branch = "develop" }
 
