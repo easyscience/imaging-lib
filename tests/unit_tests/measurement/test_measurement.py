@@ -1009,8 +1009,8 @@ class TestMeasurement:
             ('not_a_valid_type',),
             (sc.array(dims=['tof'], values=[5.0, 10.0], unit='s'),),
         ],
-            ids=['invalid_type', 'array_input'],
-        )
+        ids=['invalid_type', 'array_input'],
+    )
     def test_plot_invalid_time_of_flight_type(self, valid_data_array, time_of_flight):
         # When
         measurement = Measurement(data_array=valid_data_array)

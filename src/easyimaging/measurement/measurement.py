@@ -160,37 +160,37 @@ class Measurement(NewBase):
             raise RuntimeError(f"Failed to rename dimensions for TIFF stack file '{filename}': {e}") from e
 
         time_of_flights = cls._validate_provided_coord(
-            data_array = data_array, 
-            coord = time_of_flights,
-            coord_name = 'time_of_flight',
-            dim = 't',
-            length_context = 'frames in the TIFF stack',
-            expected_dim_string = 'time',
-            expected_unit = 's'
+            data_array=data_array,
+            coord=time_of_flights,
+            coord_name='time_of_flight',
+            dim='t',
+            length_context='frames in the TIFF stack',
+            expected_dim_string='time',
+            expected_unit='s',
         )
         data_array.coords['tof'] = time_of_flights
 
         if x_positions is not None:
             x_positions = cls._validate_provided_coord(
-                data_array = data_array,
-                coord = x_positions,
-                coord_name = 'x_positions',
-                dim = 'x',
-                length_context = 'pixels in the x dimension',
-                expected_dim_string = 'length',
-                expected_unit = 'm'
+                data_array=data_array,
+                coord=x_positions,
+                coord_name='x_positions',
+                dim='x',
+                length_context='pixels in the x dimension',
+                expected_dim_string='length',
+                expected_unit='m',
             )
             data_array.coords['x'] = x_positions
 
         if y_positions is not None:
             y_positions = cls._validate_provided_coord(
-                data_array = data_array,
-                coord = y_positions,
-                coord_name = 'y_positions',
-                dim = 'y',
-                length_context = 'pixels in the y dimension',
-                expected_dim_string = 'length',
-                expected_unit = 'm'
+                data_array=data_array,
+                coord=y_positions,
+                coord_name='y_positions',
+                dim='y',
+                length_context='pixels in the y dimension',
+                expected_dim_string='length',
+                expected_unit='m',
             )
             data_array.coords['y'] = y_positions
 
@@ -710,7 +710,7 @@ class Measurement(NewBase):
 
         Parameters
         ----------
-        roi : RectROI | str | None
+        roi : RectROI | str | Nonepixi 
             The region of interest for which to extract the spectrum.
             If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
 
@@ -726,7 +726,10 @@ class Measurement(NewBase):
             if roi in self.regions_of_interest:
                 roi = self.regions_of_interest[roi]
             else:
-                raise KeyError(f"ROI with unique name '{roi}' not found in the measurement's list of ROIs: [{', '.join(item.unique_name for item in self.regions_of_interest)}].")  # noqa: E501
+                raise KeyError(
+                    f"ROI with unique name '{roi}' not found in the measurement's list of ROIs: "
+                    f'[{", ".join(item.unique_name for item in self.regions_of_interest)}].'
+                )
         if roi is None:
             spectrum_data = self._data_array.mean(dim=['x', 'y'])
         elif self._has_physical_coords and roi._has_physical_coords:
