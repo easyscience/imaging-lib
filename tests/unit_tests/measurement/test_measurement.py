@@ -383,11 +383,13 @@ class TestMeasurement:
                 ValueError,
                 'Length of time_of_flight array does not match the number of frames in the TIFF stack.',
             ),  # noqa: E501
+            (sc.scalar(5.0, unit='s'), TypeError, 'time_of_flight must be a scipp Variable or a numpy ndarray.'),
             (sc.arange('t', 0, 240, 1, unit='m'), sc.UnitError, "time_of_flight must have a unit of time, such as 's'"),
         ],
         ids=[
             'invalid_type',
             'wrong_length',
+            'scalar',
             'invalid_unit',
         ],
     )
@@ -1001,12 +1003,20 @@ class TestMeasurement:
         assert fig.view.colormapper.vmax == 1.1
         assert fig.view.colormapper.vmin == 0.0
 
-    def test_plot_invalid_time_of_flight_type(self, valid_data_array):
+    @pytest.mark.parametrize(
+        'time_of_flight',
+        [
+            ('not_a_valid_type',),
+            (sc.array(dims=['tof'], values=[5.0, 10.0], unit='s'),),
+        ],
+            ids=['invalid_type', 'array_input'],
+        )
+    def test_plot_invalid_time_of_flight_type(self, valid_data_array, time_of_flight):
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
         with pytest.raises(TypeError, match='time_of_flight must be an integer, scipp scalar, or None.'):
-            measurement.plot(time_of_flight='not_a_valid_type')
+            measurement.plot(time_of_flight=time_of_flight)
 
     def test_plot_invalid_time_of_flight_unit(self, valid_data_array):
         # When

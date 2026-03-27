@@ -160,19 +160,37 @@ class Measurement(NewBase):
             raise RuntimeError(f"Failed to rename dimensions for TIFF stack file '{filename}': {e}") from e
 
         time_of_flights = cls._validate_provided_coord(
-            data_array, time_of_flights, 'time_of_flight', 't', 'frames in the TIFF stack', 'time', 's'
+            data_array = data_array, 
+            coord = time_of_flights,
+            coord_name = 'time_of_flight',
+            dim = 't',
+            length_context = 'frames in the TIFF stack',
+            expected_dim_string = 'time',
+            expected_unit = 's'
         )
         data_array.coords['tof'] = time_of_flights
 
         if x_positions is not None:
             x_positions = cls._validate_provided_coord(
-                data_array, x_positions, 'x_positions', 'x', 'pixels in the x dimension', 'length', 'm'
+                data_array = data_array,
+                coord = x_positions,
+                coord_name = 'x_positions',
+                dim = 'x',
+                length_context = 'pixels in the x dimension',
+                expected_dim_string = 'length',
+                expected_unit = 'm'
             )
             data_array.coords['x'] = x_positions
 
         if y_positions is not None:
             y_positions = cls._validate_provided_coord(
-                data_array, y_positions, 'y_positions', 'y', 'pixels in the y dimension', 'length', 'm'
+                data_array = data_array,
+                coord = y_positions,
+                coord_name = 'y_positions',
+                dim = 'y',
+                length_context = 'pixels in the y dimension',
+                expected_dim_string = 'length',
+                expected_unit = 'm'
             )
             data_array.coords['y'] = y_positions
 
@@ -260,13 +278,13 @@ class Measurement(NewBase):
                 'Please use the set_physical_coord_positions method.'
             )
         value = self._validate_provided_coord(
-            self._data_array,
-            value,
-            'x_positions',
-            'x',
-            'pixels in the x dimension',
-            'length',
-            'm',
+            data_array=self._data_array,
+            coord=value,
+            coord_name='x_positions',
+            dim='x',
+            length_context='pixels in the x dimension',
+            expected_dim_string='length',
+            expected_unit='m',
         )
         self._data_array.coords['x'] = value
 
@@ -296,13 +314,13 @@ class Measurement(NewBase):
                 'Please use the set_physical_coord_positions method.'
             )
         value = self._validate_provided_coord(
-            self._data_array,
-            value,
-            'y_positions',
-            'y',
-            'pixels in the y dimension',
-            'length',
-            'm',
+            data_array=self._data_array,
+            coord=value,
+            coord_name='y_positions',
+            dim='y',
+            length_context='pixels in the y dimension',
+            expected_dim_string='length',
+            expected_unit='m',
         )
         self._data_array.coords['y'] = value
 
@@ -322,22 +340,22 @@ class Measurement(NewBase):
             If a numpy array is provided, the unit is assumed to be meters.
         """
         x_positions = self._validate_provided_coord(
-            self._data_array,
-            x_positions,
-            'x_positions',
-            'x',
-            'pixels in the x dimension',
-            'length',
-            'm',
+            data_array=self._data_array,
+            coord=x_positions,
+            coord_name='x_positions',
+            dim='x',
+            length_context='pixels in the x dimension',
+            expected_dim_string='length',
+            expected_unit='m',
         )
         y_positions = self._validate_provided_coord(
-            self._data_array,
-            y_positions,
-            'y_positions',
-            'y',
-            'pixels in the y dimension',
-            'length',
-            'm',
+            data_array=self._data_array,
+            coord=y_positions,
+            coord_name='y_positions',
+            dim='y',
+            length_context='pixels in the y dimension',
+            expected_dim_string='length',
+            expected_unit='m',
         )
         self._data_array.coords['x'] = x_positions
         self._data_array.coords['y'] = y_positions
@@ -373,13 +391,13 @@ class Measurement(NewBase):
             If a numpy array is provided, the unit is assumed to be seconds.
         """
         value = self._validate_provided_coord(
-            self._data_array,
-            value,
-            'time_of_flights',
-            't',
-            'frames in the measurement',
-            'time',
-            's',
+            data_array=self._data_array,
+            coord=value,
+            coord_name='time_of_flights',
+            dim='t',
+            length_context='frames in the measurement',
+            expected_dim_string='time',
+            expected_unit='s',
         )
         if any(value.to(unit='s') < sc.scalar(0, unit='s')):
             raise ValueError('time_of_flight values must be non-negative.')
@@ -468,7 +486,11 @@ class Measurement(NewBase):
             title_suffix = ' (averaged over TOF)'
         elif isinstance(time_of_flight, int):
             title_suffix = f' at TOF index {time_of_flight}'
-        elif isinstance(time_of_flight, sc.Variable):
+        elif isinstance(time_of_flight, sc.Variable) and not time_of_flight.sizes:
+            try:
+                time_of_flight.to(unit='s')
+            except UnitError:
+                raise UnitError("time_of_flight variable must have a unit of time such as 's'") from None
             title_suffix = f' at TOF={time_of_flight.value} {time_of_flight.unit}'
         else:
             raise TypeError('time_of_flight must be an integer, scipp scalar, or None.')
@@ -484,11 +506,7 @@ class Measurement(NewBase):
         elif isinstance(time_of_flight, int):
             plot = self._data_array['t', time_of_flight].plot(**plot_kwargs_defaults)
         elif isinstance(time_of_flight, sc.Variable):
-            try:
-                plot = self._data_array['tof', time_of_flight].plot(**plot_kwargs_defaults)
-            except UnitError:
-                raise UnitError("time_of_flight variable must have a unit of time such as 's'") from None
-
+            plot = self._data_array['tof', time_of_flight].plot(**plot_kwargs_defaults)
         if _is_notebook():
             return plot
         else:
@@ -708,7 +726,7 @@ class Measurement(NewBase):
             if roi in self.regions_of_interest:
                 roi = self.regions_of_interest[roi]
             else:
-                raise KeyError(f"ROI with unique name '{roi}' not found in the measurement's list of ROIs.")
+                raise KeyError(f"ROI with unique name '{roi}' not found in the measurement's list of ROIs: [{', '.join(item.unique_name for item in self.regions_of_interest)}].")  # noqa: E501
         if roi is None:
             spectrum_data = self._data_array.mean(dim=['x', 'y'])
         elif self._has_physical_coords and roi._has_physical_coords:
@@ -781,7 +799,7 @@ class Measurement(NewBase):
         expected_dim_string: str,
         expected_unit: str,
     ) -> sc.Variable:
-        if not isinstance(coord, (sc.Variable, np.ndarray)):
+        if not (isinstance(coord, sc.Variable) and coord.sizes) and not isinstance(coord, np.ndarray):
             raise TypeError(f'{coord_name} must be a scipp Variable or a numpy ndarray.')
         if len(coord) not in (data_array.sizes[dim], data_array.sizes[dim] + 1):
             raise ValueError(f'Length of {coord_name} array does not match the number of {length_context}.')
