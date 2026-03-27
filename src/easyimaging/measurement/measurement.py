@@ -710,7 +710,7 @@ class Measurement(NewBase):
 
         Parameters
         ----------
-        roi : RectROI | str | Nonepixi 
+        roi : RectROI | str | None
             The region of interest for which to extract the spectrum.
             If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
 
