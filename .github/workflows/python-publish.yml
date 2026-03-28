@@ -21,20 +21,20 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
-    - uses: actions/setup-python@v5
-      with:
-        python-version: 3.9
+    - name: Setup Pixi
+      uses: ./.github/actions/setup-pixi
 
-    - name: Install dependencies and build
-      run: |
-        pip install -e '.[dev]'
-        python -m build
+    - name: Build package
+      run: pixi run build
 
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.PYPI_PASSWORD }}
+        password: ${{ secrets.PYPI_TOKEN_ES }}
