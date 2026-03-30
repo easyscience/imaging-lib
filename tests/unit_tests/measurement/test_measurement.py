@@ -246,7 +246,9 @@ class TestMeasurement:
         with pytest.raises(ValueError, match="data array must have both 'x' and 'y' coordinates or neither."):
             Measurement(data_array=invalid_data_array)
 
-    @pytest.mark.parametrize('path', ['small_scitiff.tiff', Path('small_scitiff.tiff')], ids=['str_path', 'Path_object'])
+    @pytest.mark.parametrize(
+        'path', ['tests/small_scitiff.tiff', Path('tests/small_scitiff.tiff')], ids=['str_path', 'Path_object']
+    )
     def test_from_scitiff_valid(self, path):
         # When Then
         measurement = Measurement.from_scitiff(filename=path, unique_name='test_measurement', display_name='Test Measurement')
@@ -275,14 +277,14 @@ class TestMeasurement:
 
     def test_from_scitiff_not_a_scitiff(self):
         # When
-        path = 'small_tiff.tiff'  # This is a regular TIFF, not a SciTIFF
+        path = 'tests/small_tiff.tiff'  # This is a regular TIFF, not a SciTIFF
         # Then Expect
         with pytest.raises(RuntimeError, match=f"Tiff file '{path}' not a proper SciTIFF file:"):
             Measurement.from_scitiff(
                 filename=path,
             )
 
-    @pytest.mark.parametrize('path', ['small_tiff.tiff', Path('small_tiff.tiff')], ids=['str_path', 'Path_object'])
+    @pytest.mark.parametrize('path', ['tests/small_tiff.tiff', Path('tests/small_tiff.tiff')], ids=['str_path', 'Path_object'])
     def test_from_tiff_stack_valid_paths(self, path):
         # When Then
         measurement = Measurement.from_tiff_stack(
@@ -309,7 +311,7 @@ class TestMeasurement:
     def test_from_tiff_stack_valid_time_of_flights(self, coord, expected):
         # When Then
         measurement = Measurement.from_tiff_stack(
-            filename='small_tiff.tiff',
+            filename='tests/small_tiff.tiff',
             time_of_flights=coord,
         )
         # Expect
@@ -329,7 +331,7 @@ class TestMeasurement:
     def test_from_tiff_stack_valid_x_positions(self, coord, expected):
         # When Then
         measurement = Measurement.from_tiff_stack(
-            filename='small_tiff.tiff',
+            filename='tests/small_tiff.tiff',
             time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
             x_positions=coord,
             y_positions=sc.arange('y', 0, 1020, 20, unit='cm'),
@@ -352,7 +354,7 @@ class TestMeasurement:
     def test_from_tiff_stack_valid_y_positions(self, coord, expected):
         # When Then
         measurement = Measurement.from_tiff_stack(
-            filename='small_tiff.tiff',
+            filename='tests/small_tiff.tiff',
             time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
             y_positions=coord,
             x_positions=sc.arange('x', 0, 510, 10, unit='cm'),
@@ -397,7 +399,7 @@ class TestMeasurement:
         # When Then Expect
         with pytest.raises(error, match=expected_message):
             Measurement.from_tiff_stack(
-                filename='small_tiff.tiff',
+                filename='tests/small_tiff.tiff',
                 time_of_flights=coord,
             )
 
@@ -422,7 +424,7 @@ class TestMeasurement:
         # When Then Expect
         with pytest.raises(error, match=expected_message):
             Measurement.from_tiff_stack(
-                filename='small_tiff.tiff',
+                filename='tests/small_tiff.tiff',
                 time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
                 x_positions=coord,
             )
@@ -448,7 +450,7 @@ class TestMeasurement:
         # When Then Expect
         with pytest.raises(error, match=expected_message):
             Measurement.from_tiff_stack(
-                filename='small_tiff.tiff',
+                filename='tests/small_tiff.tiff',
                 time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
                 y_positions=coord,
             )
