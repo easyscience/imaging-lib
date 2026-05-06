@@ -28,7 +28,7 @@ dependencies = [
   'scitiff',            # The data-format loader/saver for neutron tiffs
   'essimaging',         # The ESS imaging reduction module
   'plopp',              # The plotting library of scipp
-  'ncrystal[composer]'  # The backend calculator
+  'ncrystal[composer]', # The backend calculator
   'pooch',              # Data downloader
 ]
 
