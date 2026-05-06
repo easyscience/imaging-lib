@@ -48,9 +48,6 @@ env:
   IS_RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/v') }}
   GITHUB_REPOSITORY: ${{ github.repository }}
   NOTEBOOKS_DIR: tutorials
-  # Opt into Node.js 24 for all JavaScript actions.
-  # Remove once all referenced actions natively target Node 24.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   # Single job that builds and deploys documentation.
@@ -86,7 +83,7 @@ jobs:
       # Check out the repository source code.
       # Note: The gh-pages branch is fetched separately later for mike deployment.
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       # Activate dark mode to create documentation with Plotly charts in dark mode
       # Need a better solution to automatically switch the chart colour theme based on the mkdocs material switcher
