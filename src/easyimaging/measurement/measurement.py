@@ -1,6 +1,6 @@
-#  SPDX-FileCopyrightText: 2026 EasyImaging contributors  <imaging@easyscience.software>
-#  SPDX-License-Identifier: BSD-3-Clause
-#  © 2021-2026 Contributors to the EasyImaging project <https://github.com/easyScience/EasyImaging>
+# SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
+# SPDX-License-Identifier: BSD-3-Clause
+
 from __future__ import annotations
 
 import warnings

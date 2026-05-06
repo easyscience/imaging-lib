@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
+# SPDX-License-Identifier: BSD-3-Clause
+
 def _is_notebook() -> bool:
     """
     Check if the code is running in a Jupyter notebook environment.
