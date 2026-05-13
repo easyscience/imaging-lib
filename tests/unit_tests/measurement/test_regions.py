@@ -19,7 +19,14 @@ class TestRectROI:
         x_end = sc.scalar(10.0, unit='m')
         y_start = sc.scalar(0.0, unit='m')
         y_end = sc.scalar(5.0, unit='m')
-        return RectROI((10, 50), (20, 80), (x_start, x_end), (y_start, y_end), unique_name='test_roi', display_name='Test ROI')
+        return RectROI(
+            (10, 50),
+            (20, 80),
+            (x_start, x_end),
+            (y_start, y_end),
+            unique_name='test_roi',
+            display_name='Test ROI',
+        )
 
     def test_init_valid_physical_coords(self, roi_with_physical_coords):
         # When Then
@@ -103,12 +110,12 @@ class TestRectROI:
             (
                 (sc.scalar(0.0, unit='m'), sc.array(dims=['x'], values=[1.0, 2.0], unit='m')),
                 ValueError,
-                'Physical coordinates must be a scipp scalar \(0-dimensional Variable\).',
+                r'Physical coordinates must be a scipp scalar \(0-dimensional Variable\).',
             ),  # Second element not a scalar  # noqa: E501
             (
                 (sc.scalar(0.0, unit='m'), sc.scalar(1.0, unit='s')),
                 UnitError,
-                "Physical coordinates must be a scipp scalar with a unit of length \(e.g., 'm'\).",
+                r"Physical coordinates must be a scipp scalar with a unit of length \(e.g., 'm'\).",
             ),  # Second element with wrong unit  # noqa: E501
         ],
         ids=[
@@ -185,7 +192,9 @@ class TestRectROI:
         assert getattr(roi, attribute) == 15
 
     @pytest.mark.parametrize(
-        'attribute', ['x_pixel_end', 'y_pixel_start', 'y_pixel_end'], ids=['x_pixel_end', 'y_pixel_start', 'y_pixel_end']
+        'attribute',
+        ['x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
+        ids=['x_pixel_end', 'y_pixel_start', 'y_pixel_end'],
     )
     @pytest.mark.parametrize(
         'invalid_value, error, message',
@@ -237,7 +246,9 @@ class TestRectROI:
         assert getattr(roi, attribute) is not getattr(roi, f'_{attribute}')  # Ensure a copy is returned
 
     @pytest.mark.parametrize(
-        'attribute', ['x_start', 'x_end', 'y_start', 'y_end'], ids=['x_start', 'x_end', 'y_start', 'y_end']
+        'attribute',
+        ['x_start', 'x_end', 'y_start', 'y_end'],
+        ids=['x_start', 'x_end', 'y_start', 'y_end'],
     )
     def test_physical_coordinate_setter(self, roi_with_physical_coords, attribute):
         # When
@@ -249,17 +260,24 @@ class TestRectROI:
         assert sc.identical(getattr(roi, attribute), new_value)
 
     @pytest.mark.parametrize(
-        'attribute', ['x_start', 'x_end', 'y_start', 'y_end'], ids=['x_start', 'x_end', 'y_start', 'y_end']
+        'attribute',
+        ['x_start', 'x_end', 'y_start', 'y_end'],
+        ids=['x_start', 'x_end', 'y_start', 'y_end'],
     )
     def test_physical_coordinate_setter_setting_single_coordinate(self, roi_basic, attribute):
         # When
         roi = roi_basic
         # Then Expect
-        with pytest.raises(ValueError, match=f'Cannot set {attribute} before setting all physical coordinate ranges.'):
+        with pytest.raises(
+            ValueError,
+            match=f'Cannot set {attribute} before setting all physical coordinate ranges.',
+        ):
             setattr(roi, attribute, sc.scalar(1.0, unit='m'))
 
     @pytest.mark.parametrize(
-        'attribute', ['x_start', 'x_end', 'y_start', 'y_end'], ids=['x_start', 'x_end', 'y_start', 'y_end']
+        'attribute',
+        ['x_start', 'x_end', 'y_start', 'y_end'],
+        ids=['x_start', 'x_end', 'y_start', 'y_end'],
     )
     @pytest.mark.parametrize(
         'invalid_value, error, message',
@@ -268,12 +286,12 @@ class TestRectROI:
             (
                 sc.array(dims=['x'], values=[1.0, 2.0], unit='m'),
                 ValueError,
-                'must be a scipp scalar \(0-dimensional Variable\).',
+                r'must be a scipp scalar \(0-dimensional Variable\).',
             ),  # Not a scalar  # noqa: E501
             (
                 sc.scalar(1.0, unit='s'),
                 UnitError,
-                "must be a scipp scalar with a unit of length \(e.g., 'm'\).",
+                r"must be a scipp scalar with a unit of length \(e.g., 'm'\).",
             ),  # Wrong unit  # noqa: E501
         ],
         ids=['not_scipp_variable', 'not_scalar', 'wrong_unit'],
@@ -321,8 +339,14 @@ class TestRectROI:
         # When Then
         roi_dict = roi_with_physical_coords.to_dict()
         # Expect
-        assert roi_dict['x_pixel_range'] == [roi_with_physical_coords.x_pixel_start, roi_with_physical_coords.x_pixel_end]
-        assert roi_dict['y_pixel_range'] == [roi_with_physical_coords.y_pixel_start, roi_with_physical_coords.y_pixel_end]
+        assert roi_dict['x_pixel_range'] == [
+            roi_with_physical_coords.x_pixel_start,
+            roi_with_physical_coords.x_pixel_end,
+        ]
+        assert roi_dict['y_pixel_range'] == [
+            roi_with_physical_coords.y_pixel_start,
+            roi_with_physical_coords.y_pixel_end,
+        ]
         assert isinstance(roi_dict['x_range'], list) and len(roi_dict['x_range']) == 2
         assert isinstance(roi_dict['y_range'], list) and len(roi_dict['y_range']) == 2
         assert isinstance(roi_dict['x_range'][0], dict) and roi_dict['x_range'][0]['@module'] == 'scipp'

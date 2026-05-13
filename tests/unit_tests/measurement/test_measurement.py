@@ -93,7 +93,11 @@ class TestMeasurement:
 
     def test_init_valid_data_array(self, valid_data_array):
         # When Then
-        measurement = Measurement(data_array=valid_data_array, unique_name='test_measurement', display_name='Test Measurement')
+        measurement = Measurement(
+            data_array=valid_data_array,
+            unique_name='test_measurement',
+            display_name='Test Measurement',
+        )
         # Expect
         assert measurement._data_array is not valid_data_array  # Ensure a copy was made
         assert not sc.any(measurement._data_array.masks['non_finite']).value
@@ -153,15 +157,31 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'new_tof_coordinate, error, expected_message',
         [
-            (None, ValueError, "data array must have a 'tof' coordinate for time-of-flight information."),
-            (sc.scalar(5.0, unit='s'), DimensionError, "'tof' coordinate must be of dimension 't'."),
-            (sc.arange('x', 0, 6, 1, unit='s'), DimensionError, "'tof' coordinate must be of dimension 't'."),
+            (
+                None,
+                ValueError,
+                "data array must have a 'tof' coordinate for time-of-flight information.",
+            ),
+            (
+                sc.scalar(5.0, unit='s'),
+                DimensionError,
+                "'tof' coordinate must be of dimension 't'.",
+            ),
+            (
+                sc.arange('x', 0, 6, 1, unit='s'),
+                DimensionError,
+                "'tof' coordinate must be of dimension 't'.",
+            ),
             (
                 sc.arange('t', 0, 10, 1, unit='m'),
                 sc.UnitError,
                 "'tof' coordinate must have a unit of time, such as \\('s'\\).",
             ),  # noqa: E501 # fmt: skip
-            (sc.arange('t', -5, 5, 1, unit='s'), ValueError, 'time_of_flight values must be non-negative.'),
+            (
+                sc.arange('t', -5, 5, 1, unit='s'),
+                ValueError,
+                'time_of_flight values must be non-negative.',
+            ),
         ],
         ids=[
             'missing_tof',
@@ -185,8 +205,16 @@ class TestMeasurement:
         'new_x_coordinate, error, expected_message',
         [
             (sc.scalar(5.0, unit='m'), DimensionError, "'x' coordinate must be of dimension 'x'"),
-            (sc.arange('t', 0, 10, 1, unit='m'), DimensionError, "'x' coordinate must be of dimension 'x'."),
-            (sc.arange('x', 0, 6, 1, unit='s'), sc.UnitError, "'x' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
+            (
+                sc.arange('t', 0, 10, 1, unit='m'),
+                DimensionError,
+                "'x' coordinate must be of dimension 'x'.",
+            ),
+            (
+                sc.arange('x', 0, 6, 1, unit='s'),
+                sc.UnitError,
+                "'x' coordinate must have a unit of length, such as \\('m'\\).",
+            ),  # noqa: E501
         ],
         ids=[
             'scalar_x',
@@ -206,8 +234,16 @@ class TestMeasurement:
         'new_y_coordinate, error, expected_message',
         [
             (sc.scalar(5.0, unit='m'), DimensionError, "'y' coordinate must be of dimension 'y'."),
-            (sc.arange('t', 0, 10, 1, unit='m'), DimensionError, "'y' coordinate must be of dimension 'y'."),
-            (sc.arange('y', 0, 6, 1, unit='s'), sc.UnitError, "'y' coordinate must have a unit of length, such as \\('m'\\)."),  # noqa: E501
+            (
+                sc.arange('t', 0, 10, 1, unit='m'),
+                DimensionError,
+                "'y' coordinate must be of dimension 'y'.",
+            ),
+            (
+                sc.arange('y', 0, 6, 1, unit='s'),
+                sc.UnitError,
+                "'y' coordinate must have a unit of length, such as \\('m'\\).",
+            ),  # noqa: E501
         ],
         ids=[
             'scalar_y',
@@ -235,7 +271,10 @@ class TestMeasurement:
 
     def test_init_missing_both_wrong_dimensions(self, valid_data_array_no_xy_coords):
         # When
-        invalid_data_array = valid_data_array_no_xy_coords.rename_dims({'x': 'wrong_x', 'y': 'wrong_y'})
+        invalid_data_array = valid_data_array_no_xy_coords.rename_dims({
+            'x': 'wrong_x',
+            'y': 'wrong_y',
+        })
         # Then Expect
         with pytest.raises(DimensionError, match="data array must have both 'x' and 'y' dimensions."):
             Measurement(data_array=invalid_data_array)
@@ -250,7 +289,9 @@ class TestMeasurement:
             Measurement(data_array=invalid_data_array)
 
     @pytest.mark.parametrize(
-        'path', ['tests/small_scitiff.tiff', Path('tests/small_scitiff.tiff')], ids=['str_path', 'Path_object']
+        'path',
+        ['tests/small_scitiff.tiff', Path('tests/small_scitiff.tiff')],
+        ids=['str_path', 'Path_object'],
     )
     def test_from_scitiff_valid(self, path):
         # When Then
@@ -287,7 +328,11 @@ class TestMeasurement:
                 filename=path,
             )
 
-    @pytest.mark.parametrize('path', ['tests/small_tiff.tiff', Path('tests/small_tiff.tiff')], ids=['str_path', 'Path_object'])
+    @pytest.mark.parametrize(
+        'path',
+        ['tests/small_tiff.tiff', Path('tests/small_tiff.tiff')],
+        ids=['str_path', 'Path_object'],
+    )
     def test_from_tiff_stack_valid_paths(self, path):
         # When Then
         measurement = Measurement.from_tiff_stack(
@@ -382,14 +427,26 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'coord, error, expected_message',
         [
-            ('not_a_valid_type', TypeError, 'time_of_flight must be a scipp Variable or a numpy ndarray.'),
+            (
+                'not_a_valid_type',
+                TypeError,
+                'time_of_flight must be a scipp Variable or a numpy ndarray.',
+            ),
             (
                 sc.arange('t', 0, 5, 1, unit='s'),
                 ValueError,
                 'Length of time_of_flight array does not match the number of frames in the TIFF stack.',
             ),  # noqa: E501
-            (sc.scalar(5.0, unit='s'), TypeError, 'time_of_flight must be a scipp Variable or a numpy ndarray.'),
-            (sc.arange('t', 0, 240, 1, unit='m'), sc.UnitError, "time_of_flight must have a unit of time, such as 's'"),
+            (
+                sc.scalar(5.0, unit='s'),
+                TypeError,
+                'time_of_flight must be a scipp Variable or a numpy ndarray.',
+            ),
+            (
+                sc.arange('t', 0, 240, 1, unit='m'),
+                sc.UnitError,
+                "time_of_flight must have a unit of time, such as 's'",
+            ),
         ],
         ids=[
             'invalid_type',
@@ -409,13 +466,21 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'coord, error, expected_message',
         [
-            ('not_a_valid_type', TypeError, 'x_positions must be a scipp Variable or a numpy ndarray.'),
+            (
+                'not_a_valid_type',
+                TypeError,
+                'x_positions must be a scipp Variable or a numpy ndarray.',
+            ),
             (
                 sc.arange('x', 0, 10, 1, unit='m'),
                 ValueError,
                 'Length of x_positions array does not match the number of pixels in the x dimension.',
             ),  # noqa: E501
-            (sc.arange('x', 0, 50, 1, unit='s'), sc.UnitError, "x_positions must have a unit of length, such as 'm'"),
+            (
+                sc.arange('x', 0, 50, 1, unit='s'),
+                sc.UnitError,
+                "x_positions must have a unit of length, such as 'm'",
+            ),
         ],
         ids=[
             'invalid_type_x',
@@ -435,13 +500,21 @@ class TestMeasurement:
     @pytest.mark.parametrize(
         'coord, error, expected_message',
         [
-            ('not_a_valid_type', TypeError, 'y_positions must be a scipp Variable or a numpy ndarray.'),
+            (
+                'not_a_valid_type',
+                TypeError,
+                'y_positions must be a scipp Variable or a numpy ndarray.',
+            ),
             (
                 sc.arange('y', 0, 10, 1, unit='m'),
                 ValueError,
                 'Length of y_positions array does not match the number of pixels in the y dimension.',
             ),  # noqa: E501
-            (sc.arange('y', 0, 50, 1, unit='s'), sc.UnitError, "y_positions must have a unit of length, such as 'm'"),
+            (
+                sc.arange('y', 0, 50, 1, unit='s'),
+                sc.UnitError,
+                "y_positions must have a unit of length, such as 'm'",
+            ),
         ],
         ids=[
             'invalid_type_y',
@@ -591,7 +664,10 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array_no_xy_coords)
         # Then Expect
-        with pytest.raises(ValueError, match=f'Cannot set {coordinate} before setting all physical coordinate positions.'):
+        with pytest.raises(
+            ValueError,
+            match=f'Cannot set {coordinate} before setting all physical coordinate positions.',
+        ):
             setattr(measurement, coordinate, sc.arange('x', 0, 10, 1, unit='m'))
 
     # Just a single test, other test-cases are covered by from_tiff_stack tests as both use _validate_provided_coord()
@@ -647,7 +723,10 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array_no_xy_coords)
         # Then Expect
-        with pytest.raises(ValueError, match='Cannot delete physical coordinate positions because they are not set.'):
+        with pytest.raises(
+            ValueError,
+            match='Cannot delete physical coordinate positions because they are not set.',
+        ):
             measurement.delete_physical_coord_positions()
 
     def test_time_of_flights(self, valid_data_array):
@@ -875,7 +954,10 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(TypeError, match='dimensions must be a dictionary mapping dimension names to rebin factors.'):
+        with pytest.raises(
+            TypeError,
+            match='dimensions must be a dictionary mapping dimension names to rebin factors.',
+        ):
             measurement.rebin(dimensions=['x'])
 
     def test_rebin_time_dimension(self, valid_data_array):
@@ -903,21 +985,30 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(ValueError, match="Rebin size for dimension 'x' must be a positive integer of at least 1."):
+        with pytest.raises(
+            ValueError,
+            match="Rebin size for dimension 'x' must be a positive integer of at least 1.",
+        ):
             measurement.rebin(dimensions={'x': 'not_an_integer'})
 
     def test_rebin_invalid_dimensions_value_zero(self, valid_data_array):
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(ValueError, match="Rebin size for dimension 'x' must be a positive integer of at least 1."):
+        with pytest.raises(
+            ValueError,
+            match="Rebin size for dimension 'x' must be a positive integer of at least 1.",
+        ):
             measurement.rebin(dimensions={'x': 0})
 
     def test_rebin_invalid_dimensions_value_negative(self, valid_data_array):
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(ValueError, match="Rebin size for dimension 'x' must be a positive integer of at least 1."):
+        with pytest.raises(
+            ValueError,
+            match="Rebin size for dimension 'x' must be a positive integer of at least 1.",
+        ):
             measurement.rebin(dimensions={'x': -2})
 
     def test_rebin_invalid_dimensions_value_non_divisable(self, valid_data_array):
@@ -944,13 +1035,20 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.warns(UserWarning, match='No rebinning to revert. The data array is already in its original state.'):
+        with pytest.warns(
+            UserWarning,
+            match='No rebinning to revert. The data array is already in its original state.',
+        ):
             measurement.revert_rebin()
 
     # Without making image comparisons, this is the best we can do to test the plot function
     @pytest.mark.parametrize(
         'time_of_flight, title',
-        [(None, '(averaged over TOF)'), (0, 'at TOF index 0'), (sc.scalar(5.0, unit='s'), 'at TOF=5.0 s')],
+        [
+            (None, '(averaged over TOF)'),
+            (0, 'at TOF index 0'),
+            (sc.scalar(5.0, unit='s'), 'at TOF=5.0 s'),
+        ],
         ids=['sum', 'indice', 'scipp_scalar'],
     )
     def test_plot_coordinates(self, valid_data_array, time_of_flight, title, plot_setup):
@@ -1086,7 +1184,10 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(RuntimeError, match='Interactive spectrum inspector is only supported in Jupyter notebooks.'):
+        with pytest.raises(
+            RuntimeError,
+            match='Interactive spectrum inspector is only supported in Jupyter notebooks.',
+        ):
             measurement.spectrum_inspector()
 
     def test_spectrum_inspector(self, valid_data_array, plot_setup):
@@ -1372,6 +1473,7 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
         with pytest.raises(
-            KeyError, match="ROI with unique name 'non_existent_roi' not found in the measurement's list of ROIs."
+            KeyError,
+            match="ROI with unique name 'non_existent_roi' not found in the measurement's list of ROIs.",
         ):  # noqa: E501
             measurement.spectrum(roi='non_existent_roi')

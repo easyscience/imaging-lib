@@ -30,8 +30,7 @@ class RectROI(NewBase):
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> None:
-        """
-        Initialize a RectROI instance.
+        """Initialize a RectROI instance.
 
         Parameters:
         x_pixel_range (Sequence[int]): The pixel range for the x-coordinate.
@@ -53,6 +52,7 @@ class RectROI(NewBase):
 
     def set_pixel_coord_range(self, x_pixel_range: Sequence[int], y_pixel_range: Sequence[int]) -> None:
         """Set the pixel coordinate ranges for the ROI.
+
         Parameters:
             x_pixel_range (Sequence[int]): The start and end pixel coordinates in the x direction.
             y_pixel_range (Sequence[int]): The start and end pixel coordinates in the y direction.
@@ -67,6 +67,7 @@ class RectROI(NewBase):
 
     def set_physical_coord_range(self, x_range: Sequence[sc.Variable], y_range: Sequence[sc.Variable]) -> None:
         """Set the physical coordinate ranges for the ROI.
+
         Parameters:
             x_range (Sequence[sc.Variable]): The start and end physical coordinates in the x direction.
             y_range (Sequence[sc.Variable]): The start and end physical coordinates in the y direction.
@@ -94,16 +95,20 @@ class RectROI(NewBase):
     def pixel_slice(self) -> Tuple[slice, slice]:
         """Get the pixel slice corresponding to the ROI.
 
-        Returns:
-            tuple: Two (x,y) slice objects representing the pixel range of the ROI.
+        Returns
+        -------
+        tuple
+            Two (x,y) slice objects representing the pixel range of the ROI.
         """
         return slice(self._x_pixel_start, self._x_pixel_end), slice(self._y_pixel_start, self._y_pixel_end)
 
     def slice(self) -> Tuple[slice, slice]:
         """Get the slice corresponding to the ROI, using physical coordinates if available.
 
-        Returns:
-            tuple: Two (x,y) slice objects representing the range of the ROI.
+        Returns
+        -------
+        tuple
+            Two (x,y) slice objects representing the range of the ROI.
         """
         if self._has_physical_coords:
             return slice(self._x_start, self._x_end), slice(self._y_start, self._y_end)
@@ -112,42 +117,51 @@ class RectROI(NewBase):
 
     @property
     def x_pixel_start(self) -> int:
+        """X pixel start."""
         return self._x_pixel_start.value
 
     @x_pixel_start.setter
     def x_pixel_start(self, value: int):
+        """X pixel start."""
         self._check_index(value, 'x_pixel_start')
         self._x_pixel_start = sc.scalar(value)
 
     @property
     def x_pixel_end(self) -> int:
+        """X pixel end."""
         return self._x_pixel_end.value
 
     @x_pixel_end.setter
     def x_pixel_end(self, value: int):
+        """X pixel end."""
         self._check_index(value, 'x_pixel_end')
         self._x_pixel_end = sc.scalar(value)
 
     @property
     def y_pixel_start(self) -> int:
+        """Y pixel start."""
         return self._y_pixel_start.value
 
     @y_pixel_start.setter
     def y_pixel_start(self, value: int):
+        """Y pixel start."""
         self._check_index(value, 'y_pixel_start')
         self._y_pixel_start = sc.scalar(value)
 
     @property
     def y_pixel_end(self) -> int:
+        """Y pixel end."""
         return self._y_pixel_end.value
 
     @y_pixel_end.setter
     def y_pixel_end(self, value: int):
+        """Y pixel end."""
         self._check_index(value, 'y_pixel_end')
         self._y_pixel_end = sc.scalar(value)
 
     @property
     def x_start(self) -> sc.Variable:
+        """X start."""
         if self._has_physical_coords:
             return self._x_start.copy()
         else:
@@ -155,12 +169,14 @@ class RectROI(NewBase):
 
     @x_start.setter
     def x_start(self, value: sc.Variable):
+        """X start."""
         self._single_coord_setter_check(value, 'x_start')
         self._check_scalar(value, 'x_start')
         self._x_start = value
 
     @property
     def x_end(self) -> sc.Variable:
+        """X end."""
         if self._has_physical_coords:
             return self._x_end.copy()
         else:
@@ -168,12 +184,14 @@ class RectROI(NewBase):
 
     @x_end.setter
     def x_end(self, value: sc.Variable):
+        """X end."""
         self._single_coord_setter_check(value, 'x_end')
         self._check_scalar(value, 'x_end')
         self._x_end = value
 
     @property
     def y_start(self) -> sc.Variable:
+        """Y start."""
         if self._has_physical_coords:
             return self._y_start.copy()
         else:
@@ -181,12 +199,14 @@ class RectROI(NewBase):
 
     @y_start.setter
     def y_start(self, value: sc.Variable):
+        """Y start."""
         self._single_coord_setter_check(value, 'y_start')
         self._check_scalar(value, 'y_start')
         self._y_start = value
 
     @property
     def y_end(self) -> sc.Variable:
+        """Y end."""
         if self._has_physical_coords:
             return self._y_end.copy()
         else:
@@ -194,14 +214,13 @@ class RectROI(NewBase):
 
     @y_end.setter
     def y_end(self, value: sc.Variable):
+        """Y end."""
         self._single_coord_setter_check(value, 'y_end')
         self._check_scalar(value, 'y_end')
         self._y_end = value
 
     def _check_input_sequence(self, value: Sequence, name: str, typename: str, expected_type: any) -> None:
-        """
-        Check if the input value is a sequence of the expected type and length.
-        """
+        """Check if the input value is a sequence of the expected type and length."""
         if not isinstance(value, Sequence) or len(value) != 2:
             raise TypeError(f'{name} must be a tuple or a list of two {typename}, got a {type(value).__name__}.')
         if not (isinstance(value[0], expected_type) and isinstance(value[1], expected_type)):
@@ -211,18 +230,14 @@ class RectROI(NewBase):
             )
 
     def _check_index(self, value: int, name: str) -> None:
-        """
-        Check if the input value is a valid index (non-negative integer).
-        """
+        """Check if the input value is a valid index (non-negative integer)."""
         if not isinstance(value, int):
             raise TypeError(f'{name} index must be an integer.')
         if value < 0:
             raise ValueError(f'{name} index must be non-negative.')
 
     def _check_scalar(self, value: sc.Variable, name: str) -> None:
-        """
-        Check if the input value is a scipp scalar with a unit of length.
-        """
+        """Check if the input value is a scipp scalar with a unit of length."""
         if value.dims:
             raise ValueError(f'{name} must be a scipp scalar (0-dimensional Variable).')
         try:
@@ -232,9 +247,7 @@ class RectROI(NewBase):
             raise UnitError(f"{name} must be a scipp scalar with a unit of length (e.g., 'm').") from e
 
     def _single_coord_setter_check(self, value: sc.Variable, name: str) -> None:
-        """
-        Check if the input value is a scipp scalar and if physical coordinates are set.
-        """
+        """Check if the input value is a scipp scalar and if physical coordinates are set."""
         if not isinstance(value, sc.Variable):
             raise TypeError(f'{name} must be a scipp scalar.')
         if not self._has_physical_coords:
@@ -256,12 +269,32 @@ class RectROI(NewBase):
         out_dict['y_pixel_range'] = [int(self.y_pixel_start), int(self.y_pixel_end)]
         if self._has_physical_coords:
             out_dict['x_range'] = [
-                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.x_start)},
-                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.x_end)},
+                {
+                    '@module': 'scipp',
+                    '@version': sc.__version__,
+                    '@class': 'scalar',
+                    'dict': sc.to_dict(self.x_start),
+                },
+                {
+                    '@module': 'scipp',
+                    '@version': sc.__version__,
+                    '@class': 'scalar',
+                    'dict': sc.to_dict(self.x_end),
+                },
             ]
             out_dict['y_range'] = [
-                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.y_start)},
-                {'@module': 'scipp', '@version': sc.__version__, '@class': 'scalar', 'dict': sc.to_dict(self.y_end)},
+                {
+                    '@module': 'scipp',
+                    '@version': sc.__version__,
+                    '@class': 'scalar',
+                    'dict': sc.to_dict(self.y_start),
+                },
+                {
+                    '@module': 'scipp',
+                    '@version': sc.__version__,
+                    '@class': 'scalar',
+                    'dict': sc.to_dict(self.y_end),
+                },
             ]
         return out_dict
 
@@ -275,6 +308,7 @@ class RectROI(NewBase):
         return super().from_dict(temp_dict)
 
     def __repr__(self) -> str:
+        """Repr function."""
         repr_str = (
             f'RectROI(x_pixel_range=({self._x_pixel_start}, {self._x_pixel_end}), '
             f'y_pixel_range=({self._y_pixel_start}, {self._y_pixel_end})'

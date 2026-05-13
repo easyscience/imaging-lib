@@ -178,6 +178,6 @@ nav:
   - Tutorials:
       - Tutorials: tutorials/index.md
       - Getting Started:
-          - Dummy tutorial: tutorials/tutorial.ipynb
+          - Dummy tutorial: tutorials/plotting.ipynb
   - API Reference:
       - API Reference: api-reference/index.md

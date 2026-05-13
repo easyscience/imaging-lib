@@ -4258,8 +4258,8 @@ packages:
   requires_python: '>=3.5'
 - pypi: ./
   name: easyimaging
-  version: 0.0.1+devdirty2
-  sha256: f8ca78e4c0ba0c211d21527e1cdaf59e3d6f980ff2f111bb2533dd519bf37c69
+  version: 0.0.1+devdirty5
+  sha256: 29991e0acda405383904f872df23cff267441d758aa93a3bf8488c271bfb21f6
   requires_dist:
   - easyscience>=2.2.0
   - essimaging

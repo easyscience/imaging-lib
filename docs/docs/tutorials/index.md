@@ -17,5 +17,5 @@ The tutorials are organized into the following categories:
 
 ## Getting Started
 
-- [Dummy tutorial](tutorial.ipynb) – A dummy tutorial to ensure the
+- [Dummy tutorial](plotting.ipynb) – A dummy tutorial to ensure the
   tutorial infrastructure is working correctly.
