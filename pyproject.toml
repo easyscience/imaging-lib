@@ -20,7 +20,7 @@ classifiers = [
   'Programming Language :: Python :: 3.11',
   'Programming Language :: Python :: 3.12',
   'Programming Language :: Python :: 3.13',
-  'Development Status :: 3 - Alpha'
+  'Development Status :: 3 - Alpha',
 ]
 requires-python = '>=3.11, <3.14'
 dependencies = [
@@ -172,21 +172,19 @@ testpaths = ['tests']
 # https://docs.astral.sh/ruff/rules/
 
 [tool.ruff]
-exclude = [
-  'ProofOfConcept*',
-  'tmp',
-]
+exclude = ['ProofOfConcept*', 'tmp']
 indent-width = 4
-line-length = 127 # See also `max-line-length` in [tool.ruff.lint.pycodestyle]
-preview = true # Enable new rules that are not yet stable, like DOC
+line-length = 127                    # See also `max-line-length` in [tool.ruff.lint.pycodestyle]
+preview = true                       # Enable new rules that are not yet stable, like DOC
+builtins = ['display']               # Clutch-fix/patch to https://github.com/nbQA-dev/nbQA/issues/882
 
 # Formatting options for Ruff
 
 [tool.ruff.format]
-docstring-code-format = true    # Whether to format code snippets in docstrings
+docstring-code-format = true     # Whether to format code snippets in docstrings
 docstring-code-line-length = 127 # Line length for code snippets in docstrings
-indent-style = 'space'          # PEP 8 recommends using spaces over tabs
-quote-style = 'single'          # But double quotes in docstrings (PEP 8, PEP 257)
+indent-style = 'space'           # PEP 8 recommends using spaces over tabs
+quote-style = 'single'           # But double quotes in docstrings (PEP 8, PEP 257)
 
 # Linting rules to use with Ruff
 
@@ -195,7 +193,7 @@ select = [
   # Various rules
   #'C90',  # https://docs.astral.sh/ruff/rules/#mccabe-c90
   #'D',   # https://docs.astral.sh/ruff/rules/#pydocstyle-d
-  'F',   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  'F', # https://docs.astral.sh/ruff/rules/#pyflakes-f
   #'FLY',  # https://docs.astral.sh/ruff/rules/#flynt-fly
   #'FURB', # https://docs.astral.sh/ruff/rules/#refurb-furb
   'I', # https://docs.astral.sh/ruff/rules/#isort-i
@@ -276,6 +274,9 @@ ignore = [
   'INP001', # https://docs.astral.sh/ruff/rules/implicit-namespace-package/
   'T201',   # https://docs.astral.sh/ruff/rules/print/
 ]
+'docs/docs/tutorials/**' = [
+  'E402', # https://docs.astral.sh/ruff/rules/module-import-not-at-top-of-file/
+]
 
 # Specific options for certain rules
 
@@ -323,7 +324,7 @@ max-positional-args = 6
 # the parameter declarations in the code (in function's signature).
 
 [tool.pydoclint]
-exclude = '\.' # Temporarily disable pydoclint until we are ready
+exclude = '\.'              # Temporarily disable pydoclint until we are ready
 style = 'numpy'
 check-style-mismatch = true
 check-arg-defaults = true
@@ -337,7 +338,7 @@ allow-init-docstring = true
 # https://github.com/jsh9/format-docstring
 
 [tool.format_docstring]
-exclude = '\.' # Temporarily disable format-docstring until we are ready
+exclude = '\.'            # Temporarily disable format-docstring until we are ready
 docstring_style = 'numpy'
 line_length = 127
 fix_rst_backticks = true

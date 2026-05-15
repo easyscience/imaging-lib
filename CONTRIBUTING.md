@@ -42,8 +42,7 @@ Please make sure you follow the EasyScience organization-wide
 If you are not planning to contribute code, you may want to:
 
 - 🐞 Report a bug — see [Reporting Issues](#11-reporting-issues)
-- 🛡 Report a security issue —
-  see [Security Issues](#12-security-issues)
+- 🛡 Report a security issue — see [Security Issues](#12-security-issues)
 - 💬 Ask a question or start a discussion at
   [Project Discussions](https://github.com/easyscience/imaging-lib/discussions)
 
@@ -381,8 +380,8 @@ git push
 >
 > If your change affects user-facing functionality, update the project
 > documentation accordingly — specifically the `nav:` (navigation)
-> structure in `mkdocs.yml` and the relevant documentation Markdown
-> files in `docs/docs/`.
+> structure in `mkdocs.yml` and the relevant documentation Markdown files
+> in `docs/docs/`.
 >
 > ```text
 > 📁 docs
@@ -430,9 +429,8 @@ issues more effectively.
 >
 > Please do **not** report security vulnerabilities publicly.
 
-If you discover a potential vulnerability, please contact the
-maintainers privately so the issue can be investigated and addressed
-responsibly.
+If you discover a potential vulnerability, please contact the maintainers
+privately so the issue can be investigated and addressed responsibly.
 
 ---
 
@@ -447,5 +445,4 @@ then tagged and published on GitHub and PyPI.
 
 ---
 
-Thank you for contributing to EasyImaging and the EasyScience
-ecosystem!
+Thank you for contributing to EasyImaging and the EasyScience ecosystem!

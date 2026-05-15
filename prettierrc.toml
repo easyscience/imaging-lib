@@ -9,12 +9,12 @@ singleQuote = true   # use single quotes instead of double quotes
 tabWidth = 2         # change tab width to 2 spaces
 useTabs = false      # use spaces instead of tabs
 
-printWidth = 79 # wrap lines at 79 characters
+printWidth = 88 # wrap lines at 88 characters
 
 [[overrides]]
 files = ["*.md"]
 [overrides.options]
-printWidth = 72 # wrap Markdown files at 72 characters
+printWidth = 73 # wrap Markdown files at 73 characters
 
 [[overrides]]
 files = ["*.yml", "*.yaml"]

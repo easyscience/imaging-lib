@@ -8,8 +8,8 @@ icon: material/cog-box
 **Python 3.11** through **3.13**.
 
 To install and set up EasyImaging, we recommend using
-[**Pixi**](https://pixi.prefix.dev), a modern package manager for Windows,
-macOS, and Linux.
+[**Pixi**](https://pixi.prefix.dev), a modern package manager for
+Windows, macOS, and Linux.
 
 ??? note "Main benefits of using Pixi"
 
@@ -94,8 +94,8 @@ This section describes the simplest way to set up EasyImaging using
 ## Classical Installation
 
 This section describes how to install EasyImaging using the traditional
-method with **pip**. It is assumed that you are familiar with Python package
-management and virtual environments.
+method with **pip**. It is assumed that you are familiar with Python
+package management and virtual environments.
 
 ### Environment Setup <small>optional</small> { #environment-setup data-toc-label="Environment Setup" }
 
@@ -256,14 +256,14 @@ once using the command line, as shown below.
   python -m ipykernel install --user --name=venv --display-name "EasyImaging Python kernel"
   ```
 - Download all the EasyImaging tutorials to the `tutorials/` directory.
-- Start the Jupyter Notebook server in the `tutorials/` directory to access the
-  notebooks:
+- Start the Jupyter Notebook server in the `tutorials/` directory to
+  access the notebooks:
   ```txt
   jupyter notebook tutorials/
   ```
 - Your web browser should open automatically. Click on one of the
-  `*.ipynb` files and select the `EasyImaging Python kernel`
-  to get started.
+  `*.ipynb` files and select the `EasyImaging Python kernel` to get
+  started.
 
 ### Run Tutorials via Google Colab
 

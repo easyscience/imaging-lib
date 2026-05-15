@@ -9,9 +9,9 @@ name: Create Python Package
 
 on:
   push:
-    branches: [ master, pre-release ]
+    branches: [master, pre-release]
   pull_request:
-    branches: [ master, pre-release ]
+    branches: [master, pre-release]
 
 jobs:
   build:
@@ -22,22 +22,22 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
 
     steps:
-    - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-    - name: Setup Pixi
-      uses: ./.github/actions/setup-pixi
+      - name: Setup Pixi
+        uses: ./.github/actions/setup-pixi
 
-    - name: Set Python version
-      run: pixi add python=${{ matrix.python-version }}
+      - name: Set Python version
+        run: pixi add python=${{ matrix.python-version }}
 
-    - name: Build package
-      run: pixi run build
+      - name: Build package
+        run: pixi run build
 
-    - name: Run tests with tox
-      run: pixi run tox
+      - name: Run tests with tox
+        run: pixi run tox
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: EasyImaging - Python ${{ matrix.python-version }}
-        path: ${{ github.workspace }}/dist/*
-        overwrite: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EasyImaging - Python ${{ matrix.python-version }}
+          path: ${{ github.workspace }}/dist/*
+          overwrite: true

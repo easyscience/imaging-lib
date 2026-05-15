@@ -30,14 +30,11 @@ macos = '14.0'
 
 # Set specific Python versions to be used in CI testing.
 
-
 [feature.py-min.dependencies]
 python = '3.11.*'
 
 [feature.py-max.dependencies]
 python = '3.13.*'
-
-
 
 # Development dependencies for local development and testing with
 # editable installations.
@@ -72,7 +69,6 @@ easyimaging = '*'
 
 # The `default` feature is always included in all environments.
 # Additional features can be specified per environment.
-
 
 # Specific environments for CI testing with different Python versions.
 py-311-env = { features = ['py-min', 'dev'] }

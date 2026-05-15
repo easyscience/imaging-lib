@@ -16,16 +16,15 @@ jobs:
         uses: trstringer/require-label-prefix@v1
         with:
           secret: ${{ github.TOKEN }}
-          prefix: "[scope]"
+          prefix: '[scope]'
           addLabel: true
-          defaultLabel: "[scope] ⚠️ label needed"
+          defaultLabel: '[scope] ⚠️ label needed'
 
       - name: Require [priority] label
         if: always()
         uses: trstringer/require-label-prefix@v1
         with:
           secret: ${{ github.TOKEN }}
-          prefix: "[priority]"
+          prefix: '[priority]'
           addLabel: true
-          defaultLabel: "[priority] ⚠️ label needed"
-
+          defaultLabel: '[priority] ⚠️ label needed'

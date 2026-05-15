@@ -4,7 +4,6 @@
 #
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
 
-
 name: Publish Python Package
 
 # Controls when the workflow will run
@@ -19,22 +18,21 @@ on:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
 
     steps:
-    - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-    - name: Setup Pixi
-      uses: ./.github/actions/setup-pixi
+      - name: Setup Pixi
+        uses: ./.github/actions/setup-pixi
 
-    - name: Build package
-      run: pixi run build
+      - name: Build package
+        run: pixi run build
 
-    - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_TOKEN_ES }}
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN_ES }}

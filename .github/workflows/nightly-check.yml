@@ -2,23 +2,23 @@
 name: Nightly Check
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs every day at midnight UTC
+    - cron: '0 0 * * *' # Runs every day at midnight UTC
   workflow_dispatch:
 
 jobs:
   nightly-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-    - name: Setup Pixi
-      uses: ./.github/actions/setup-pixi
+      - name: Setup Pixi
+        uses: ./.github/actions/setup-pixi
 
-    - name: Update lock file
-      run: pixi run update-lock
+      - name: Update lock file
+        run: pixi run update-lock
 
-    - name: Build package
-      run: pixi run build
+      - name: Build package
+        run: pixi run build
 
-    - name: Run tox tests
-      run: pixi run tox
+      - name: Run tox tests
+        run: pixi run tox
