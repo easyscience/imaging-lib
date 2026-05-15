@@ -405,7 +405,8 @@ class Measurement(NewBase):
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """Rebin the measurement image stack.
 
-        This operation reduces the resolution of the data by combining adjacent pixels or time bins.The rebinned dimensions must be evenly divisible by their specific rebin factor.
+        This operation reduces the resolution of the data by combining adjacent pixels or time bins.
+        The rebinned dimensions must be evenly divisible by their specific rebin factor.
 
         Parameters
         ----------
@@ -696,7 +697,8 @@ class Measurement(NewBase):
         ----------
         roi : RectROI | str | None, optional
             The region of interest for which to extract the spectrum.
-            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs. By default, None.
+            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
+            By default, None.
 
         Returns
         -------
@@ -736,7 +738,8 @@ class Measurement(NewBase):
         ----------
         roi : RectROI | str | None, optional
             The region of interest for which to plot the spectrum.
-            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs. By default, None.
+            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
+            By default, None.
         **kwargs : dict
             Additional keyword arguments to pass to the plotting function.
             See https://scipp.github.io/plopp/generated/plopp.plot.html for options.

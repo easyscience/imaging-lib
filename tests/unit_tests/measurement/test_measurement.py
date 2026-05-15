@@ -1378,7 +1378,8 @@ class TestMeasurement:
         # When
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
-        # Make the physical coordinates different from the pixel coordinates to ensure they are used correctly in the spectrum calculation  # noqa: E501
+        # Make the physical coordinates different from the pixel coordinates
+        # to ensure they are used correctly in the spectrum calculation
         measurement.set_physical_coord_positions(
             x_positions=sc.arange('x', 0, 21, 3, unit='m'),
             y_positions=sc.arange('y', 0, 14, 2, unit='m'),
@@ -1414,7 +1415,8 @@ class TestMeasurement:
         assert sc.identical(spectrum.data, sc.ones(dims=['t'], shape=[10]) * 0.625)
 
     def test_spectrum_identical_after_rebin(self, valid_data_array):
-        # If the roi is defined such that it includes whole rebinned pixels, then the spectrum should be identical before and after rebinning  # noqa: E501
+        # If the roi is defined such that it includes whole rebinned pixels,
+        # then the spectrum should be identical before and after rebinning
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
         roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
@@ -1426,7 +1428,8 @@ class TestMeasurement:
         assert sc.identical(spectrum_before_rebin, spectrum_after_rebin)
 
     def test_spectrum_not_identical_after_rebin(self, valid_data_array):
-        # If the roi is defined such that it includes partial rebinned pixels, then the spectrum should not be identical before and after rebinning  # noqa: E501
+        # If the roi is defined such that it includes partial rebinned pixels,
+        # then the spectrum should not be identical before and after rebinning
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
         roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 5))
