@@ -17,5 +17,4 @@ The tutorials are organized into the following categories:
 
 ## Getting Started
 
-- [Dummy tutorial](plotting.ipynb) – A dummy tutorial to ensure the
-  tutorial infrastructure is working correctly.
+- [The **Measurement** class](measurement.ipynb) – A tutorial which explores the purpose and functions of the core-component: The **Measurement** class.
