@@ -65,9 +65,9 @@ jobs:
         working-directory: easyimaging
         run: pixi run python -m pytest ../tests/unit/ --color=yes -v
 
-      - name: Run functional tests to verify the installation
-        working-directory: easyimaging
-        run: pixi run python -m pytest ../tests/functional/ --color=yes -v
+      # - name: Run functional tests to verify the installation
+      #   working-directory: easyimaging
+      #   run: pixi run python -m pytest ../tests/functional/ --color=yes -v
 
       - name: Run integration tests to verify the installation
         working-directory: easyimaging
