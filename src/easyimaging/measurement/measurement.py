@@ -45,6 +45,12 @@ class Measurement(NewBase):
         if any(data_array.coords['tof'].to(unit='s') < sc.scalar(0, unit='s')):
             raise ValueError('time_of_flight values must be non-negative.')
 
+        # Coordinate names were changed in scitiff.
+        if 'x_pixel_offset' in data_array.coords:
+            data_array.coords['x'] = data_array.coords.pop('x_pixel_offset')
+        if 'y_pixel_offset' in data_array.coords:
+            data_array.coords['y'] = data_array.coords.pop('y_pixel_offset')
+
         if 'x' in data_array.coords and 'y' in data_array.coords:
             self._validate_data_array_coordinate(data_array, 'x', 'x', 'length', 'm')
             self._validate_data_array_coordinate(data_array, 'y', 'y', 'length', 'm')

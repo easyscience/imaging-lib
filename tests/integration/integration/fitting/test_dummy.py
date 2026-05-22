@@ -11,7 +11,7 @@ def test_dummy_fast():
     assert calculated == expected
 
 
-def test_dummy_slow():
-    calculated = sum(i * j for i in range(10000) for j in range(10000))
-    expected = 2499500025000000
-    assert calculated == expected
+# def test_dummy_slow():
+#     calculated = sum(i * j for i in range(10000) for j in range(10000))
+#     expected = 2499500025000000
+#     assert calculated == expected

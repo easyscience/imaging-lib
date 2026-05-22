@@ -16,6 +16,8 @@ from easyscience.base_classes import EasyList
 from scipp import DimensionError
 
 from easyimaging import Measurement
+from easyimaging.datasets import small_test_scitiff
+from easyimaging.datasets import small_test_tiff
 from easyimaging.measurement.regions import RectROI
 
 
@@ -290,7 +292,7 @@ class TestMeasurement:
 
     @pytest.mark.parametrize(
         'path',
-        ['tests/small_scitiff.tiff', Path('tests/small_scitiff.tiff')],
+        [small_test_scitiff(), Path(small_test_scitiff())],
         ids=['str_path', 'Path_object'],
     )
     def test_from_scitiff_valid(self, path):
@@ -321,7 +323,8 @@ class TestMeasurement:
 
     def test_from_scitiff_not_a_scitiff(self):
         # When
-        path = 'tests/small_tiff.tiff'  # This is a regular TIFF, not a SciTIFF
+        path = small_test_tiff()  # This is a regular TIFF, not a SciTIFF
+        path = path.replace('\\', '/')  # Ensure consistent path format across platforms
         # Then Expect
         with pytest.raises(RuntimeError, match=f"Tiff file '{path}' not a proper SciTIFF file:"):
             Measurement.from_scitiff(
@@ -330,7 +333,7 @@ class TestMeasurement:
 
     @pytest.mark.parametrize(
         'path',
-        ['tests/small_tiff.tiff', Path('tests/small_tiff.tiff')],
+        [small_test_tiff(), Path(small_test_tiff())],
         ids=['str_path', 'Path_object'],
     )
     def test_from_tiff_stack_valid_paths(self, path):
@@ -359,7 +362,7 @@ class TestMeasurement:
     def test_from_tiff_stack_valid_time_of_flights(self, coord, expected):
         # When Then
         measurement = Measurement.from_tiff_stack(
-            filename='tests/small_tiff.tiff',
+            filename=small_test_tiff(),
             time_of_flights=coord,
         )
         # Expect
@@ -379,7 +382,7 @@ class TestMeasurement:
     def test_from_tiff_stack_valid_x_positions(self, coord, expected):
         # When Then
         measurement = Measurement.from_tiff_stack(
-            filename='tests/small_tiff.tiff',
+            filename=small_test_tiff(),
             time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
             x_positions=coord,
             y_positions=sc.arange('y', 0, 1020, 20, unit='cm'),
@@ -402,7 +405,7 @@ class TestMeasurement:
     def test_from_tiff_stack_valid_y_positions(self, coord, expected):
         # When Then
         measurement = Measurement.from_tiff_stack(
-            filename='tests/small_tiff.tiff',
+            filename=small_test_tiff(),
             time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
             y_positions=coord,
             x_positions=sc.arange('x', 0, 510, 10, unit='cm'),
@@ -459,7 +462,7 @@ class TestMeasurement:
         # When Then Expect
         with pytest.raises(error, match=expected_message):
             Measurement.from_tiff_stack(
-                filename='tests/small_tiff.tiff',
+                filename=small_test_tiff(),
                 time_of_flights=coord,
             )
 
@@ -492,7 +495,7 @@ class TestMeasurement:
         # When Then Expect
         with pytest.raises(error, match=expected_message):
             Measurement.from_tiff_stack(
-                filename='tests/small_tiff.tiff',
+                filename=small_test_tiff(),
                 time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
                 x_positions=coord,
             )
@@ -526,7 +529,7 @@ class TestMeasurement:
         # When Then Expect
         with pytest.raises(error, match=expected_message):
             Measurement.from_tiff_stack(
-                filename='tests/small_tiff.tiff',
+                filename=small_test_tiff(),
                 time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
                 y_positions=coord,
             )
