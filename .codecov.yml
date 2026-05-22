@@ -15,12 +15,13 @@ coverage:
   status:
     project:
       default:
-        target: auto
-        threshold: 1%
-        # Make project coverage informational (won't block PR)
-        informational: true
+        target: 80%
+        threshold: 0%
+        # require project coverage, don't allow wiggle room.
+        informational: false
     patch:
       default:
-        target: auto
-        # Require patch coverage but with threshold
-        threshold: 1%
+        target: 80%
+        threshold: 5%
+        # Make patch coverage informational (won't block PR)
+        informational: true
