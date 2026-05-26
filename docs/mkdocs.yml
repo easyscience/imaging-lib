@@ -180,6 +180,6 @@ nav:
   - Tutorials:
       - Tutorials: tutorials/index.md
       - Getting Started:
-          - Dummy tutorial: tutorials/plotting.ipynb
+          - Dummy tutorial: tutorials/measurement.ipynb
   - API Reference:
       - API Reference: api-reference/index.md

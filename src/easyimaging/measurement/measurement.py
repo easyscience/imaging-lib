@@ -34,6 +34,32 @@ class Measurement(NewBase):
         unique_name: str | None = None,
         display_name: str | None = None,
     ):
+        """Initialize a Measurement instance.
+
+        Parameters
+        ----------
+        data_array : sc.DataArray
+            The measurement data array with dimensions ``('t', 'y', 'x')``. Must have a
+            ``'tof'`` coordinate for time-of-flight values and both ``'x'`` and ``'y'``
+            dimensions. Optionally may include ``'x'`` and ``'y'`` coordinates for
+            physical pixel positions.
+        unique_name : str | None, optional
+            Unique identifier for the measurement. By default, None.
+        display_name : str | None, optional
+            Human-readable display name for the measurement. By default, None.
+
+        Raises
+        ------
+        TypeError
+            If ``data_array`` is not a :class:`scipp.DataArray`.
+        ValueError
+            If the data array is missing the ``'tof'`` coordinate, contains negative
+            time-of-flight values, or has inconsistent coordinate/dimension configuration.
+        DimensionError
+            If the data array does not have both ``'x'`` and ``'y'`` dimensions.
+        UnitError
+            If any coordinate has an incompatible unit.
+        """
         if not isinstance(data_array, sc.DataArray):
             raise TypeError('data_array must be an instance of scipp.DataArray.')
 
@@ -90,7 +116,6 @@ class Measurement(NewBase):
 
         Parameters
         ----------
-        cls :
         filename : str | Path
             Path to the SciTIFF file.
         unique_name : str | None, optional
@@ -102,6 +127,13 @@ class Measurement(NewBase):
         -------
         Measurement
             An instance of the Measurement class containing the loaded data.
+
+        Raises
+        ------
+        TypeError
+            If ``filename`` is not a string or :class:`pathlib.Path` object.
+        RuntimeError
+            If the file cannot be loaded or is not a valid SciTIFF file.
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
@@ -129,7 +161,6 @@ class Measurement(NewBase):
 
         Parameters
         ----------
-        cls :
         filename : str | Path
             Path to the TIFF stack file.
         time_of_flights : sc.Variable | np.ndarray
@@ -150,6 +181,13 @@ class Measurement(NewBase):
         -------
         Measurement
             An instance of the Measurement class containing the loaded data.
+
+        Raises
+        ------
+        TypeError
+            If ``filename`` is not a string or :class:`pathlib.Path` object.
+        RuntimeError
+            If the file cannot be loaded or its dimensions cannot be renamed.
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
@@ -210,6 +248,19 @@ class Measurement(NewBase):
         ----------
         filename : str | Path
             Path to the output SciTIFF file.
+
+        Raises
+        ------
+        TypeError
+            If ``filename`` is not a string or :class:`pathlib.Path` object.
+        RuntimeError
+            If the file cannot be written.
+
+        Warns
+        -----
+        UserWarning
+            If the data array is of type ``float64``, which will be downcast to ``float32``
+            when saving, potentially causing loss of precision.
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
@@ -230,15 +281,27 @@ class Measurement(NewBase):
 
     @property
     def data_array_copy(self) -> sc.DataArray:
-        """Get the current data array of the measurement, either rebinned or the original full resolution.
+        """Get a full deep copy of the current data array.
 
-        Note that this will make a full copy of the data array, so it should be used with caution for large datasets.
+        Returns the rebinned data array if rebinning has been applied, otherwise the
+        original full-resolution data array. Use with caution for large datasets.
+
+        Returns
+        -------
+        sc.DataArray
+            A deep copy of the current data array.
         """
         return self._data_array.copy(deep=True)
 
     @data_array_copy.setter
     def data_array_copy(self, value: sc.DataArray) -> None:
-        """Data array copy."""
+        """Raise AttributeError — ``data_array_copy`` is a read-only property.
+
+        Raises
+        ------
+        AttributeError
+            Always. To use a different data array, create a new :class:`Measurement` instance.
+        """
         raise AttributeError(
             'Cannot set data_array, it is a read-only property. '
             'Please make a new Measurement instance if you want to use a different data array.'
@@ -246,19 +309,39 @@ class Measurement(NewBase):
 
     @property
     def _data_array(self) -> sc.DataArray:
-        """Get the current data array, either rebinned or the original full resolution."""
+        """Get the current data array, either rebinned or the original full resolution.
+
+        Returns
+        -------
+        sc.DataArray
+            The rebinned data array if rebinning has been applied, otherwise the
+            original full-resolution data array.
+        """
         if hasattr(self, '_rebinned_data_array'):
             return self._rebinned_data_array
         return self._full_data_array
 
     @_data_array.setter
     def _data_array(self, value: sc.DataArray) -> None:
-        """Data array."""
+        """Raise AttributeError — ``_data_array`` is a read-only property.
+
+        Raises
+        ------
+        AttributeError
+            Always.
+        """
         raise AttributeError('Cannot set _data_array, it is a read-only property.')
 
     @property
     def x_positions(self) -> sc.Variable | None:
-        """Get the x-coordinate positions of the pixels, if available."""
+        """Get the x-coordinate positions of the pixels.
+
+        Returns
+        -------
+        sc.Variable or None
+            The x-coordinate positions as a :class:`scipp.Variable`, or ``None`` if
+            physical coordinates are not available.
+        """
         if self._has_physical_coords:
             return self._data_array.coords['x'].copy()
         return None
@@ -272,6 +355,16 @@ class Measurement(NewBase):
         value : sc.Variable | np.ndarray
             The new x-coordinate positions to set.
             If a numpy array is provided, the unit is assumed to be meters.
+
+        Raises
+        ------
+        ValueError
+            If physical coordinate positions have not been initialised yet. Use
+            :meth:`set_physical_coord_positions` to set both axes simultaneously.
+        TypeError
+            If ``value`` is not a :class:`scipp.Variable` or :class:`numpy.ndarray`.
+        UnitError
+            If ``value`` does not carry a unit of length.
         """
         if not self._has_physical_coords:
             raise ValueError(
@@ -291,7 +384,14 @@ class Measurement(NewBase):
 
     @property
     def y_positions(self) -> sc.Variable | None:
-        """Get the y-coordinate positions of the pixels, if available."""
+        """Get the y-coordinate positions of the pixels.
+
+        Returns
+        -------
+        sc.Variable or None
+            The y-coordinate positions as a :class:`scipp.Variable`, or ``None`` if
+            physical coordinates are not available.
+        """
         if self._has_physical_coords:
             return self._data_array.coords['y'].copy()
         return None
@@ -305,6 +405,16 @@ class Measurement(NewBase):
         value : sc.Variable | np.ndarray
             The new y-coordinate positions to set.
             If a numpy array is provided, the unit is assumed to be meters.
+
+        Raises
+        ------
+        ValueError
+            If physical coordinate positions have not been initialised yet. Use
+            :meth:`set_physical_coord_positions` to set both axes simultaneously.
+        TypeError
+            If ``value`` is not a :class:`scipp.Variable` or :class:`numpy.ndarray`.
+        UnitError
+            If ``value`` does not carry a unit of length.
         """
         if not self._has_physical_coords:
             raise ValueError(
@@ -359,7 +469,13 @@ class Measurement(NewBase):
         self._has_physical_coords = True
 
     def delete_physical_coord_positions(self) -> None:
-        """Delete the physical coordinate positions for the measurement."""
+        """Delete the physical coordinate positions for the measurement.
+
+        Raises
+        ------
+        ValueError
+            If physical coordinate positions are not currently set.
+        """
         if self._has_physical_coords:
             del self._data_array.coords['x']
             del self._data_array.coords['y']
@@ -369,7 +485,13 @@ class Measurement(NewBase):
 
     @property
     def time_of_flights(self) -> sc.Variable:
-        """Get the time-of-flight values of the measurement."""
+        """Get the time-of-flight values of the measurement.
+
+        Returns
+        -------
+        sc.Variable
+            A copy of the time-of-flight coordinate array.
+        """
         return self._data_array.coords['tof'].copy()
 
     @time_of_flights.setter
@@ -381,6 +503,16 @@ class Measurement(NewBase):
         value : sc.Variable | np.ndarray
             The new time-of-flight values to set.
             If a numpy array is provided, the unit is assumed to be seconds.
+
+        Raises
+        ------
+        TypeError
+            If ``value`` is not a :class:`scipp.Variable` or :class:`numpy.ndarray`.
+        ValueError
+            If the length of ``value`` does not match the number of frames, or if any
+            time-of-flight value is negative.
+        UnitError
+            If ``value`` does not carry a unit of time.
         """
         value = self._validate_provided_coord(
             data_array=self._data_array,
@@ -397,12 +529,25 @@ class Measurement(NewBase):
 
     @property
     def regions_of_interest(self) -> EasyList[RectROI]:
-        """Get the list of regions of interest (ROIs) defined for this measurement."""
+        """Get the list of regions of interest (ROIs) defined for this measurement.
+
+        Returns
+        -------
+        EasyList[RectROI]
+            The list of :class:`~easyimaging.measurement.regions.RectROI` objects
+            associated with this measurement.
+        """
         return self._regions_of_interest
 
     @regions_of_interest.setter
     def regions_of_interest(self, value: EasyList[RectROI]) -> None:
-        """Regions of interest."""
+        """Raise AttributeError — ``regions_of_interest`` is a read-only property.
+
+        Raises
+        ------
+        AttributeError
+            Always. Add or remove ROIs directly from the list instead.
+        """
         raise AttributeError(
             'Cannot set regions_of_interest, it is a read-only property. '
             'Please simply add or remove ROIs directly from the list.'
@@ -418,7 +563,19 @@ class Measurement(NewBase):
         ----------
         dimensions : dict[str, Numeric]
             A dictionary specifying the rebinning factors for each dimension.
-            For example, {'t': 2} will rebin the time dimension by a factor of 2.
+            For example, ``{'x': 2, 'y': 2}`` will halve the spatial resolution.
+
+        Raises
+        ------
+        TypeError
+            If ``dimensions`` is not a :class:`dict`, or a dimension key is not a string,
+            or a rebin factor is not a positive integer (or integer-valued float).
+        ValueError
+            If rebinning of the ``'t'`` dimension is requested (not yet supported), if a
+            rebin factor is less than 1, or if a dimension size is not evenly divisible by
+            the rebin factor.
+        KeyError
+            If a specified dimension name does not exist in the data array.
         """
         if not isinstance(dimensions, dict):
             raise TypeError('dimensions must be a dictionary mapping dimension names to rebin factors.')
@@ -450,7 +607,11 @@ class Measurement(NewBase):
         self._rebinned_data_array = temp_array
 
     def revert_rebin(self) -> None:
-        """Revert any rebinning applied to the measurement data, restoring it to its original resolution."""
+        """Revert any rebinning applied to the measurement data, restoring it to its original resolution.
+
+        If no rebinning has been applied, a :class:`UserWarning` is issued and no action
+        is taken.
+        """
         if hasattr(self, '_rebinned_data_array'):
             del self._rebinned_data_array
         else:
@@ -474,6 +635,19 @@ class Measurement(NewBase):
         **kwargs : dict
             Additional keyword arguments to pass to the plotting function.
             See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
+
+        Returns
+        -------
+        plopp.Figure or None
+            The plot object when running inside a Jupyter notebook, otherwise ``None``
+            (the plot is displayed directly via :meth:`show`).
+
+        Raises
+        ------
+        TypeError
+            If ``time_of_flight`` is not an integer, :class:`scipp.Variable` scalar, or ``None``.
+        UnitError
+            If a :class:`scipp.Variable` ``time_of_flight`` does not carry a unit of time.
         """
         if time_of_flight is None:
             title_suffix = ' (averaged over TOF)'
@@ -516,6 +690,16 @@ class Measurement(NewBase):
         **kwargs : dict
             Additional keyword arguments to pass to the slicer function.
             See https://scipp.github.io/plopp/generated/plopp.slicer.html for options.
+
+        Returns
+        -------
+        plopp.widgets.Slicer
+            The interactive slicer widget.
+
+        Raises
+        ------
+        RuntimeError
+            If called outside a Jupyter notebook environment.
         """
         slicer_kwargs_defaults = self._plot_defaults()
         slicer_kwargs_defaults.update({
@@ -544,6 +728,16 @@ class Measurement(NewBase):
         **kwargs : dict
             Additional keyword arguments to pass to the inspector function.
             See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
+
+        Returns
+        -------
+        list
+            A list of plopp figure objects comprising the inspector widget.
+
+        Raises
+        ------
+        RuntimeError
+            If called outside a Jupyter notebook environment.
         """
         inspector_kwargs_defaults = self._plot_defaults()
         inspector_kwargs_defaults['ymax'] = inspector_kwargs_defaults['cmax']
@@ -580,6 +774,17 @@ class Measurement(NewBase):
         **kwargs : dict
             Additional keyword arguments to pass to the ROI creator function.
             See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
+
+        Returns
+        -------
+        list
+            A list of plopp figure objects comprising the ROI creator widget.
+            Changes made interactively are reflected in :attr:`regions_of_interest`.
+
+        Raises
+        ------
+        RuntimeError
+            If called outside a Jupyter notebook environment.
         """
 
         if not _is_notebook():
@@ -639,7 +844,17 @@ class Measurement(NewBase):
 
         # The callback to be used by the Scipp RectangleTool when drawing a new rectangle.
         def create_rectangle_roi(rect, roi_list, data_array):
-            """Create rectangle roi."""
+            """Create a new :class:`RectROI` from a drawn rectangle and append it to ``roi_list``.
+
+            Parameters
+            ----------
+            rect :
+                The rectangle object provided by the plopp RectangleTool.
+            roi_list : EasyList[RectROI]
+                The list of ROIs to append the new ROI to.
+            data_array : sc.DataArray
+                The data array used to derive pixel and physical coordinate ranges.
+            """
             # Get the pixel and physical coordinate ranges from the rectangle vertices using the helper method.
             x_pixel_range, y_pixel_range, x_range, y_range = Measurement._ranges_from_rectangle(rect, data_array)
             new_roi = RectROI(
@@ -653,7 +868,17 @@ class Measurement(NewBase):
 
         # The callback to be used by the Scipp RectangleTool when dragging the corners of an existing rectangle.
         def edit_rectangle_roi(rect, roi_list, data_array):
-            """Edit rectangle roi."""
+            """Update the matching :class:`RectROI` in ``roi_list`` when a rectangle is resized.
+
+            Parameters
+            ----------
+            rect :
+                The rectangle object provided by the plopp RectangleTool.
+            roi_list : EasyList[RectROI]
+                The list of ROIs containing the ROI to update.
+            data_array : sc.DataArray
+                The data array used to derive updated coordinate ranges.
+            """
             x_pixel_range, y_pixel_range, x_range, y_range = Measurement._ranges_from_rectangle(rect, data_array)
             # Find the ROI corresponding to the rectangle being edited based on the stored rectangle ID.
             for roi in roi_list:
@@ -666,7 +891,15 @@ class Measurement(NewBase):
                 matching_roi.set_physical_coord_range(x_range, y_range)
 
         def delete_rectangle_roi(rect, roi_list):
-            """Delete rectangle roi."""
+            """Remove the :class:`RectROI` corresponding to ``rect`` from ``roi_list``.
+
+            Parameters
+            ----------
+            rect :
+                The rectangle object provided by the plopp RectangleTool.
+            roi_list : EasyList[RectROI]
+                The list of ROIs from which the matching ROI will be removed.
+            """
             for roi in roi_list:
                 if hasattr(roi, '_rect_ids') and rect.id in roi._rect_ids:
                     roi_list.remove(roi)
@@ -709,7 +942,15 @@ class Measurement(NewBase):
         Returns
         -------
         sc.DataArray
-            A DataArray containing the spectrum data.
+            A 1-D DataArray containing the spatially averaged spectrum along the
+            time-of-flight axis.
+
+        Raises
+        ------
+        TypeError
+            If ``roi`` is not a :class:`RectROI`, string, or ``None``.
+        KeyError
+            If a string ``roi`` does not match any ROI in :attr:`regions_of_interest`.
         """
         if roi is not None and not isinstance(roi, (RectROI, str)):
             raise TypeError('roi must be a string, None, or an instance of RectROI.')
@@ -749,6 +990,19 @@ class Measurement(NewBase):
         **kwargs : dict
             Additional keyword arguments to pass to the plotting function.
             See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
+
+        Returns
+        -------
+        plopp.Figure or None
+            The plot object when running inside a Jupyter notebook, otherwise ``None``
+            (the plot is displayed directly via :meth:`show`).
+
+        Raises
+        ------
+        TypeError
+            If ``roi`` is not a :class:`RectROI`, string, or ``None``.
+        KeyError
+            If a string ``roi`` does not match any ROI in :attr:`regions_of_interest`.
         """
         spectrum_data = self.spectrum(roi=roi)
 
@@ -776,7 +1030,28 @@ class Measurement(NewBase):
         expected_dim_string: str,
         expected_unit: str,
     ) -> None:
-        """Validate data array coordinate."""
+        """Validate that a named coordinate of a data array has the expected dimension and unit.
+
+        Parameters
+        ----------
+        data_array : sc.DataArray
+            The data array whose coordinate is to be validated.
+        coord_name : str
+            Name of the coordinate to validate.
+        expected_dim : str
+            The single dimension name the coordinate must have (e.g. ``'t'``).
+        expected_dim_string : str
+            Human-readable name of the physical dimension (e.g. ``'time'``).
+        expected_unit : str
+            The SI unit string the coordinate must be convertible to (e.g. ``'s'``).
+
+        Raises
+        ------
+        DimensionError
+            If the coordinate does not have exactly the expected dimension.
+        UnitError
+            If the coordinate cannot be converted to ``expected_unit``.
+        """
         if data_array.coords[coord_name].dims != (expected_dim,):
             raise DimensionError(f"'{coord_name}' coordinate must be of dimension '{expected_dim}'.")
         try:
@@ -796,7 +1071,43 @@ class Measurement(NewBase):
         expected_dim_string: str,
         expected_unit: str,
     ) -> sc.Variable:
-        """Validate provided coord."""
+        """Validate and normalise a coordinate array provided by the caller.
+
+        Accepts either a :class:`scipp.Variable` or a :class:`numpy.ndarray` and
+        returns a validated :class:`scipp.Variable`. A numpy array is wrapped with
+        ``dim`` and ``expected_unit``.
+
+        Parameters
+        ----------
+        data_array : sc.DataArray
+            The data array the coordinate will be assigned to (used for length checks).
+        coord : sc.Variable | np.ndarray
+            The coordinate values to validate.
+        coord_name : str
+            Human-readable name of the coordinate (used in error messages).
+        dim : str
+            Dimension name along which the coordinate runs (e.g. ``'t'``).
+        length_context : str
+            Description of what the length should match (used in error messages).
+        expected_dim_string : str
+            Human-readable name of the physical dimension (e.g. ``'time'``).
+        expected_unit : str
+            The SI unit string the coordinate must be convertible to (e.g. ``'s'``).
+
+        Returns
+        -------
+        sc.Variable
+            The validated (and possibly converted) coordinate variable.
+
+        Raises
+        ------
+        TypeError
+            If ``coord`` is not a :class:`scipp.Variable` array or :class:`numpy.ndarray`.
+        ValueError
+            If the length of ``coord`` does not match the dimension size of ``data_array``.
+        UnitError
+            If ``coord`` cannot be converted to ``expected_unit``.
+        """
         if not (isinstance(coord, sc.Variable) and coord.sizes) and not isinstance(coord, np.ndarray):
             raise TypeError(f'{coord_name} must be a scipp Variable or a numpy ndarray.')
         if len(coord) not in (data_array.sizes[dim], data_array.sizes[dim] + 1):
@@ -813,7 +1124,31 @@ class Measurement(NewBase):
     def _ranges_from_rectangle(
         rect, data_array: sc.DataArray
     ) -> tuple[tuple[int, int], None] | tuple[tuple[int, int], tuple[sc.Variable, sc.Variable]]:  # noqa: E501
-        """Ranges from rectangle."""
+        """Convert rectangle vertices from the plopp RectangleTool to pixel and physical coordinate ranges.
+
+        Used internally by :meth:`roi_creator` when the user draws or edits a rectangle.
+
+        Parameters
+        ----------
+        rect :
+            Rectangle object from the plopp RectangleTool exposing a ``vertices`` attribute.
+        data_array : sc.DataArray
+            The current data array, used to determine whether physical coordinates are
+            available and to look up pixel indices.
+
+        Returns
+        -------
+        x_pixel_range : tuple[int, int]
+            ``(x_start, x_end)`` pixel indices.
+        y_pixel_range : tuple[int, int]
+            ``(y_start, y_end)`` pixel indices.
+        x_range : tuple[sc.Variable, sc.Variable] or None
+            ``(x_start, x_end)`` physical coordinates, or ``None`` if no physical
+            coordinates are present.
+        y_range : tuple[sc.Variable, sc.Variable] or None
+            ``(y_start, y_end)`` physical coordinates, or ``None`` if no physical
+            coordinates are present.
+        """
         # To be used in the roi_selector method to convert the rectangle vertices to pixel and
         # physical coordinate ranges for the new ROI.
         x_vertex_list, y_vertex_list = rect.vertices
@@ -845,7 +1180,14 @@ class Measurement(NewBase):
         return x_pixel_range, y_pixel_range, x_range, y_range
 
     def _plot_defaults(self):
-        """Plot defaults."""
+        """Return the default keyword arguments shared across all plot methods.
+
+        Returns
+        -------
+        dict
+            A dictionary of default plopp keyword arguments including title, colour-bar
+            label and limits, mask colour, and the coordinate names to use for the axes.
+        """
         return {
             'title': self.display_name,
             'clabel': 'Transmission',
@@ -856,5 +1198,12 @@ class Measurement(NewBase):
         }
 
     def __repr__(self):
-        """Repr function."""
+        """Return a string representation of the Measurement.
+
+        Returns
+        -------
+        str
+            A human-readable summary including the display name, data shape, and the
+            display names of all associated regions of interest.
+        """
         return f'{self.display_name} with shape {self._data_array.shape} and regions of interest: {[roi.display_name for roi in self.regions_of_interest]}'  # noqa: E501
