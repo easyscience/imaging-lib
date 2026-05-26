@@ -1,0 +1,45 @@
+# Verifies if a pull request has at least one label from a set of valid
+# labels before it can be merged.
+#
+# The label validation is delegated to `mheap/github-action-required-labels`,
+# which checks the current PR labels via the GitHub API and can add or update a
+# PR comment when the required label set is missing.
+
+name: PR labels check
+
+on:
+  pull_request_target:
+    types: [opened, labeled, unlabeled, synchronize]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  check-labels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup easyscience[bot]
+        id: bot
+        uses: ./.github/actions/setup-easyscience-bot
+        with:
+          app-id: ${{ vars.EASYSCIENCE_APP_ID }}
+          private-key: ${{ secrets.EASYSCIENCE_APP_KEY }}
+
+      - uses: mheap/github-action-required-labels@v5
+        with:
+          token: ${{ steps.bot.outputs.token }}
+          add_comment: true
+          mode: minimum
+          count: 1
+          labels: |
+            [bot] release
+            [scope] bug
+            [scope] documentation
+            [scope] enhancement
+            [scope] maintenance
+            [scope] significant

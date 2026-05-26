@@ -1,16 +1,12 @@
+# SPDX-FileCopyrightText: 2024 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
-# Copyright (c) 2024 Easyscience contributors (https://github.com/EasyScience)
 
-# flake8: noqa
-import importlib.metadata
+"""EasyImaging library."""
 
-try:
-    __version__ = importlib.metadata.version(__package__ or __name__)
-except importlib.metadata.PackageNotFoundError:
-    __version__ = '0.0.0'
-
-del importlib
+from importlib.metadata import version
 
 from .measurement import Measurement
 
-__all__ = [Measurement]
+__version__ = version(__package__)
+
+__all__ = [Measurement, __version__]
