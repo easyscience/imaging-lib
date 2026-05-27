@@ -17,6 +17,7 @@ from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
 from scitiff import save_scitiff
+from scitiff.io import ImageJMetadataNotFoundWarning
 
 from ..utils import _is_notebook
 from ..utils import _to_edges
@@ -191,10 +192,14 @@ class Measurement(NewBase):
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
-        try:
-            data_array = load_scitiff(filename)['image']
-        except Exception as e:
-            raise RuntimeError(f"Failed to load TIFF stack file '{filename}': {e}") from e
+
+        # We know this is not a scitiff, so supress that warning
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=ImageJMetadataNotFoundWarning)
+            try:
+                data_array = load_scitiff(filename)['image']
+            except Exception as e:
+                raise RuntimeError(f"Failed to load TIFF stack file '{filename}': {e}") from e
 
         try:
             data_array = data_array.rename_dims({'dim_0': 't', 'dim_1': 'y', 'dim_2': 'x'})
@@ -620,6 +625,10 @@ class Measurement(NewBase):
                 UserWarning,
             )
 
+    # -------------------------------------------------------------------------------------------------------------------------
+    # ----------------------------------------- Plotting methods --------------------------------------------------------------
+    # -------------------------------------------------------------------------------------------------------------------------
+
     def plot(self, time_of_flight: int | sc.Variable | None = None, **kwargs) -> None:
         """Plot the measurement image at a specific time-of-flight.
 
@@ -662,18 +671,20 @@ class Measurement(NewBase):
         else:
             raise TypeError('time_of_flight must be an integer, scipp scalar, or None.')
 
-        plot_kwargs_defaults = self._plot_defaults()
-        plot_kwargs_defaults['title'] = self.display_name + title_suffix
+        if time_of_flight is None:
+            plot_array = self._data_array.mean('t')
+        elif isinstance(time_of_flight, int):
+            plot_array = self._data_array['t', time_of_flight]
+        elif isinstance(time_of_flight, sc.Variable):
+            plot_array = self._data_array['tof', time_of_flight]
 
         # Overwrite defaults with any user-provided kwargs
+        plot_kwargs_defaults = self._plot_defaults()
+        plot_kwargs_defaults['title'] = self.display_name + title_suffix
+        plot_kwargs_defaults['cmax'] = min(3.0, float(plot_array.max().value * 1.1))
         plot_kwargs_defaults.update(kwargs)
 
-        if time_of_flight is None:
-            plot = self._data_array.mean('t').plot(**plot_kwargs_defaults)
-        elif isinstance(time_of_flight, int):
-            plot = self._data_array['t', time_of_flight].plot(**plot_kwargs_defaults)
-        elif isinstance(time_of_flight, sc.Variable):
-            plot = self._data_array['tof', time_of_flight].plot(**plot_kwargs_defaults)
+        plot = plot_array.plot(**plot_kwargs_defaults)
         if _is_notebook():
             return plot
         else:
@@ -744,7 +755,7 @@ class Measurement(NewBase):
         inspector_kwargs_defaults.update({
             'title': self.display_name + ' - Spectrum Inspector',
             'ymin': 0.0,
-            'dim': 't',
+            'dim': 'Time of flight',  # Due to https://github.com/scipp/plopp/issues/566
             'orientation': 'vertical',
             'operation': 'mean',
             'mode': 'point',
@@ -752,8 +763,18 @@ class Measurement(NewBase):
         # Overwrite defaults with any user-provided kwargs
         inspector_kwargs_defaults.update(kwargs)
 
+        # Hack to cirmunvent the bug in https://github.com/scipp/plopp/issues/566
+        temp_array = self._data_array.drop_coords(self._data_array.coords)
+        if self._has_physical_coords:
+            temp_array.coords['x'] = self._data_array.coords['x']
+            temp_array.coords['y'] = self._data_array.coords['y']
+        temp_array.coords['x_pixels'] = self._data_array.coords['x_pixels']
+        temp_array.coords['y_pixels'] = self._data_array.coords['y_pixels']
+        temp_array.coords['Time of flight'] = self._data_array.coords['tof']
+        temp_array = temp_array.rename_dims({'t': 'Time of flight'})
+
         if _is_notebook():
-            return pp.inspector(self._data_array, **inspector_kwargs_defaults)
+            return pp.inspector(temp_array, **inspector_kwargs_defaults)
         else:
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
 
@@ -795,15 +816,27 @@ class Measurement(NewBase):
         roi_selector_kwargs_defaults.update({
             'title': self.display_name + ' - ROI Creator',
             'ymin': 0.0,
-            'dim': 't',
+            'dim': 'Time of flight',  # Due to https://github.com/scipp/plopp/issues/566
             'orientation': 'vertical',
             'operation': 'mean',
             'mode': 'rectangle',
+            # 'autoscale' : False,
         })
         # Overwrite defaults with any user-provided kwargs
         roi_selector_kwargs_defaults.update(kwargs)
 
-        plots = pp.inspector(self._data_array, **roi_selector_kwargs_defaults)
+        # Hack to cirmunvent the bug in https://github.com/scipp/plopp/issues/566
+        temp_array = self._data_array.drop_coords(self._data_array.coords)
+        if self._has_physical_coords:
+            temp_array.coords['x'] = self._data_array.coords['x']
+            temp_array.coords['y'] = self._data_array.coords['y']
+        temp_array.coords['x_pixels'] = self._data_array.coords['x_pixels']
+        temp_array.coords['y_pixels'] = self._data_array.coords['y_pixels']
+        temp_array.coords['Time of flight'] = self._data_array.coords['tof']
+        temp_array = temp_array.rename_dims({'t': 'Time of flight'})
+
+        plots = pp.inspector(temp_array, **roi_selector_kwargs_defaults)
+        # plots = pp.inspector(self._data_array, **roi_selector_kwargs_defaults)
 
         # -------------------------------------------------------------------------------------------------
         # -------------------------- Plot the existing ROIs on the plot -----------------------------------
@@ -1006,12 +1039,20 @@ class Measurement(NewBase):
         """
         spectrum_data = self.spectrum(roi=roi)
 
+        if roi is None:
+            roi_name = 'entire image'
+        elif isinstance(roi, str):
+            roi_name = f"ROI '{roi}'"
+        else:
+            roi_name = f"ROI '{roi.unique_name}'"
+
         plot_kwargs_defaults = {
-            'title': self.display_name + ' - Spectrum',
-            'xlabel': 'Time of Flight',
+            'title': self.display_name + ' - Spectrum of ' + roi_name,
+            'xlabel': f'Time of flight [{spectrum_data.coords["tof"].unit}]',
             'ylabel': 'Transmission',
             'ymin': 0.0,
-            'ymax': 3.0,
+            'ymax': min(3.0, float(spectrum_data.max().value * 1.1)),
+            'coords': ['tof'],
         }
         # Overwrite defaults with any user-provided kwargs
         plot_kwargs_defaults.update(kwargs)

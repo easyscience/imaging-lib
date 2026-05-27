@@ -13,7 +13,7 @@ BRAIN = pooch.create(
     # If this is a development version, get the data from the "main" branch
     version_dev='master',
     registry={
-        'iron_alpha_scitiff/iron_alpha_v1.tiff': 'sha256:efb923947e5f5c0f46788c0f18836a3fce916745a05ad5fb8483e5ff17e08a1a',
+        'iron_alpha_scitiff/iron_alpha_v1.tiff': 'sha256:ada3d50a5324362add0b8787e11b87b5f33e1dd7e3862f92face03671a20a282',
         'iron_alpha_tiff/iron_alpha_v1.tiff': 'sha256:a1e4a14bfff3d7c0e92cc42f65f7931536d01f763ba7df2a0e4c0aac851f3594',
         'small_test_scitiff/small_test_scitiff_v1.tiff': (
             'sha256:2ce4088fad10437a1180855fba4ebfefad0c98b252be36d6fc046a1aa6ca922d'

@@ -89,7 +89,7 @@ class TestMeasurement:
             y_pixel_range=y_pixel_range,
             x_range=x_range,
             y_range=y_range,
-            unique_name='test_roi',
+            # unique_name='test_roi',
             display_name='Test ROI',
         )
 
@@ -351,6 +351,14 @@ class TestMeasurement:
         assert 'x' not in measurement._data_array.coords
         assert 'y' not in measurement._data_array.coords
 
+    @pytest.mark.filterwarnings('error')
+    def test_from_tiff_stack_no_ImageJ_warning(self):
+        # When Then Expect
+        Measurement.from_tiff_stack(
+            filename=small_test_tiff(),
+            time_of_flights=sc.arange('t', 0, 240, 1, unit='s'),
+        )
+
     @pytest.mark.parametrize(
         'coord, expected',
         [
@@ -542,7 +550,7 @@ class TestMeasurement:
             UserWarning,
             match='The data array is of type float64, which is not directly supported by the SciTIFF format. '
             'It will be downcast to float32 when saving, which may result in loss of precision.',
-        ):  # noqa: E501
+        ):
             measurement.save_scitiff(tmp_path / 'test.tiff')
         assert 'non_finite' in measurement._data_array.masks
 
@@ -1071,6 +1079,16 @@ class TestMeasurement:
         assert fig.view.colormapper.vmax == 1.1
         assert fig.view.colormapper.vmin == 0.0
 
+    def test_plot_automatic_cmax_at_index(self, valid_data_array, plot_setup):
+        # When
+        valid_data_array['t', 0].data *= 0.5  # Scale data at first TOF index to ensure max is below 1.0
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.plot(time_of_flight=0)
+        # Expect
+        assert fig.view.colormapper.vmax == 0.55
+        assert fig.view.colormapper.vmin == 0.0
+
     def test_plot_automatic_cmax(self, valid_data_array, plot_setup):
         # When
         valid_data_array.data *= 10.0  # Scale data to ensure max is above 1.0
@@ -1214,6 +1232,8 @@ class TestMeasurement:
         assert figs[0].view.colormapper.vmax == 1.1
         assert figs[0].view.colormapper.vmin == 0.0
         assert figs[1].canvas.ymax == 1.1
+        assert figs[1].canvas.dims['x'] == 'Time of flight'
+        assert figs[1].canvas.units['x'] == 's'
 
     def test_spectrum_inspector_user_overwrite(self, valid_data_array, plot_setup):
         # When
@@ -1292,6 +1312,9 @@ class TestMeasurement:
         figs[0].toolbar['inspect']._tool.stop()
         # Expect
         assert figs[1].canvas.ymax == 1.1
+        # The next 2 can only be tested when something is drawn on the plot.
+        assert figs[1].canvas.dims['x'] == 'Time of flight'
+        assert figs[1].canvas.units['x'] == 's'
         assert len(measurement.regions_of_interest) == 1
         roi = measurement.regions_of_interest[0]
         assert isinstance(roi, RectROI)
@@ -1304,6 +1327,58 @@ class TestMeasurement:
         assert roi.y_start == sc.scalar(2.5, unit='m')
         assert roi.y_end == sc.scalar(5, unit='m')
         assert roi._has_physical_coords
+
+    def test_roi_creator_with_existing_roi_both_physical_coords(self, valid_data_array, valid_roi, plot_setup):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.regions_of_interest.append(valid_roi)
+        # Then
+        figs = measurement.roi_creator()
+        # Expect
+        assert figs[1].canvas.ymax == 1.1
+        # The next 2 can only be tested when something is drawn on the plot,
+        # hence this tests that the existing ROI is properly loaded into the plot.
+        assert figs[1].canvas.dims['x'] == 'Time of flight'
+        assert figs[1].canvas.units['x'] == 's'
+
+    def test_roi_creator_with_existing_roi_pixel_coordinates(self, valid_data_array, plot_setup):
+        # When
+        x_pixel_range = (1, 4)
+        y_pixel_range = (2, 5)
+        roi = RectROI(
+            x_pixel_range=x_pixel_range,
+            y_pixel_range=y_pixel_range,
+        )
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.regions_of_interest.append(roi)
+        # Then
+        figs = measurement.roi_creator()
+        # Expect
+        assert figs[1].canvas.ymax == 1.1
+        # The next 2 can only be tested when something is drawn on the plot,
+        # hence this tests that the existing ROI is properly loaded into the plot.
+        assert figs[1].canvas.dims['x'] == 'Time of flight'
+        assert figs[1].canvas.units['x'] == 's'
+
+    def test_roi_creator_existing_roi_both_pixel_coords(self, valid_data_array, valid_data_array_no_xy_coords, plot_setup):
+        # When
+        x_pixel_range = (1, 4)
+        y_pixel_range = (2, 5)
+        roi = RectROI(
+            x_pixel_range=x_pixel_range,
+            y_pixel_range=y_pixel_range,
+        )
+        valid_data_array_no_xy_coords.data += 0.5
+        measurement = Measurement(data_array=valid_data_array_no_xy_coords)
+        measurement.regions_of_interest.append(roi)
+        # Then
+        figs = measurement.roi_creator()
+        # Expect
+        assert figs[1].canvas.ymax == 0.55
+        # The next 2 can only be tested when something is drawn on the plot,
+        # hence this tests that the existing ROI is properly loaded into the plot.
+        assert figs[1].canvas.dims['x'] == 'Time of flight'
+        assert figs[1].canvas.units['x'] == 's'
 
     def test_roi_creator_create_roi_pixel_coordinates(self, valid_data_array, plot_setup):
         # When
@@ -1407,10 +1482,10 @@ class TestMeasurement:
         # When
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi')
+        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi_3')
         # Then
         measurement.regions_of_interest.append(roi)
-        spectrum = measurement.spectrum(roi='test_roi')
+        spectrum = measurement.spectrum(roi='test_roi_3')
         # Expect
         assert isinstance(spectrum, sc.DataArray)
         assert sc.identical(spectrum.coords['tof'], measurement._data_array.coords['tof'])
@@ -1483,3 +1558,61 @@ class TestMeasurement:
             match="ROI with unique name 'non_existent_roi' not found in the measurement's list of ROIs.",
         ):  # noqa: E501
             measurement.spectrum(roi='non_existent_roi')
+
+    @pytest.mark.parametrize(
+        'roi, expected',
+        [
+            (None, 'entire image'),
+            (RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi_2'), "ROI 'test_roi_2'"),
+        ],
+        ids=['no_roi', 'rect_roi'],
+    )
+    def test_spectrum_plot(self, valid_data_array, plot_setup, roi, expected, valid_roi):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.regions_of_interest.append(valid_roi)
+        # Then
+        fig = measurement.spectrum_plot(roi=roi)
+        # Expect
+        assert fig.canvas.dims['x'] == 'tof'
+        assert fig.canvas.units['x'] == 's'
+        assert fig.canvas.title == measurement.display_name + ' - Spectrum of ' + expected
+        assert fig.canvas.xlabel == 'Time of flight [s]'
+        assert fig.canvas.ylabel == 'Transmission'
+
+    def test_spectrum_plot_unique_name_roi(self, valid_data_array, plot_setup, valid_roi):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        measurement.regions_of_interest.append(valid_roi)
+        roi = valid_roi.unique_name
+        # Then
+        fig = measurement.spectrum_plot(roi=roi)
+        # Expect
+        assert fig.canvas.dims['x'] == 'tof'
+        assert fig.canvas.units['x'] == 's'
+        assert fig.canvas.title == measurement.display_name + ' - Spectrum of ' + "ROI '" + roi + "'"
+        assert fig.canvas.xlabel == 'Time of flight [s]'
+        assert fig.canvas.ylabel == 'Transmission'
+
+    def test_spectrum_plot_user_overwrite(self, valid_data_array, plot_setup):
+        # When
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.spectrum_plot(xlabel='Custom X label')
+        # Expect
+        assert fig.canvas.xlabel == 'Custom X label'
+        assert fig.canvas.ylabel == 'Transmission'
+        assert fig.canvas.title == measurement.display_name + ' - Spectrum of ' + 'entire image'
+
+    def test_spectrum_plot_automatic_ymax(self, valid_data_array, plot_setup):
+        # When
+        valid_data_array.data *= 10.0  # Scale data to ensure max is above 1.0
+        measurement = Measurement(data_array=valid_data_array)
+        # Then
+        fig = measurement.spectrum_plot()
+        # Expect
+        assert fig.canvas.dims['x'] == 'tof'
+        assert fig.canvas.title == measurement.display_name + ' - Spectrum of ' + 'entire image'
+        assert fig.canvas.xlabel == 'Time of flight [s]'
+        assert fig.canvas.ylabel == 'Transmission'
+        assert fig.canvas.ymax == 3.0
