@@ -5,13 +5,13 @@ import pytest
 import scipp as sc
 from scipp import UnitError
 
-from easyimaging.measurement.regions import RectROI
+from easyimaging.regions_of_interest import RectangleROI
 
 
-class TestRectROI:
+class TestRectangleROI:
     @pytest.fixture
     def roi_basic(self):
-        return RectROI((10, 50), [20, 80])
+        return RectangleROI((10, 50), [20, 80])
 
     @pytest.fixture
     def roi_with_physical_coords(self):
@@ -19,7 +19,7 @@ class TestRectROI:
         x_end = sc.scalar(10.0, unit='m')
         y_start = sc.scalar(0.0, unit='m')
         y_end = sc.scalar(5.0, unit='m')
-        return RectROI(
+        return RectangleROI(
             (10, 50),
             (20, 80),
             (x_start, x_end),
@@ -48,8 +48,8 @@ class TestRectROI:
         # When Then
         roi = roi_basic
         # Expect
-        assert roi.unique_name.startswith('RectROI_')
-        assert roi.display_name.startswith('RectROI_')
+        assert roi.unique_name.startswith('RectangleROI_')
+        assert roi.display_name.startswith('RectangleROI_')
         assert roi.x_pixel_start == 10
         assert roi.x_pixel_end == 50
         assert roi.y_pixel_start == 20
@@ -62,12 +62,12 @@ class TestRectROI:
         x_end = sc.scalar(10.0, unit='m')
         # Then Expect
         with pytest.raises(ValueError, match='Both x_range and y_range must be provided together or not at all.'):
-            RectROI((10, 50), (20, 80), (x_start, x_end))
+            RectangleROI((10, 50), (20, 80), (x_start, x_end))
 
     def test_init_invalid_negative_pixel_indices(self):
         # When Then Expect
         with pytest.raises(ValueError, match='Pixel indices must be non-negative integers.'):
-            RectROI((-10, 50), (20, 80))
+            RectangleROI((-10, 50), (20, 80))
 
     @pytest.mark.parametrize(
         'x_pixel_range',
@@ -82,7 +82,7 @@ class TestRectROI:
     def test_init_invalid_x_pixel_range_arguments(self, x_pixel_range):
         # When Then Expect
         with pytest.raises(TypeError, match='x_pixel_range must be a tuple or a list of two integers'):
-            RectROI(x_pixel_range, (20, 80))
+            RectangleROI(x_pixel_range, (20, 80))
 
     @pytest.mark.parametrize(
         'x_range, error, message',
@@ -130,7 +130,7 @@ class TestRectROI:
     def test_init_invalid_x_range_arguments(self, x_range, error, message):
         # When Then Expect
         with pytest.raises(error, match=message):
-            RectROI((10, 50), (20, 80), x_range, (sc.scalar(0.0, unit='m'), sc.scalar(1.0, unit='m')))
+            RectangleROI((10, 50), (20, 80), x_range, (sc.scalar(0.0, unit='m'), sc.scalar(1.0, unit='m')))
 
     def test_set_physical_coord_range(self, roi_basic):
         # When
@@ -364,12 +364,12 @@ class TestRectROI:
         # Given
         input_dict = {
             '@module': 'easyimaging.measurement.regions',
-            '@class': 'RectROI',
+            '@class': 'RectangleROI',
             'x_pixel_range': [10, 50],
             'y_pixel_range': [20, 80],
         }
         # When Then
-        roi = RectROI.from_dict(input_dict)
+        roi = RectangleROI.from_dict(input_dict)
         # Expect
         assert roi.x_pixel_start == 10
         assert roi.x_pixel_end == 50
@@ -382,7 +382,7 @@ class TestRectROI:
         roi = roi_with_physical_coords
         input_dict = roi.to_dict(skip='unique_name')  # Skip unique_name to allow auto-generation in from_dict
         # When Then
-        roi_from_dict = RectROI.from_dict(input_dict)
+        roi_from_dict = RectangleROI.from_dict(input_dict)
         # Expect
         assert roi_from_dict.x_pixel_start == roi.x_pixel_start
         assert roi_from_dict.x_pixel_end == roi.x_pixel_end

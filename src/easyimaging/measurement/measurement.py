@@ -19,9 +19,9 @@ from scitiff import load_scitiff
 from scitiff import save_scitiff
 from scitiff.io import ImageJMetadataNotFoundWarning
 
+from ..regions_of_interest import RectangleROI
 from ..utils import _is_notebook
 from ..utils import _to_edges
-from .regions import RectROI
 
 Numeric = int | float
 
@@ -104,7 +104,7 @@ class Measurement(NewBase):
         self._full_data_array.coords['x_pixels'] = sc.arange('x', 0, self._full_data_array.sizes['x'] + 1, 1)
         self._full_data_array.coords['y_pixels'] = sc.arange('y', 0, self._full_data_array.sizes['y'] + 1, 1)
 
-        self._regions_of_interest = EasyList(protected_types=(RectROI,))
+        self._regions_of_interest = EasyList(protected_types=(RectangleROI,))
 
         non_finite_mask = ~sc.isfinite(self._full_data_array.data)
         self._full_data_array.masks['non_finite'] = non_finite_mask
@@ -533,19 +533,19 @@ class Measurement(NewBase):
         self._data_array.coords['tof'] = value
 
     @property
-    def regions_of_interest(self) -> EasyList[RectROI]:
+    def regions_of_interest(self) -> EasyList[RectangleROI]:
         """Get the list of regions of interest (ROIs) defined for this measurement.
 
         Returns
         -------
-        EasyList[RectROI]
-            The list of :class:`~easyimaging.measurement.regions.RectROI` objects
+        EasyList[RectangleROI]
+            The list of :class:`~easyimaging.measurement.regions.RectangleROI` objects
             associated with this measurement.
         """
         return self._regions_of_interest
 
     @regions_of_interest.setter
-    def regions_of_interest(self, value: EasyList[RectROI]) -> None:
+    def regions_of_interest(self, value: EasyList[RectangleROI]) -> None:
         """Raise AttributeError — ``regions_of_interest`` is a read-only property.
 
         Raises
@@ -877,20 +877,20 @@ class Measurement(NewBase):
 
         # The callback to be used by the Scipp RectangleTool when drawing a new rectangle.
         def create_rectangle_roi(rect, roi_list, data_array):
-            """Create a new :class:`RectROI` from a drawn rectangle and append it to ``roi_list``.
+            """Create a new :class:`RectangleROI` from a drawn rectangle and append it to ``roi_list``.
 
             Parameters
             ----------
             rect :
                 The rectangle object provided by the plopp RectangleTool.
-            roi_list : EasyList[RectROI]
+            roi_list : EasyList[RectangleROI]
                 The list of ROIs to append the new ROI to.
             data_array : sc.DataArray
                 The data array used to derive pixel and physical coordinate ranges.
             """
             # Get the pixel and physical coordinate ranges from the rectangle vertices using the helper method.
             x_pixel_range, y_pixel_range, x_range, y_range = Measurement._ranges_from_rectangle(rect, data_array)
-            new_roi = RectROI(
+            new_roi = RectangleROI(
                 x_pixel_range=x_pixel_range,
                 y_pixel_range=y_pixel_range,
                 x_range=x_range,
@@ -901,13 +901,13 @@ class Measurement(NewBase):
 
         # The callback to be used by the Scipp RectangleTool when dragging the corners of an existing rectangle.
         def edit_rectangle_roi(rect, roi_list, data_array):
-            """Update the matching :class:`RectROI` in ``roi_list`` when a rectangle is resized.
+            """Update the matching :class:`RectangleROI` in ``roi_list`` when a rectangle is resized.
 
             Parameters
             ----------
             rect :
                 The rectangle object provided by the plopp RectangleTool.
-            roi_list : EasyList[RectROI]
+            roi_list : EasyList[RectangleROI]
                 The list of ROIs containing the ROI to update.
             data_array : sc.DataArray
                 The data array used to derive updated coordinate ranges.
@@ -924,13 +924,13 @@ class Measurement(NewBase):
                 matching_roi.set_physical_coord_range(x_range, y_range)
 
         def delete_rectangle_roi(rect, roi_list):
-            """Remove the :class:`RectROI` corresponding to ``rect`` from ``roi_list``.
+            """Remove the :class:`RectangleROI` corresponding to ``rect`` from ``roi_list``.
 
             Parameters
             ----------
             rect :
                 The rectangle object provided by the plopp RectangleTool.
-            roi_list : EasyList[RectROI]
+            roi_list : EasyList[RectangleROI]
                 The list of ROIs from which the matching ROI will be removed.
             """
             for roi in roi_list:
@@ -960,14 +960,14 @@ class Measurement(NewBase):
 
         return plots
 
-    def spectrum(self, roi: RectROI | str | None = None) -> sc.DataArray:
+    def spectrum(self, roi: RectangleROI | str | None = None) -> sc.DataArray:
         """Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
 
         If no ROI is provided, the spectrum is calculated over the entire image.
 
         Parameters
         ----------
-        roi : RectROI | str | None, optional
+        roi : RectangleROI | str | None, optional
             The region of interest for which to extract the spectrum.
             If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
             By default, None.
@@ -981,12 +981,12 @@ class Measurement(NewBase):
         Raises
         ------
         TypeError
-            If ``roi`` is not a :class:`RectROI`, string, or ``None``.
+            If ``roi`` is not a :class:`RectangleROI`, string, or ``None``.
         KeyError
             If a string ``roi`` does not match any ROI in :attr:`regions_of_interest`.
         """
-        if roi is not None and not isinstance(roi, (RectROI, str)):
-            raise TypeError('roi must be a string, None, or an instance of RectROI.')
+        if roi is not None and not isinstance(roi, (RectangleROI, str)):
+            raise TypeError('roi must be a string, None, or an instance of RectangleROI.')
 
         if isinstance(roi, str):
             if roi in self.regions_of_interest:
@@ -1006,7 +1006,7 @@ class Measurement(NewBase):
             spectrum_data = self._data_array['x_pixels', x_slice]['y_pixels', y_slice].mean(dim=['x', 'y'])
         return spectrum_data
 
-    def spectrum_plot(self, roi: RectROI | str | None = None, **kwargs) -> None:
+    def spectrum_plot(self, roi: RectangleROI | str | None = None, **kwargs) -> None:
         """Plot the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
 
         If no ROI is provided, the spectrum is calculated over the entire image.
@@ -1016,7 +1016,7 @@ class Measurement(NewBase):
 
         Parameters
         ----------
-        roi : RectROI | str | None, optional
+        roi : RectangleROI | str | None, optional
             The region of interest for which to plot the spectrum.
             If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
             By default, None.
@@ -1033,7 +1033,7 @@ class Measurement(NewBase):
         Raises
         ------
         TypeError
-            If ``roi`` is not a :class:`RectROI`, string, or ``None``.
+            If ``roi`` is not a :class:`RectangleROI`, string, or ``None``.
         KeyError
             If a string ``roi`` does not match any ROI in :attr:`regions_of_interest`.
         """

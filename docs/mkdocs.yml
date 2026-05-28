@@ -180,6 +180,10 @@ nav:
   - Tutorials:
       - Tutorials: tutorials/index.md
       - Getting Started:
-          - Dummy tutorial: tutorials/measurement.ipynb
+          - The Measurement class: tutorials/measurement.ipynb
   - API Reference:
       - API Reference: api-reference/index.md
+      - Measurement: api-reference/measurement/measurement.md
+      - regions_of_interest:
+          - regions_of_interest: api-reference/regions_of_interest/index.md
+          - RectangleROI: api-reference/regions_of_interest/rectangle_roi.md

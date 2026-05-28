@@ -14,7 +14,7 @@ from easyscience.base_classes import NewBase
 from scipp import UnitError
 
 
-class RectROI(NewBase):
+class RectangleROI(NewBase):
     """Class representing a rectangular region of interest (ROI) in an image.
 
     Physical coordinate ranges are used by default if they are provided and are usable in the Measurement.
@@ -30,7 +30,7 @@ class RectROI(NewBase):
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> None:
-        """Initialize a RectROI instance.
+        """Initialize a RectangleROI instance.
 
         Parameters
         ----------
@@ -49,7 +49,7 @@ class RectROI(NewBase):
             giving the physical coordinate range in the y direction. Must be provided
             together with ``x_range``. By default, None.
         unique_name : str | None, optional
-            A unique identifier for the ROI. Defaults to ``'RectROI'`` appended by a
+            A unique identifier for the ROI. Defaults to ``'RectangleROI'`` appended by a
             unique integer.
         display_name : str | None, optional
             A human-readable name for the ROI. Defaults to ``unique_name`` if not provided.
@@ -561,7 +561,7 @@ class RectROI(NewBase):
             )
 
     def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
-        """Convert the RectROI instance to a dictionary representation.
+        """Convert the RectangleROI instance to a dictionary representation.
 
         Parameters
         ----------
@@ -618,8 +618,8 @@ class RectROI(NewBase):
         return out_dict
 
     @classmethod
-    def from_dict(cls, input_dict: Dict[str, Any]) -> RectROI:
-        """Create a RectROI instance from a dictionary representation.
+    def from_dict(cls, input_dict: Dict[str, Any]) -> RectangleROI:
+        """Create a RectangleROI instance from a dictionary representation.
 
         Parameters
         ----------
@@ -631,8 +631,8 @@ class RectROI(NewBase):
 
         Returns
         -------
-        RectROI
-            A new :class:`RectROI` instance initialised from the dictionary.
+        RectangleROI
+            A new :class:`RectangleROI` instance initialised from the dictionary.
         """
         temp_dict = input_dict.copy()
         if 'x_range' in input_dict and 'y_range' in input_dict:
@@ -641,7 +641,7 @@ class RectROI(NewBase):
         return super().from_dict(temp_dict)
 
     def __repr__(self) -> str:
-        """Return a string representation of the RectROI.
+        """Return a string representation of the RectangleROI.
 
         Returns
         -------
@@ -650,7 +650,7 @@ class RectROI(NewBase):
             physical coordinate ranges.
         """
         repr_str = (
-            f'RectROI(x_pixel_range=({self._x_pixel_start}, {self._x_pixel_end}), '
+            f'RectangleROI(x_pixel_range=({self._x_pixel_start}, {self._x_pixel_end}), '
             f'y_pixel_range=({self._y_pixel_start}, {self._y_pixel_end})'
         )
         if self._has_physical_coords:

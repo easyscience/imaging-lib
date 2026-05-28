@@ -18,7 +18,7 @@ from scipp import DimensionError
 from easyimaging import Measurement
 from easyimaging.datasets import small_test_scitiff
 from easyimaging.datasets import small_test_tiff
-from easyimaging.measurement.regions import RectROI
+from easyimaging.regions_of_interest import RectangleROI
 
 
 class TestMeasurement:
@@ -84,7 +84,7 @@ class TestMeasurement:
         y_pixel_range = (2, 5)
         x_range = (sc.scalar(1.0, unit='m'), sc.scalar(4.0, unit='m'))
         y_range = (sc.scalar(2.0, unit='m'), sc.scalar(5.0, unit='m'))
-        return RectROI(
+        return RectangleROI(
             x_pixel_range=x_pixel_range,
             y_pixel_range=y_pixel_range,
             x_range=x_range,
@@ -1317,7 +1317,7 @@ class TestMeasurement:
         assert figs[1].canvas.units['x'] == 's'
         assert len(measurement.regions_of_interest) == 1
         roi = measurement.regions_of_interest[0]
-        assert isinstance(roi, RectROI)
+        assert isinstance(roi, RectangleROI)
         assert roi.x_pixel_start == 2
         assert roi.x_pixel_end == 5
         assert roi.y_pixel_start == 2
@@ -1345,7 +1345,7 @@ class TestMeasurement:
         # When
         x_pixel_range = (1, 4)
         y_pixel_range = (2, 5)
-        roi = RectROI(
+        roi = RectangleROI(
             x_pixel_range=x_pixel_range,
             y_pixel_range=y_pixel_range,
         )
@@ -1364,7 +1364,7 @@ class TestMeasurement:
         # When
         x_pixel_range = (1, 4)
         y_pixel_range = (2, 5)
-        roi = RectROI(
+        roi = RectangleROI(
             x_pixel_range=x_pixel_range,
             y_pixel_range=y_pixel_range,
         )
@@ -1396,7 +1396,7 @@ class TestMeasurement:
         assert figs[1].canvas.ymax == 1.1
         assert len(measurement.regions_of_interest) == 1
         roi = measurement.regions_of_interest[0]
-        assert isinstance(roi, RectROI)
+        assert isinstance(roi, RectangleROI)
         assert roi.x_pixel_start == 2
         assert roi.x_pixel_end == 5
         assert roi.y_pixel_start == 2
@@ -1411,7 +1411,7 @@ class TestMeasurement:
     # def test_roi_creator_delete_roi_both_physical_coords(self, valid_data_array, plot_setup):
     #     # When
     #     measurement = Measurement(data_array=valid_data_array)
-    #     roi = RectROI(
+    #     roi = RectangleROI(
     #         x_pixel_range=(2, 5),
     #         y_pixel_range=(2, 5),
     #         x_range=(sc.scalar(2.5, unit='m'), sc.scalar(5, unit='m')),
@@ -1443,7 +1443,7 @@ class TestMeasurement:
         # When
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
+        roi = RectangleROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
         # Then
         spectrum = measurement.spectrum(roi=roi)
         # Expect
@@ -1462,7 +1462,7 @@ class TestMeasurement:
             x_positions=sc.arange('x', 0, 21, 3, unit='m'),
             y_positions=sc.arange('y', 0, 14, 2, unit='m'),
         )
-        roi = RectROI(
+        roi = RectangleROI(
             x_pixel_range=(1, 6),
             y_pixel_range=(1, 6),
             x_range=(sc.scalar(6, unit='m'), sc.scalar(18, unit='m')),
@@ -1482,7 +1482,7 @@ class TestMeasurement:
         # When
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi_3')
+        roi = RectangleROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi_3')
         # Then
         measurement.regions_of_interest.append(roi)
         spectrum = measurement.spectrum(roi='test_roi_3')
@@ -1497,7 +1497,7 @@ class TestMeasurement:
         # then the spectrum should be identical before and after rebinning
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
+        roi = RectangleROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
         spectrum_before_rebin = measurement.spectrum(roi=roi)
         # Then
         measurement.rebin(dimensions={'x': 2, 'y': 2})
@@ -1510,7 +1510,7 @@ class TestMeasurement:
         # then the spectrum should not be identical before and after rebinning
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 5))
+        roi = RectangleROI(x_pixel_range=(2, 6), y_pixel_range=(2, 5))
         spectrum_before_rebin = measurement.spectrum(roi=roi)
         # Then
         measurement.rebin(dimensions={'x': 2, 'y': 2})
@@ -1532,7 +1532,7 @@ class TestMeasurement:
         valid_data_array['x', 2:5]['y', 3:6]['t', 0:10] = sc.zeros(dims=['x', 'y', 't'], shape=[3, 3, 10])
         valid_data_array['x', 3]['y', 3] = sc.full(value=value, dims=['t'], shape=[10])
         measurement = Measurement(data_array=valid_data_array)
-        roi = RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
+        roi = RectangleROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4))
         # Then
         spectrum = measurement.spectrum(roi=roi)
         # Expect
@@ -1546,7 +1546,7 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(TypeError, match='roi must be a string, None, or an instance of RectROI.'):
+        with pytest.raises(TypeError, match='roi must be a string, None, or an instance of RectangleROI.'):
             measurement.spectrum(roi=3.4)
 
     def test_spectrum_invalid_roi_name(self, valid_data_array):
@@ -1563,7 +1563,7 @@ class TestMeasurement:
         'roi, expected',
         [
             (None, 'entire image'),
-            (RectROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi_2'), "ROI 'test_roi_2'"),
+            (RectangleROI(x_pixel_range=(2, 6), y_pixel_range=(2, 4), unique_name='test_roi_2'), "ROI 'test_roi_2'"),
         ],
         ids=['no_roi', 'rect_roi'],
     )
