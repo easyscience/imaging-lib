@@ -156,7 +156,7 @@ plugins:
             show_root_heading: true
             show_root_full_path: false
             show_submodules: true
-            show_source: true
+            show_source: false
   - search
 
 # Determines additional directories to watch when running mkdocs serve

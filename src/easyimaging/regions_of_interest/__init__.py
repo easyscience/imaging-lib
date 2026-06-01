@@ -2,5 +2,3 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from .rectangle_roi import RectangleROI
-
-__all__ = [RectangleROI]
