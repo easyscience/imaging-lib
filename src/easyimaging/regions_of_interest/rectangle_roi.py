@@ -17,8 +17,27 @@ from scipp import UnitError
 class RectangleROI(NewBase):
     """Class representing a rectangular region of interest (ROI) in an image.
 
-    Physical coordinate ranges are used by default if they are provided and are usable in the Measurement.
-    Otherwise, the obligatory pixel coordinate ranges are used as fallback.
+    This class is most simply instantiated by the [`roi_creator`][...Measurement.roi_creator] method in the
+      [Measurement][...Measurement] class. Alternatively it can be created manually as shown in the example below.
+
+    Physical coordinate ranges are used by default, if they are provided **and** can be used in the
+      associated [Measurement][...Measurement] class.
+    Otherwise, the obligatory pixel coordinate ranges are used as a fallback.
+
+    Example
+    -------
+    ```python
+    import scipp as sc
+    from easyimaging.regions_of_interest import RectangleROI
+
+    roi = RectangleROI(
+        x_pixel_range = (10, 50),
+        y_pixel_range = (20, 80),
+        x_range = (sc.scalar(0.0, unit='m'), sc.scalar(10.0, unit='m')),
+        y_range = (sc.scalar(0.0, unit='m'), sc.scalar(5.0, unit='m')),
+        unique_name = 'my_rectangle_roi',
+    )
+    ```
     """
 
     def __init__(
@@ -35,35 +54,38 @@ class RectangleROI(NewBase):
         Parameters
         ----------
         x_pixel_range : Sequence[int]
-            A two-element sequence ``[x_start, x_end]`` giving the pixel range in the
-            x direction.
+            A two-element integer sequence ``[x_start, x_end]`` indicating the pixel range in the
+            x-direction.
         y_pixel_range : Sequence[int]
-            A two-element sequence ``[y_start, y_end]`` giving the pixel range in the
-            y direction.
-        x_range : Sequence[sc.Variable] | None, optional
-            A two-element sequence ``[x_start, x_end]`` of :class:`scipp.Variable` scalars
-            giving the physical coordinate range in the x direction. Must be provided
-            together with ``y_range``. By default, None.
-        y_range : Sequence[sc.Variable] | None, optional
-            A two-element sequence ``[y_start, y_end]`` of :class:`scipp.Variable` scalars
-            giving the physical coordinate range in the y direction. Must be provided
-            together with ``x_range``. By default, None.
-        unique_name : str | None, optional
+            A two-element integer sequence ``[y_start, y_end]`` indicating the pixel range in the
+            y-direction.
+        x_range : Sequence[sc.Variable] | None
+            A two-element sequence ``[x_start, x_end]`` of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html)
+            scalars with units of length, indicating the spatial coordinate range in the x-direction.<br>
+            Must be provided together with ``y_range``.
+        y_range : Sequence[sc.Variable] | None
+            A two-element sequence ``[y_start, y_end]`` of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html)
+            scalars with units of length, indicating the spatial coordinate range in the y-direction.<br>
+            Must be provided together with ``x_range``.
+        unique_name : str | None
             A unique identifier for the ROI. Defaults to ``'RectangleROI'`` appended by a
             unique integer.
-        display_name : str | None, optional
-            A human-readable name for the ROI. Defaults to ``unique_name`` if not provided.
+        display_name : str | None
+            A human-readable name for the ROI. Defaults to [`unique_name`][..unique_name] if not provided.
 
         Raises
         ------
         TypeError
-            If ``x_pixel_range`` or ``y_pixel_range`` is not a two-element sequence of
-            integers, or if physical ranges are not sequences of :class:`scipp.Variable`.
+            If ``x_pixel_range`` or ``y_pixel_range`` is not a two-element sequence of integers.<br>
+            If physical ranges are not two-element sequences of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html).
         ValueError
-            If any pixel index is negative, if only one of ``x_range`` / ``y_range`` is
-            provided, or if physical coordinate scalars do not have a unit of length.
+            If any pixel index in ``x_pixel_range`` or ``y_pixel_range`` is negative.<br>
+            If only one of ``x_range`` / ``y_range`` is provided.<br>
+            If any [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) in ``x_range``
+             or ``y_range`` is not 0-dimensional (i.e., not a scalar).<br>
         UnitError
-            If a physical coordinate scalar cannot be converted to metres.
+            If any [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html) scalar in ``x_range`` or
+             ``y_range`` does not have a unit of length.
         """
         super().__init__(unique_name=unique_name, display_name=display_name)
         self.set_pixel_coord_range(x_pixel_range, y_pixel_range)
@@ -76,16 +98,18 @@ class RectangleROI(NewBase):
             raise ValueError('Both x_range and y_range must be provided together or not at all.')
 
     def set_pixel_coord_range(self, x_pixel_range: Sequence[int], y_pixel_range: Sequence[int]) -> None:
-        """Set the pixel coordinate ranges for the ROI.
+        """Set the pixel coordinate ranges defining the ROI.
 
         Parameters
         ----------
         x_pixel_range : Sequence[int]
-            A two-element sequence ``[x_start, x_end]`` of non-negative integer pixel
-            coordinates in the x direction.
+            The pixel coordinate range in the x-direction to set.
+            Must be a two-element sequence ``[x_start, x_end]`` of pixel
+            indices defining an x-axis range.
         y_pixel_range : Sequence[int]
-            A two-element sequence ``[y_start, y_end]`` of non-negative integer pixel
-            coordinates in the y direction.
+            The pixel coordinate range in the y-direction to set.
+            Must be a two-element sequence ``[y_start, y_end]`` of pixel
+            indices defining a y-axis range.
 
         Raises
         ------
@@ -98,30 +122,36 @@ class RectangleROI(NewBase):
         self._check_input_sequence(y_pixel_range, 'y_pixel_range', 'integers', int)
         for index in tuple(x_pixel_range) + tuple(y_pixel_range):
             if index < 0:
-                raise ValueError('Pixel indices must be non-negative integers.')  # Do I need this check?
+                raise ValueError('Pixel indices must be non-negative integers.')
         self._x_pixel_start, self._x_pixel_end = sc.array(values=x_pixel_range, dims='x')
         self._y_pixel_start, self._y_pixel_end = sc.array(values=y_pixel_range, dims='y')
 
     def set_physical_coord_range(self, x_range: Sequence[sc.Variable], y_range: Sequence[sc.Variable]) -> None:
-        """Set the physical coordinate ranges for the ROI.
+        """Set the physical coordinate ranges defining the ROI.
 
         Parameters
         ----------
         x_range : Sequence[sc.Variable]
-            A two-element sequence ``[x_start, x_end]`` of :class:`scipp.Variable` scalars
-            with units of length representing the physical extent in the x direction.
+            The physical coordinate range in the x-direction to set.
+            Must be a two-element sequence ``[x_start, x_end]`` of
+             [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) scalars
+            with units of length.
         y_range : Sequence[sc.Variable]
-            A two-element sequence ``[y_start, y_end]`` of :class:`scipp.Variable` scalars
-            with units of length representing the physical extent in the y direction.
+            The physical coordinate range in the y-direction to set.
+            Must be a two-element sequence ``[y_start, y_end]`` of
+             [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) scalars
+            with units of length.
 
         Raises
         ------
         TypeError
-            If either argument is not a two-element sequence of :class:`scipp.Variable`.
+            If either argument is not a two-element sequence of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html).
         ValueError
-            If any element is not a 0-dimensional (scalar) variable.
+            If any [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) in ``x_range``
+             or ``y_range`` is not 0-dimensional (i.e., not a scalar).
         UnitError
-            If any scalar cannot be converted to metres.
+            If any [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html) scalar in ``x_range`` or
+             ``y_range`` does not have a unit of length.
         """
 
         self._check_input_sequence(x_range, 'x_range', 'scipp scalars', sc.Variable)
@@ -133,7 +163,7 @@ class RectangleROI(NewBase):
         self._has_physical_coords = True
 
     def delete_physical_coord_range(self) -> None:
-        """Delete the physical coordinate ranges for the ROI.
+        """Delete the physical coordinate ranges for the ROI, reverting the ROI to using pixel coordinates only.
 
         Raises
         ------
@@ -150,22 +180,23 @@ class RectangleROI(NewBase):
             raise ValueError('Cannot delete physical coordinate ranges because they are not set.')
 
     def pixel_slice(self) -> Tuple[slice, slice]:
-        """Get the pixel slice corresponding to the ROI.
+        """Get the pixel index slice corresponding to the ROI.
 
         Returns
         -------
         tuple
-            Two (x,y) slice objects representing the pixel range of the ROI.
+            Two (x,y) slice objects representing the pixel ranges of the ROI.
         """
         return slice(self._x_pixel_start, self._x_pixel_end), slice(self._y_pixel_start, self._y_pixel_end)
 
     def slice(self) -> Tuple[slice, slice]:
-        """Get the slice corresponding to the ROI, using physical coordinates if available.
+        """Get the slice corresponding to the ROI, using physical coordinates if available,
+         but falling back to pixel coordinates if not.
 
         Returns
         -------
         tuple
-            Two (x,y) slice objects representing the range of the ROI.
+            Two (x,y) slice objects representing the physical coordinate ranges of the ROI.
         """
         if self._has_physical_coords:
             return slice(self._x_start, self._x_end), slice(self._y_start, self._y_end)
@@ -174,18 +205,18 @@ class RectangleROI(NewBase):
 
     @property
     def x_pixel_start(self) -> int:
-        """Start pixel index in the x direction.
+        """Pixel index defining the start of the ROI in the x-direction.
 
         Returns
         -------
         int
-            The start pixel index along the x axis.
+            The x-axis pixel index defining the start of the ROI.
         """
         return self._x_pixel_start.value
 
     @x_pixel_start.setter
     def x_pixel_start(self, value: int):
-        """Set the start pixel index in the x direction.
+        """Set the pixel index defining the start of the ROI in the x-direction.
 
         Parameters
         ----------
@@ -204,18 +235,18 @@ class RectangleROI(NewBase):
 
     @property
     def x_pixel_end(self) -> int:
-        """End pixel index in the x direction.
+        """Pixel index defining the end of the ROI in the x-direction.
 
         Returns
         -------
         int
-            The end pixel index along the x axis.
+            The x-axis pixel index defining the end of the ROI.
         """
         return self._x_pixel_end.value
 
     @x_pixel_end.setter
     def x_pixel_end(self, value: int):
-        """Set the end pixel index in the x direction.
+        """Set the pixel index defining the end of the ROI in the x-direction.
 
         Parameters
         ----------
@@ -234,18 +265,18 @@ class RectangleROI(NewBase):
 
     @property
     def y_pixel_start(self) -> int:
-        """Start pixel index in the y direction.
+        """Pixel index defining the start of the ROI in the y-direction.
 
         Returns
         -------
         int
-            The start pixel index along the y axis.
+            The y-axis pixel index defining the start of the ROI.
         """
         return self._y_pixel_start.value
 
     @y_pixel_start.setter
     def y_pixel_start(self, value: int):
-        """Set the start pixel index in the y direction.
+        """Set the pixel index defining the start of the ROI in the y-direction.
 
         Parameters
         ----------
@@ -264,18 +295,18 @@ class RectangleROI(NewBase):
 
     @property
     def y_pixel_end(self) -> int:
-        """End pixel index in the y direction.
+        """Pixel index defining the end of the ROI in the y-direction.
 
         Returns
         -------
         int
-            The end pixel index along the y axis.
+            The y-axis pixel index defining the end of the ROI.
         """
         return self._y_pixel_end.value
 
     @y_pixel_end.setter
     def y_pixel_end(self, value: int):
-        """Set the end pixel index in the y direction.
+        """Set the pixel index defining the end of the ROI in the y-direction.
 
         Parameters
         ----------
@@ -294,12 +325,12 @@ class RectangleROI(NewBase):
 
     @property
     def x_start(self) -> sc.Variable:
-        """Start physical coordinate in the x direction.
+        """Physical coordinate defining the start of the ROI in the x-direction.
 
         Returns
         -------
         sc.Variable
-            A copy of the start coordinate scalar along the x axis.
+            A copy of the x-axis physical coordinate defining the start of the ROI.
 
         Raises
         ------
@@ -313,22 +344,23 @@ class RectangleROI(NewBase):
 
     @x_start.setter
     def x_start(self, value: sc.Variable):
-        """Set the start physical coordinate in the x direction.
+        """Set the physical coordinate defining the start of the ROI in the x-direction.
 
         Parameters
         ----------
         value : sc.Variable
-            A 0-dimensional :class:`scipp.Variable` scalar with a unit of length.
+            A 0-dimensional `sc.Variable` scalar with a unit of length.
 
         Raises
         ------
         TypeError
-            If ``value`` is not a :class:`scipp.Variable`.
+            If ``value`` is not a `sc.Variable`.
         ValueError
-            If physical coordinate ranges are not yet set (use
-            :meth:`set_physical_coord_range` first), or if ``value`` is not a scalar.
+            If physical coordinate ranges are not set (use
+            [`set_physical_coord_range`][..set_physical_coord_range] first).
+            If ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
         UnitError
-            If ``value`` cannot be converted to metres.
+            If ``value`` does not have a unit of length.
         """
         self._single_coord_setter_check(value, 'x_start')
         self._check_scalar(value, 'x_start')
@@ -336,12 +368,12 @@ class RectangleROI(NewBase):
 
     @property
     def x_end(self) -> sc.Variable:
-        """End physical coordinate in the x direction.
+        """Physical coordinate defining the end of the ROI in the x-direction.
 
         Returns
         -------
         sc.Variable
-            A copy of the end coordinate scalar along the x axis.
+            A copy of the x-axis physical coordinate defining the end of the ROI.
 
         Raises
         ------
@@ -355,21 +387,21 @@ class RectangleROI(NewBase):
 
     @x_end.setter
     def x_end(self, value: sc.Variable):
-        """Set the end physical coordinate in the x direction.
+        """Set the physical coordinate defining the end of the ROI in the x-direction.
 
         Parameters
         ----------
         value : sc.Variable
-            A 0-dimensional :class:`scipp.Variable` scalar with a unit of length.
+            A 0-dimensional `sc.Variable` scalar with a unit of length.
 
         Raises
         ------
         TypeError
-            If ``value`` is not a :class:`scipp.Variable`.
+            If ``value`` is not a `sc.Variable`.
         ValueError
-            If physical coordinate ranges are not yet set, or if ``value`` is not a scalar.
+            If physical coordinate ranges are not set, or if ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
         UnitError
-            If ``value`` cannot be converted to metres.
+            If ``value`` does not have a unit of length.
         """
         self._single_coord_setter_check(value, 'x_end')
         self._check_scalar(value, 'x_end')
@@ -377,12 +409,12 @@ class RectangleROI(NewBase):
 
     @property
     def y_start(self) -> sc.Variable:
-        """Start physical coordinate in the y direction.
+        """Physical coordinate defining the start of the ROI in the y-direction.
 
         Returns
         -------
         sc.Variable
-            A copy of the start coordinate scalar along the y axis.
+            A copy of the y-axis physical coordinate defining the start of the ROI.
 
         Raises
         ------
@@ -396,7 +428,7 @@ class RectangleROI(NewBase):
 
     @y_start.setter
     def y_start(self, value: sc.Variable):
-        """Set the start physical coordinate in the y direction.
+        """Set the physical coordinate defining the start of the ROI in the y-direction.
 
         Parameters
         ----------
@@ -408,9 +440,9 @@ class RectangleROI(NewBase):
         TypeError
             If ``value`` is not a :class:`scipp.Variable`.
         ValueError
-            If physical coordinate ranges are not yet set, or if ``value`` is not a scalar.
+            If physical coordinate ranges are not set, or if ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
         UnitError
-            If ``value`` cannot be converted to metres.
+            If ``value`` does not have a unit of length.
         """
         self._single_coord_setter_check(value, 'y_start')
         self._check_scalar(value, 'y_start')
@@ -418,12 +450,12 @@ class RectangleROI(NewBase):
 
     @property
     def y_end(self) -> sc.Variable:
-        """End physical coordinate in the y direction.
+        """Physical coordinate defining the end of the ROI in the y-direction.
 
         Returns
         -------
         sc.Variable
-            A copy of the end coordinate scalar along the y axis.
+            A copy of the y-axis physical coordinate defining the end of the ROI.
 
         Raises
         ------
@@ -437,7 +469,7 @@ class RectangleROI(NewBase):
 
     @y_end.setter
     def y_end(self, value: sc.Variable):
-        """Set the end physical coordinate in the y direction.
+        """Set the physical coordinate defining the end of the ROI in the y-direction.
 
         Parameters
         ----------
@@ -449,9 +481,9 @@ class RectangleROI(NewBase):
         TypeError
             If ``value`` is not a :class:`scipp.Variable`.
         ValueError
-            If physical coordinate ranges are not yet set, or if ``value`` is not a scalar.
+            If physical coordinate ranges are not set, or if ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
         UnitError
-            If ``value`` cannot be converted to metres.
+            If ``value`` does not have a unit of length.
         """
         self._single_coord_setter_check(value, 'y_end')
         self._check_scalar(value, 'y_end')
@@ -561,15 +593,15 @@ class RectangleROI(NewBase):
             )
 
     def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
-        """Convert the RectangleROI instance to a dictionary representation.
+        """Convert the ROI instance to a dictionary representation. Used for saving the ROI to file.
 
         Parameters
         ----------
-        skip : list[str] | None, optional
-            A list of attribute names to exclude from the output dictionary.
+        skip : list[str] | None
+            A list of attribute names to exclude from the output dictionary.<br>
             The ``'x_pixel_range'``, ``'y_pixel_range'``, ``'x_range'``, and
             ``'y_range'`` keys are always handled explicitly and appended
-            regardless of this parameter. By default, None.
+            regardless of this parameter.
 
         Returns
         -------
@@ -624,15 +656,13 @@ class RectangleROI(NewBase):
         Parameters
         ----------
         input_dict : dict
-            A dictionary as produced by :meth:`to_dict`, containing at minimum
-            ``'x_pixel_range'`` and ``'y_pixel_range'`` keys. If ``'x_range'`` and
-            ``'y_range'`` are present they are deserialised from their scipp scalar
-            dict format.
+            A dictionary in a format as produced by [`to_dict`][..to_dict], containing at minimum
+            ``'x_pixel_range'`` and ``'y_pixel_range'`` keys.
 
         Returns
         -------
         RectangleROI
-            A new :class:`RectangleROI` instance initialised from the dictionary.
+            A new [`RectangleROI`][..] instance initialised with the data from the dictionary.
         """
         temp_dict = input_dict.copy()
         if 'x_range' in input_dict and 'y_range' in input_dict:

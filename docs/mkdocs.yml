@@ -166,6 +166,7 @@ plugins:
             docstring_options:
               ignore_init_summary: true
             summary: true
+            relative_crossrefs: true
   - search
 
 # Determines additional directories to watch when running mkdocs serve
