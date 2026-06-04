@@ -15,9 +15,9 @@ from scipp import UnitError
 
 
 class RectangleROI(NewBase):
-    """Class representing a rectangular region of interest (ROI) in an image.
+    """Object representing a rectangular region of interest (ROI) in an image.
 
-    This class is most simply instantiated by the [`roi_creator`][...Measurement.roi_creator] method in the
+    This object is most simply created by the [`roi_creator`][...Measurement.roi_creator] method in the
       [Measurement][...Measurement] class. Alternatively it can be created manually as shown in the example below.
 
     Physical coordinate ranges are used by default, if they are provided **and** can be used in the
@@ -26,6 +26,7 @@ class RectangleROI(NewBase):
 
     Example
     -------
+    Creating a [RectangleROI][.] instance manually:
     ```python
     import scipp as sc
     from easyimaging.regions_of_interest import RectangleROI
@@ -71,7 +72,7 @@ class RectangleROI(NewBase):
             A unique identifier for the ROI. Defaults to ``'RectangleROI'`` appended by a
             unique integer.
         display_name : str | None
-            A human-readable name for the ROI. Defaults to [`unique_name`][..unique_name] if not provided.
+            A prettily formatted name for the ROI. Defaults to [`unique_name`][..unique_name] if not provided.
 
         Raises
         ------

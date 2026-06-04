@@ -167,6 +167,7 @@ plugins:
               ignore_init_summary: true
             summary: true
             relative_crossrefs: true
+            filters: ["!^_[^_]", "!__repr__", "!__dir__"]
   - search
 
 # Determines additional directories to watch when running mkdocs serve

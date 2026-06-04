@@ -27,7 +27,29 @@ Numeric = int | float
 
 
 class Measurement(NewBase):
-    """Class responsible for managing the measurement data of a time-of-flight neutron imaging experiment."""
+    """Object responsible for managing and inspecting the measurement data of a time-of-flight neutron imaging experiment.
+    This object can be created in 3 ways:
+
+    - by loading the data from a [SciTiff](https://scipp.github.io/scitiff/) file with the [from_scitiff][.from_scitiff]
+     method.<br>
+     This is the recommended approach, as the [SciTiff](https://scipp.github.io/scitiff/) format natively contains all the
+     necessary metadata for the analysis of the measurement data.
+    - by directly providing a properly formatted
+     [`sc.DataArray`](https://scipp.github.io/generated/classes/scipp.DataArray.html#scipp.DataArray).<br>
+     This is mostly useful for when working directly in a reduction notebook.
+    - by loading from a regular .tiff stack file with the [from_tiff_stack][.from_tiff_stack] method.<br>
+     This method is provided to support older datasets that are not in the SciTiff format.
+
+    Examples of all 3 methods are supplied below.
+
+    When the [Measurement][.] object is created, a mask is automatically applied to filter out non-finite values in the data.
+
+    Examples
+    --------
+    Creating a Measurement instance by loading from a SciTiff file:
+
+    ```python
+    """
 
     def __init__(
         self,
@@ -40,14 +62,17 @@ class Measurement(NewBase):
         Parameters
         ----------
         data_array : sc.DataArray
-            The measurement data array with dimensions ``('t', 'y', 'x')``. Must have a
-            ``'tof'`` coordinate for time-of-flight values and both ``'x'`` and ``'y'``
-            dimensions. Optionally may include ``'x'`` and ``'y'`` coordinates for
-            physical pixel positions.
-        unique_name : str | None, optional
-            Unique identifier for the measurement. By default, None.
-        display_name : str | None, optional
-            Human-readable display name for the measurement. By default, None.
+            The measurement data in a
+             [`sc.DataArray`](https://scipp.github.io/generated/classes/scipp.DataArray.html#scipp.DataArray) with dimensions
+            ``('x', 'y', 't')``.<br>
+            Must have a ``'tof'`` coordinate for time-of-flight values in the dimension ``t``.<br>
+            Optionally may include ``'x'`` and ``'y'`` coordinates for spatial pixel positions.<br>
+            Other coordinates in the
+             [`sc.DataArray`](https://scipp.github.io/generated/classes/scipp.DataArray.html#scipp.DataArray) are ignored.
+        unique_name : str | None
+            A unique identifier for the ``Measurement``. Defaults to ``'Measurement'`` appended by a unique integer.
+        display_name : str | None
+            A prettily formatted name for the ``Measurement``. Defaults to [`unique_name`][..unique_name] if not provided.
 
         Raises
         ------
