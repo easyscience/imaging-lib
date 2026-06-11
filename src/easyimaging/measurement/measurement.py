@@ -27,15 +27,14 @@ Numeric = int | float
 
 
 class Measurement(NewBase):
-    """Object responsible for managing and inspecting the measurement data of a time-of-flight neutron imaging experiment.
-    This object can be created in 3 ways:
+    """Object responsible for managing and inspecting the **normalized** measurement data of a time-of-flight neutron imaging
+     experiment. This object can be created in 3 ways:
 
-    - by loading the data from a [SciTiff](https://scipp.github.io/scitiff/) file with the [from_scitiff][.from_scitiff]
-     method.<br>
+    - by loading the data from a [SciTiff](https://scipp.github.io/scitiff/) file with the
+     [from_scitiff][.from_scitiff] method.<br>
      This is the recommended approach, as the [SciTiff](https://scipp.github.io/scitiff/) format natively contains all the
      necessary metadata for the analysis of the measurement data.
-    - by directly providing a properly formatted
-     [`sc.DataArray`](https://scipp.github.io/generated/classes/scipp.DataArray.html#scipp.DataArray).<br>
+    - by directly providing a properly formatted [`sc.DataArray`][scipp.DataArray] to the constructor.<br>
      This is mostly useful for when working directly in a reduction notebook.
     - by loading from a regular .tiff stack file with the [from_tiff_stack][.from_tiff_stack] method.<br>
      This method is provided to support older datasets that are not in the SciTiff format.
@@ -44,11 +43,58 @@ class Measurement(NewBase):
 
     When the [Measurement][.] object is created, a mask is automatically applied to filter out non-finite values in the data.
 
-    Examples
-    --------
-    Creating a Measurement instance by loading from a SciTiff file:
+    Example
+    -------
+    **Creating a [Measurement][.] instance by loading from a [SciTiff](https://scipp.github.io/scitiff/) file**
 
+    Using the example data provided by the library:
     ```python
+    from easyimaging.datasets import iron_alpha_scitiff
+    from easyimaging import Measurement
+
+    scitiff_path = iron_alpha_scitiff()
+
+    measurement = Measurement.from_scitiff(filename=scitiff_path)
+    ```
+
+    **Creating a [Measurement][.] instance by directly providing a [`sc.DataArray`][scipp.DataArray]**
+
+    Note that the dimension names must be exactly `'x'`, `'y'`, and `'t'`, and that the coordinate names must be exactly
+     `'x'`, `'y'`, and `'tof'` to be recognised by the constructor, and that the `'tof'` coordinate must be provided, whereas
+     `'x'` and `'y'` are optional:
+    ```python
+    import scipp as sc
+    from easyimaging import Measurement
+
+    tof = sc.arange('t', 0, 10, 1, unit='s')
+    x = sc.arange('x', 0, 7, 1, unit='m')  # Optional
+    y = sc.arange('y', 0, 7, 1, unit='m')  # Optional
+    coords = {'tof': tof, 'x': x, 'y': y}
+    data = sc.ones(dims=['t', 'y', 'x'], shape=[10, 6, 6])
+
+    data_array = sc.DataArray(data=data, coords=coords)
+
+    measurement = Measurement(data_array=data_array)
+    ```
+
+    **Creating a [Measurement][.] instance by loading from a regular .tiff stack file**
+
+    Using the example data provided by the library, note that the time_of_flights must be provided, whereas the x_positions
+     and y_positions are optional:
+    ```python
+    from easyimaging.datasets import iron_alpha_tiff
+    from easyimaging import Measurement
+    import scipp as sc
+
+    tiff_path = iron_alpha_tiff()
+
+    measurement = Measurement.from_tiff_stack(
+        filename=tiff_path,
+        time_of_flights=sc.arange('t', 0, 1501, 1, unit='s'),  # mandatory
+        # x_positions=sc.arange('x', 0, 50, 1, unit='mm'), # optional
+        # y_positions=sc.arange('y', 0, 50, 1, unit='mm'), # optional
+    )
+    ```
     """
 
     def __init__(
@@ -62,13 +108,10 @@ class Measurement(NewBase):
         Parameters
         ----------
         data_array : sc.DataArray
-            The measurement data in a
-             [`sc.DataArray`](https://scipp.github.io/generated/classes/scipp.DataArray.html#scipp.DataArray) with dimensions
-            ``('x', 'y', 't')``.<br>
-            Must have a ``'tof'`` coordinate for time-of-flight values in the dimension ``t``.<br>
-            Optionally may include ``'x'`` and ``'y'`` coordinates for spatial pixel positions.<br>
-            Other coordinates in the
-             [`sc.DataArray`](https://scipp.github.io/generated/classes/scipp.DataArray.html#scipp.DataArray) are ignored.
+            The measurement data in a [`sc.DataArray`][scipp.DataArray] with dimensions ``('x', 'y', 't')``.<br>
+            Must have a ``'tof'`` coordinate for time-of-flight values in the dimension ``'t'``.<br>
+            Optionally may include ``'x'`` and ``'y'`` coordinates for physical pixel positions.<br>
+            Other coordinates in the [`sc.DataArray`][scipp.DataArray] are ignored.
         unique_name : str | None
             A unique identifier for the ``Measurement``. Defaults to ``'Measurement'`` appended by a unique integer.
         display_name : str | None
@@ -77,14 +120,19 @@ class Measurement(NewBase):
         Raises
         ------
         TypeError
-            If ``data_array`` is not a :class:`scipp.DataArray`.
+            If ``data_array`` is not a [`sc.DataArray`][scipp.DataArray].
         ValueError
-            If the data array is missing the ``'tof'`` coordinate, contains negative
-            time-of-flight values, or has inconsistent coordinate/dimension configuration.
+            If the ``data_array`` is missing the ``'tof'`` coordinate.<br>
+            If the ``'tof'`` coordinate contains negative time-of-flight values.<br>
+            If the ``data_array`` has only one of the ``'x'`` or ``'y'`` coordinates, but not both.<br>
         DimensionError
-            If the data array does not have both ``'x'`` and ``'y'`` dimensions.
+            If the ``'tof'`` coordinate does not have the dimension ``'t'``.<br>
+            If the ``'x'`` and ``'y'`` coordinates do not have the dimensions ``'x'`` and ``'y'``, respectively, when
+             provided.<br>
+            If the ``data_array`` does not have both ``'x'`` and ``'y'`` dimensions.
         UnitError
-            If any coordinate has an incompatible unit.
+            If the ``'tof'`` coordinate does not have a unit of time.<br>
+            If the ``'x'`` and ``'y'`` coordinates do not have a unit of length, when provided.
         """
         if not isinstance(data_array, sc.DataArray):
             raise TypeError('data_array must be an instance of scipp.DataArray.')
@@ -311,10 +359,10 @@ class Measurement(NewBase):
 
     @property
     def data_array_copy(self) -> sc.DataArray:
-        """Get a full deep copy of the current data array.
+        """Get a full deep copy of the current data array. This attribute is **read-only**.
 
         Returns the rebinned data array if rebinning has been applied, otherwise the
-        original full-resolution data array. Use with caution for large datasets.
+        original full-resolution data array. Use with caution for large datasets to avoid memory issues.
 
         Returns
         -------
@@ -323,19 +371,20 @@ class Measurement(NewBase):
         """
         return self._data_array.copy(deep=True)
 
-    @data_array_copy.setter
-    def data_array_copy(self, value: sc.DataArray) -> None:
-        """Raise AttributeError — ``data_array_copy`` is a read-only property.
+    # Can't have setters due to MkDocstrings then showing the property as writable.
+    # @data_array_copy.setter
+    # def data_array_copy(self, value: sc.DataArray) -> None:
+    #     """Raise AttributeError — ``data_array_copy`` is a read-only property.
 
-        Raises
-        ------
-        AttributeError
-            Always. To use a different data array, create a new :class:`Measurement` instance.
-        """
-        raise AttributeError(
-            'Cannot set data_array, it is a read-only property. '
-            'Please make a new Measurement instance if you want to use a different data array.'
-        )
+    #     Raises
+    #     ------
+    #     AttributeError
+    #         Always. To use a different data array, create a new :class:`Measurement` instance.
+    #     """
+    #     raise AttributeError(
+    #         'Cannot set data_array, it is a read-only property. '
+    #         'Please make a new Measurement instance if you want to use a different data array.'
+    #     )
 
     @property
     def _data_array(self) -> sc.DataArray:
@@ -363,39 +412,39 @@ class Measurement(NewBase):
         raise AttributeError('Cannot set _data_array, it is a read-only property.')
 
     @property
-    def x_positions(self) -> sc.Variable | None:
-        """Get the x-coordinate positions of the pixels.
-
-        Returns
-        -------
-        sc.Variable or None
-            The x-coordinate positions as a :class:`scipp.Variable`, or ``None`` if
-            physical coordinates are not available.
-        """
-        if self._has_physical_coords:
-            return self._data_array.coords['x'].copy()
-        return None
-
-    @x_positions.setter
-    def x_positions(self, value: sc.Variable | np.ndarray) -> None:
-        """Set the x-coordinate positions of the pixels.
+    def x_positions(self) -> sc.Variable:
+        """The x-coordinate physical positions of the pixels.
 
         Parameters
         ----------
         value : sc.Variable | np.ndarray
-            The new x-coordinate positions to set.
+            The new x-coordinate positions to set.<br>
             If a numpy array is provided, the unit is assumed to be meters.
+
+        Returns
+        -------
+        sc.Variable
+            A copy of the physical x-coordinate positions as a [`sc.Variable`][scipp.Variable].
 
         Raises
         ------
         ValueError
-            If physical coordinate positions have not been initialised yet. Use
-            :meth:`set_physical_coord_positions` to set both axes simultaneously.
+            If physical coordinate positions are not set (use
+            [`set_physical_coord_positions`][..set_physical_coord_positions] to set)<br>
+            If ``value`` is not 1-dimensional with the same length as the number of pixels (or pixel-edges) in the x-dimension.
         TypeError
-            If ``value`` is not a :class:`scipp.Variable` or :class:`numpy.ndarray`.
+            If ``value`` is not a [`sc.Variable`][scipp.Variable] or [`np.ndarray`][numpy.ndarray].
         UnitError
-            If ``value`` does not carry a unit of length.
+            If ``value`` is a [`sc.Variable`][scipp.Variable] and does not have a unit of length.
         """
+        if self._has_physical_coords:
+            return self._data_array.coords['x'].copy()
+        else:
+            raise ValueError('Physical coordinate positions are not set for this Measurement.')
+
+    @x_positions.setter
+    def x_positions(self, value: sc.Variable | np.ndarray) -> None:
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         if not self._has_physical_coords:
             raise ValueError(
                 'Cannot set x_positions before setting all physical coordinate positions. '
@@ -413,39 +462,39 @@ class Measurement(NewBase):
         self._data_array.coords['x'] = value
 
     @property
-    def y_positions(self) -> sc.Variable | None:
-        """Get the y-coordinate positions of the pixels.
-
-        Returns
-        -------
-        sc.Variable or None
-            The y-coordinate positions as a :class:`scipp.Variable`, or ``None`` if
-            physical coordinates are not available.
-        """
-        if self._has_physical_coords:
-            return self._data_array.coords['y'].copy()
-        return None
-
-    @y_positions.setter
-    def y_positions(self, value: sc.Variable | np.ndarray) -> None:
-        """Set the y-coordinate positions of the pixels.
+    def y_positions(self) -> sc.Variable:
+        """The y-coordinate physical positions of the pixels.
 
         Parameters
         ----------
         value : sc.Variable | np.ndarray
-            The new y-coordinate positions to set.
+            The new y-coordinate positions to set.<br>
             If a numpy array is provided, the unit is assumed to be meters.
+
+        Returns
+        -------
+        sc.Variable
+            A copy of the physical y-coordinate positions as a [`sc.Variable`][scipp.Variable].
 
         Raises
         ------
         ValueError
-            If physical coordinate positions have not been initialised yet. Use
-            :meth:`set_physical_coord_positions` to set both axes simultaneously.
+            If physical coordinate positions are not set (use
+            [`set_physical_coord_positions`][..set_physical_coord_positions] to set)<br>
+            If ``value`` is not 1-dimensional with the same length as the number of pixels (or pixel-edges) in the y-dimension.
         TypeError
-            If ``value`` is not a :class:`scipp.Variable` or :class:`numpy.ndarray`.
+            If ``value`` is not a [`sc.Variable`][scipp.Variable] or [`np.ndarray`][numpy.ndarray].
         UnitError
-            If ``value`` does not carry a unit of length.
+            If ``value`` is a [`sc.Variable`][scipp.Variable] and does not have a unit of length.
         """
+        if self._has_physical_coords:
+            return self._data_array.coords['y'].copy()
+        else:
+            raise ValueError('Physical coordinate positions are not set for this Measurement.')
+
+    @y_positions.setter
+    def y_positions(self, value: sc.Variable | np.ndarray) -> None:
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         if not self._has_physical_coords:
             raise ValueError(
                 'Cannot set y_positions before setting all physical coordinate positions. '
@@ -515,35 +564,34 @@ class Measurement(NewBase):
 
     @property
     def time_of_flights(self) -> sc.Variable:
-        """Get the time-of-flight values of the measurement.
+        """The time-of-flight values of the measurement.
+
+        Parameters
+        ----------
+        value : sc.Variable | np.ndarray
+            The new time-of-flight values to set.<br>
+            If a numpy array is provided, the unit is assumed to be seconds.
 
         Returns
         -------
         sc.Variable
-            A copy of the time-of-flight coordinate array.
+            A copy of the time-of-flight values as a [`sc.Variable`][scipp.Variable].
+
+        Raises
+        ------
+        ValueError
+            If ``value`` is not 1-dimensional with the same length as the number of frames.<br>
+            If any element in ``value`` is negative.
+        TypeError
+            If ``value`` is not a [`sc.Variable`][scipp.Variable] or [`np.ndarray`][numpy.ndarray].
+        UnitError
+            If ``value`` is a [`sc.Variable`][scipp.Variable] and does not have a unit of time.
         """
         return self._data_array.coords['tof'].copy()
 
     @time_of_flights.setter
     def time_of_flights(self, value: sc.Variable | np.ndarray) -> None:
-        """Set the time-of-flight values of the measurement.
-
-        Parameters
-        ----------
-        value : sc.Variable | np.ndarray
-            The new time-of-flight values to set.
-            If a numpy array is provided, the unit is assumed to be seconds.
-
-        Raises
-        ------
-        TypeError
-            If ``value`` is not a :class:`scipp.Variable` or :class:`numpy.ndarray`.
-        ValueError
-            If the length of ``value`` does not match the number of frames, or if any
-            time-of-flight value is negative.
-        UnitError
-            If ``value`` does not carry a unit of time.
-        """
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         value = self._validate_provided_coord(
             data_array=self._data_array,
             coord=value,
@@ -559,29 +607,37 @@ class Measurement(NewBase):
 
     @property
     def regions_of_interest(self) -> EasyList[RectangleROI]:
-        """Get the list of regions of interest (ROIs) defined for this measurement.
+        """Get the list of regions of interest (ROIs) defined for this measurement.<br>
+        This attribute is **read-only**, to modify or set new ROIs, interact directly with the list.
+
+        Example
+        -------
+        ```python
+        measurement.regions_of_interest.append(new_roi)  # Add a new ROI to the measurement
+        measurement.regions_of_interest.remove(existing_roi)  # Remove an existing ROI
+        ```
 
         Returns
         -------
         EasyList[RectangleROI]
-            The list of :class:`~easyimaging.measurement.regions.RectangleROI` objects
-            associated with this measurement.
+            A list of the regions of interest (ROIs) attached to this measurement.[`ROIs`][...regions_of_interest.RectangleROI]
         """
         return self._regions_of_interest
 
-    @regions_of_interest.setter
-    def regions_of_interest(self, value: EasyList[RectangleROI]) -> None:
-        """Raise AttributeError — ``regions_of_interest`` is a read-only property.
+    # Can't have setters due to MkDocstrings then showing the property as writable.
+    # @regions_of_interest.setter
+    # def regions_of_interest(self, value: EasyList[RectangleROI]) -> None:
+    #     """Raise AttributeError — ``regions_of_interest`` is a read-only property.
 
-        Raises
-        ------
-        AttributeError
-            Always. Add or remove ROIs directly from the list instead.
-        """
-        raise AttributeError(
-            'Cannot set regions_of_interest, it is a read-only property. '
-            'Please simply add or remove ROIs directly from the list.'
-        )
+    #     Raises
+    #     ------
+    #     AttributeError
+    #         Always. Add or remove ROIs directly from the list instead.
+    #     """
+    #     raise AttributeError(
+    #         'Cannot set regions_of_interest, it is a read-only property. '
+    #         'Please simply add or remove ROIs directly from the list.'
+    #     )
 
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """Rebin the measurement image stack.

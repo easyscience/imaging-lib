@@ -32,11 +32,11 @@ class RectangleROI(NewBase):
     from easyimaging.regions_of_interest import RectangleROI
 
     roi = RectangleROI(
-        x_pixel_range = (10, 50),
-        y_pixel_range = (20, 80),
-        x_range = (sc.scalar(0.0, unit='m'), sc.scalar(10.0, unit='m')),
-        y_range = (sc.scalar(0.0, unit='m'), sc.scalar(5.0, unit='m')),
-        unique_name = 'my_rectangle_roi',
+        x_pixel_range=(10, 50),
+        y_pixel_range=(20, 80),
+        x_range=(sc.scalar(0.0, unit='m'), sc.scalar(10.0, unit='m')),
+        y_range=(sc.scalar(0.0, unit='m'), sc.scalar(5.0, unit='m')),
+        unique_name='my_rectangle_roi',
     )
     ```
     """
@@ -61,16 +61,15 @@ class RectangleROI(NewBase):
             A two-element integer sequence ``[y_start, y_end]`` indicating the pixel range in the
             y-direction.
         x_range : Sequence[sc.Variable] | None
-            A two-element sequence ``[x_start, x_end]`` of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html)
-            scalars with units of length, indicating the spatial coordinate range in the x-direction.<br>
+            A two-element sequence ``[x_start, x_end]`` of [`sc.Variable`][scipp.Variable] scalars with units of length,
+             indicating the spatial coordinate range in the x-direction.<br>
             Must be provided together with ``y_range``.
         y_range : Sequence[sc.Variable] | None
-            A two-element sequence ``[y_start, y_end]`` of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html)
-            scalars with units of length, indicating the spatial coordinate range in the y-direction.<br>
+            A two-element sequence ``[y_start, y_end]`` of [`sc.Variable`][scipp.Variable] scalars with units of length,
+             indicating the spatial coordinate range in the y-direction.<br>
             Must be provided together with ``x_range``.
         unique_name : str | None
-            A unique identifier for the ROI. Defaults to ``'RectangleROI'`` appended by a
-            unique integer.
+            A unique identifier for the ROI. Defaults to ``'RectangleROI'`` appended by a unique integer.
         display_name : str | None
             A prettily formatted name for the ROI. Defaults to [`unique_name`][..unique_name] if not provided.
 
@@ -78,15 +77,13 @@ class RectangleROI(NewBase):
         ------
         TypeError
             If ``x_pixel_range`` or ``y_pixel_range`` is not a two-element sequence of integers.<br>
-            If physical ranges are not two-element sequences of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html).
+            If physical ranges are not two-element sequences of [`sc.Variable`][scipp.Variable].
         ValueError
             If any pixel index in ``x_pixel_range`` or ``y_pixel_range`` is negative.<br>
             If only one of ``x_range`` / ``y_range`` is provided.<br>
-            If any [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) in ``x_range``
-             or ``y_range`` is not 0-dimensional (i.e., not a scalar).<br>
+            If any [`sc.Variable`][scipp.Variable] in ``x_range`` or ``y_range`` is not 0-dimensional (i.e., not a scalar).<br>
         UnitError
-            If any [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html) scalar in ``x_range`` or
-             ``y_range`` does not have a unit of length.
+            If any [`sc.Variable`][scipp.Variable] scalar in ``x_range`` or ``y_range`` does not have a unit of length.
         """
         super().__init__(unique_name=unique_name, display_name=display_name)
         self.set_pixel_coord_range(x_pixel_range, y_pixel_range)
@@ -105,12 +102,10 @@ class RectangleROI(NewBase):
         ----------
         x_pixel_range : Sequence[int]
             The pixel coordinate range in the x-direction to set.
-            Must be a two-element sequence ``[x_start, x_end]`` of pixel
-            indices defining an x-axis range.
+            Must be a two-element sequence ``[x_start, x_end]`` of pixel indices defining an x-axis range.
         y_pixel_range : Sequence[int]
             The pixel coordinate range in the y-direction to set.
-            Must be a two-element sequence ``[y_start, y_end]`` of pixel
-            indices defining a y-axis range.
+            Must be a two-element sequence ``[y_start, y_end]`` of pixel indices defining a y-axis range.
 
         Raises
         ------
@@ -134,25 +129,19 @@ class RectangleROI(NewBase):
         ----------
         x_range : Sequence[sc.Variable]
             The physical coordinate range in the x-direction to set.
-            Must be a two-element sequence ``[x_start, x_end]`` of
-             [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) scalars
-            with units of length.
+            Must be a two-element sequence ``[x_start, x_end]`` of [`sc.Variable`][scipp.Variable] scalars with units of length
         y_range : Sequence[sc.Variable]
             The physical coordinate range in the y-direction to set.
-            Must be a two-element sequence ``[y_start, y_end]`` of
-             [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) scalars
-            with units of length.
+            Must be a two-element sequence ``[y_start, y_end]`` of [`sc.Variable`][scipp.Variable] scalars with units of length
 
         Raises
         ------
         TypeError
-            If either argument is not a two-element sequence of [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html).
+            If either argument is not a two-element sequence of [`sc.Variable`][scipp.Variable].
         ValueError
-            If any [`sc.Variable`](https://scipp.github.io/generated/classes/scipp.Variable.html#scipp.Variable) in ``x_range``
-             or ``y_range`` is not 0-dimensional (i.e., not a scalar).
+            If any [`sc.Variable`][scipp.Variable] in ``x_range`` or ``y_range`` is not 0-dimensional (i.e., not a scalar).
         UnitError
-            If any [`sc.Variable`](https://scipp.github.io/generated/functions/scipp.scalar.html) scalar in ``x_range`` or
-             ``y_range`` does not have a unit of length.
+            If any [`sc.Variable`][scipp.Variable] scalar in ``x_range`` or ``y_range`` does not have a unit of length.
         """
 
         self._check_input_sequence(x_range, 'x_range', 'scipp scalars', sc.Variable)
@@ -208,21 +197,15 @@ class RectangleROI(NewBase):
     def x_pixel_start(self) -> int:
         """Pixel index defining the start of the ROI in the x-direction.
 
-        Returns
-        -------
-        int
-            The x-axis pixel index defining the start of the ROI.
-        """
-        return self._x_pixel_start.value
-
-    @x_pixel_start.setter
-    def x_pixel_start(self, value: int):
-        """Set the pixel index defining the start of the ROI in the x-direction.
-
         Parameters
         ----------
         value : int
             A non-negative integer pixel index.
+
+        Returns
+        -------
+        int
+            The x-axis pixel index defining the start of the ROI.
 
         Raises
         ------
@@ -231,6 +214,11 @@ class RectangleROI(NewBase):
         ValueError
             If ``value`` is negative.
         """
+        return self._x_pixel_start.value
+
+    @x_pixel_start.setter
+    def x_pixel_start(self, value: int):
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._check_index(value, 'x_pixel_start')
         self._x_pixel_start = sc.scalar(value)
 
@@ -238,21 +226,15 @@ class RectangleROI(NewBase):
     def x_pixel_end(self) -> int:
         """Pixel index defining the end of the ROI in the x-direction.
 
-        Returns
-        -------
-        int
-            The x-axis pixel index defining the end of the ROI.
-        """
-        return self._x_pixel_end.value
-
-    @x_pixel_end.setter
-    def x_pixel_end(self, value: int):
-        """Set the pixel index defining the end of the ROI in the x-direction.
-
         Parameters
         ----------
         value : int
             A non-negative integer pixel index.
+
+        Returns
+        -------
+        int
+            The x-axis pixel index defining the end of the ROI.
 
         Raises
         ------
@@ -261,6 +243,11 @@ class RectangleROI(NewBase):
         ValueError
             If ``value`` is negative.
         """
+        return self._x_pixel_end.value
+
+    @x_pixel_end.setter
+    def x_pixel_end(self, value: int):
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._check_index(value, 'x_pixel_end')
         self._x_pixel_end = sc.scalar(value)
 
@@ -268,21 +255,15 @@ class RectangleROI(NewBase):
     def y_pixel_start(self) -> int:
         """Pixel index defining the start of the ROI in the y-direction.
 
-        Returns
-        -------
-        int
-            The y-axis pixel index defining the start of the ROI.
-        """
-        return self._y_pixel_start.value
-
-    @y_pixel_start.setter
-    def y_pixel_start(self, value: int):
-        """Set the pixel index defining the start of the ROI in the y-direction.
-
         Parameters
         ----------
         value : int
             A non-negative integer pixel index.
+
+        Returns
+        -------
+        int
+            The y-axis pixel index defining the start of the ROI.
 
         Raises
         ------
@@ -291,6 +272,11 @@ class RectangleROI(NewBase):
         ValueError
             If ``value`` is negative.
         """
+        return self._y_pixel_start.value
+
+    @y_pixel_start.setter
+    def y_pixel_start(self, value: int):
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._check_index(value, 'y_pixel_start')
         self._y_pixel_start = sc.scalar(value)
 
@@ -298,21 +284,15 @@ class RectangleROI(NewBase):
     def y_pixel_end(self) -> int:
         """Pixel index defining the end of the ROI in the y-direction.
 
-        Returns
-        -------
-        int
-            The y-axis pixel index defining the end of the ROI.
-        """
-        return self._y_pixel_end.value
-
-    @y_pixel_end.setter
-    def y_pixel_end(self, value: int):
-        """Set the pixel index defining the end of the ROI in the y-direction.
-
         Parameters
         ----------
         value : int
             A non-negative integer pixel index.
+
+        Returns
+        -------
+        int
+            The y-axis pixel index defining the end of the ROI.
 
         Raises
         ------
@@ -321,12 +301,23 @@ class RectangleROI(NewBase):
         ValueError
             If ``value`` is negative.
         """
+        return self._y_pixel_end.value
+
+    @y_pixel_end.setter
+    def y_pixel_end(self, value: int):
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._check_index(value, 'y_pixel_end')
         self._y_pixel_end = sc.scalar(value)
 
     @property
     def x_start(self) -> sc.Variable:
         """Physical coordinate defining the start of the ROI in the x-direction.
+
+        Parameters
+        ----------
+        value : sc.Variable
+            A 0-dimensional [`sc.Variable`][scipp.Variable] scalar with a unit
+             of length.
 
         Returns
         -------
@@ -335,8 +326,14 @@ class RectangleROI(NewBase):
 
         Raises
         ------
+        TypeError
+            If ``value`` is not a [`sc.Variable`][scipp.Variable].
         ValueError
-            If physical coordinate ranges are not set.
+            If physical coordinate ranges are not set (use
+            [`set_physical_coord_range`][..set_physical_coord_range] to set).<br>
+            If ``value`` is not a 0-dimensional [`sc.Variable`][scipp.Variable] (i.e., a scalar).
+        UnitError
+            If ``value`` does not have a unit of length.
         """
         if self._has_physical_coords:
             return self._x_start.copy()
@@ -345,24 +342,7 @@ class RectangleROI(NewBase):
 
     @x_start.setter
     def x_start(self, value: sc.Variable):
-        """Set the physical coordinate defining the start of the ROI in the x-direction.
-
-        Parameters
-        ----------
-        value : sc.Variable
-            A 0-dimensional `sc.Variable` scalar with a unit of length.
-
-        Raises
-        ------
-        TypeError
-            If ``value`` is not a `sc.Variable`.
-        ValueError
-            If physical coordinate ranges are not set (use
-            [`set_physical_coord_range`][..set_physical_coord_range] first).
-            If ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
-        UnitError
-            If ``value`` does not have a unit of length.
-        """
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._single_coord_setter_check(value, 'x_start')
         self._check_scalar(value, 'x_start')
         self._x_start = value
@@ -371,6 +351,11 @@ class RectangleROI(NewBase):
     def x_end(self) -> sc.Variable:
         """Physical coordinate defining the end of the ROI in the x-direction.
 
+        Parameters
+        ----------
+        value : sc.Variable
+            A 0-dimensional [`sc.Variable`][scipp.Variable] scalar with a unit of length.
+
         Returns
         -------
         sc.Variable
@@ -378,8 +363,14 @@ class RectangleROI(NewBase):
 
         Raises
         ------
+        TypeError
+            If ``value`` is not a [`sc.Variable`][scipp.Variable].
         ValueError
-            If physical coordinate ranges are not set.
+            If physical coordinate ranges are not set (use
+            [`set_physical_coord_range`][..set_physical_coord_range] to set).<br>
+            If ``value`` is not a 0-dimensional [`sc.Variable`][scipp.Variable] (i.e., a scalar).
+        UnitError
+            If ``value`` does not have a unit of length.
         """
         if self._has_physical_coords:
             return self._x_end.copy()
@@ -388,22 +379,7 @@ class RectangleROI(NewBase):
 
     @x_end.setter
     def x_end(self, value: sc.Variable):
-        """Set the physical coordinate defining the end of the ROI in the x-direction.
-
-        Parameters
-        ----------
-        value : sc.Variable
-            A 0-dimensional `sc.Variable` scalar with a unit of length.
-
-        Raises
-        ------
-        TypeError
-            If ``value`` is not a `sc.Variable`.
-        ValueError
-            If physical coordinate ranges are not set, or if ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
-        UnitError
-            If ``value`` does not have a unit of length.
-        """
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._single_coord_setter_check(value, 'x_end')
         self._check_scalar(value, 'x_end')
         self._x_end = value
@@ -412,6 +388,12 @@ class RectangleROI(NewBase):
     def y_start(self) -> sc.Variable:
         """Physical coordinate defining the start of the ROI in the y-direction.
 
+        Parameters
+        ----------
+        value : sc.Variable
+            A 0-dimensional [`sc.Variable`][scipp.Variable] scalar with a unit
+             of length.
+
         Returns
         -------
         sc.Variable
@@ -419,8 +401,14 @@ class RectangleROI(NewBase):
 
         Raises
         ------
+        TypeError
+            If ``value`` is not a [`sc.Variable`][scipp.Variable].
         ValueError
-            If physical coordinate ranges are not set.
+            If physical coordinate ranges are not set (use
+            [`set_physical_coord_range`][..set_physical_coord_range] to set).<br>
+            If ``value`` is not a 0-dimensional [`sc.Variable`][scipp.Variable] (i.e., a scalar).
+        UnitError
+            If ``value`` does not have a unit of length.
         """
         if self._has_physical_coords:
             return self._y_start.copy()
@@ -429,22 +417,7 @@ class RectangleROI(NewBase):
 
     @y_start.setter
     def y_start(self, value: sc.Variable):
-        """Set the physical coordinate defining the start of the ROI in the y-direction.
-
-        Parameters
-        ----------
-        value : sc.Variable
-            A 0-dimensional :class:`scipp.Variable` scalar with a unit of length.
-
-        Raises
-        ------
-        TypeError
-            If ``value`` is not a :class:`scipp.Variable`.
-        ValueError
-            If physical coordinate ranges are not set, or if ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
-        UnitError
-            If ``value`` does not have a unit of length.
-        """
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._single_coord_setter_check(value, 'y_start')
         self._check_scalar(value, 'y_start')
         self._y_start = value
@@ -453,6 +426,12 @@ class RectangleROI(NewBase):
     def y_end(self) -> sc.Variable:
         """Physical coordinate defining the end of the ROI in the y-direction.
 
+        Parameters
+        ----------
+        value : sc.Variable
+            A 0-dimensional [`sc.Variable`][scipp.Variable] scalar with a unit
+             of length.
+
         Returns
         -------
         sc.Variable
@@ -460,8 +439,14 @@ class RectangleROI(NewBase):
 
         Raises
         ------
+        TypeError
+            If ``value`` is not a [`sc.Variable`][scipp.Variable].
         ValueError
-            If physical coordinate ranges are not set.
+            If physical coordinate ranges are not set (use
+            [`set_physical_coord_range`][..set_physical_coord_range] to set).<br>
+            If ``value`` is not a 0-dimensional [`sc.Variable`][scipp.Variable] (i.e., a scalar).
+        UnitError
+            If ``value`` does not have a unit of length.
         """
         if self._has_physical_coords:
             return self._y_end.copy()
@@ -470,22 +455,7 @@ class RectangleROI(NewBase):
 
     @y_end.setter
     def y_end(self, value: sc.Variable):
-        """Set the physical coordinate defining the end of the ROI in the y-direction.
-
-        Parameters
-        ----------
-        value : sc.Variable
-            A 0-dimensional :class:`scipp.Variable` scalar with a unit of length.
-
-        Raises
-        ------
-        TypeError
-            If ``value`` is not a :class:`scipp.Variable`.
-        ValueError
-            If physical coordinate ranges are not set, or if ``value`` is not a 0-dimensional `sc.Variable` (i.e., a scalar).
-        UnitError
-            If ``value`` does not have a unit of length.
-        """
+        # Setters have no docstrings. They should be written in the getter docstring instead.
         self._single_coord_setter_check(value, 'y_end')
         self._check_scalar(value, 'y_end')
         self._y_end = value

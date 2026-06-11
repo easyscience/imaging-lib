@@ -621,7 +621,7 @@ class TestMeasurement:
         # Then Expect
         with pytest.raises(
             AttributeError,
-            match='Cannot set data_array, it is a read-only property. Please make a new Measurement instance if you want to use a different data array.',  # noqa: E501
+            match="property 'data_array_copy' of 'Measurement' object has no setter",
         ):
             measurement.data_array_copy = copy(measurement._data_array)
 
@@ -640,7 +640,8 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array_no_xy_coords)
         # Then Expect
-        assert getattr(measurement, coordinate) is None
+        with pytest.raises(ValueError, match='Physical coordinate positions are not set for this Measurement.'):
+            getattr(measurement, coordinate)
 
     @pytest.mark.parametrize('coordinate', ['x_positions', 'y_positions'], ids=['x_coordinate', 'y_coordinate'])
     def test_positions_setter_valid(self, valid_data_array, coordinate):
@@ -846,7 +847,7 @@ class TestMeasurement:
         # Then Expect
         with pytest.raises(
             AttributeError,
-            match='Cannot set regions_of_interest, it is a read-only property. Please simply add or remove ROIs directly from the list.',  # noqa: E501
+            match="property 'regions_of_interest' of 'Measurement' object has no setter",
         ):  # noqa: E501
             measurement.regions_of_interest = EasyList([valid_roi])
 
