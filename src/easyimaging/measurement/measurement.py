@@ -113,9 +113,9 @@ class Measurement(NewBase):
             Optionally may include ``'x'`` and ``'y'`` coordinates for physical pixel positions.<br>
             Other coordinates in the [`sc.DataArray`][scipp.DataArray] are ignored.
         unique_name : str | None
-            A unique identifier for the ``Measurement``. Defaults to ``'Measurement'`` appended by a unique integer.
+            A unique identifier for the [`Measurement`][..]. Defaults to ``'Measurement'`` appended by a unique integer.
         display_name : str | None
-            A prettily formatted name for the ``Measurement``. Defaults to [`unique_name`][..unique_name] if not provided.
+            A prettily formatted name for the [`Measurement`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
 
         Raises
         ------
@@ -186,28 +186,39 @@ class Measurement(NewBase):
     def from_scitiff(
         cls, filename: str | Path, unique_name: str | None = None, display_name: str | None = None
     ) -> Measurement:  # noqa: E501
-        """Create a Measurement instance by loading data from a SciTIFF file.
+        """Create a [`Measurement`][..] object by loading normalized image data from a
+         [SciTiff](https://scipp.github.io/scitiff/) file.
+
+        Time-of-flight values and other relevant metadata, such as the flight-path, are automatically extracted from the file,
+        if present.
+
+        Uses the [SciTiff](https://scipp.github.io/scitiff/) library's
+         [`load_scitiff`][scitiff.load_scitiff] method internally to load the data.
+
+        Example
+        ----------
+        An example of how to use this method is given in the [Measurement][..] class description.
 
         Parameters
         ----------
         filename : str | Path
-            Path to the SciTIFF file.
-        unique_name : str | None, optional
-            Unique identifier for the measurement. By default, None.
-        display_name : str | None, optional
-            Display name for the measurement. By default, None.
+            The path to the [SciTiff](https://scipp.github.io/scitiff/) file.
+        unique_name : str | None
+            A unique identifier for the [`Measurement`][..]. Defaults to ``'Measurement'`` appended by a unique integer.
+        display_name : str | None
+            A prettily formatted name for the [`Measurement`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
 
         Returns
         -------
         Measurement
-            An instance of the Measurement class containing the loaded data.
+            An instance of the [`Measurement`][..] class containing the loaded data.
 
         Raises
         ------
         TypeError
-            If ``filename`` is not a string or :class:`pathlib.Path` object.
+            If ``filename`` is not a string or a [`Path`](https://docs.python.org/3/library/pathlib.html) object.
         RuntimeError
-            If the file cannot be loaded or is not a valid SciTIFF file.
+            If the ``filename`` cannot be loaded or is not a valid [SciTiff](https://scipp.github.io/scitiff/) file.
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
@@ -231,37 +242,59 @@ class Measurement(NewBase):
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> Measurement:
-        """Create a Measurement instance by loading data from a TIFF stack file.
+        """Create a [`Measurement`][..] object by loading data from a regular TIFF stack file.
+
+        Since a regular TIFF file does not contain the necessary metadata for Bragg-edge imaging,
+         such as **time-of-flight** values for each frame in the image stack, they have to be provided manually.
+
+        The optional metadata can also be set after the object has already been created.
+
+        Example
+        ----------
+        An example of how to use this method is given in the [Measurement][..] class description.
 
         Parameters
         ----------
         filename : str | Path
-            Path to the TIFF stack file.
+            The path to the TIFF stack file.
         time_of_flights : sc.Variable | np.ndarray
-            Array of time-of-flight values corresponding to the frames in the TIFF stack.
-            If a numpy array is provided, the unit is assumed to be seconds.
-        x_positions : sc.Variable | np.ndarray | None, optional
-            Array of x-coordinate positions for the pixels.
-            If a numpy array is provided, the unit is assumed to be meters. By default, None.
-        y_positions : sc.Variable | np.ndarray | None, optional
-            Array of y-coordinate positions for the pixels.
-            If a numpy array is provided, the unit is assumed to be meters. By default, None.
-        unique_name : str | None, optional
-            Unique identifier for the measurement. By default, None.
-        display_name : str | None, optional
-            Display name for the measurement. By default, None.
+            A 1-dimensional array of <nobr>time-of-flight</nobr> values corresponding to the frames in the TIFF stack.<br>
+            If a [numpy array][numpy.ndarray] is provided, it is assumed to be in units of seconds.
+        x_positions : sc.Variable | np.ndarray | None
+            A 1-dimensional array of physical x-axis positions for the TIFF stack pixels.<br>
+            If a [numpy array][numpy.ndarray] is provided, it is assumed to be in units of meters.
+        y_positions : sc.Variable | np.ndarray | None
+            A 1-dimensional array of physical y-axis positions for the TIFF stack pixels.<br>
+            If a [numpy array][numpy.ndarray] is provided, it is assumed to be in units of meters.
+        unique_name : str | None
+            A unique identifier for the [`Measurement`][..].<br>
+            Defaults to ``'Measurement'`` appended by a unique integer.
+        display_name : str | None
+            A prettily formatted name for the [`Measurement`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
 
         Returns
         -------
         Measurement
-            An instance of the Measurement class containing the loaded data.
+            An instance of the [`Measurement`][..] class containing the loaded and provided data.
 
         Raises
         ------
         TypeError
-            If ``filename`` is not a string or :class:`pathlib.Path` object.
+            If ``filename`` is not a string or a [`Path`](https://docs.python.org/3/library/pathlib.html) object.<br>
+            If ``time_of_flights``, ``x_positions``, or ``y_positions`` are not a [`sc.Variable`][scipp.Variable] or a
+             [numpy.ndarray][numpy.ndarray].<br>
+        ValueError
+            If ``time_of_flights`` is not 1-dimensional with the same length as the number of frames in the TIFF stack.<br>
+            If either ``x_positions`` or ``y_positions`` are not 1-dimensional with the same length as the number of pixels in
+             the corresponding dimension of the TIFF stack.<br>
+            If the ``'time_of_flights'`` contain negative values.<br>
+        UnitError
+            If ``time_of_flights`` is a [`sc.Variable`][scipp.Variable] that does not have a unit of time.<br>
+            If either ``x_positions`` or ``y_positions`` are a [`sc.Variable`][scipp.Variable] without a unit of
+             length.
         RuntimeError
-            If the file cannot be loaded or its dimensions cannot be renamed.
+            If the ``filename`` cannot be loaded.<br>
+            If the file is a [SciTiff](https://scipp.github.io/scitiff/) file: Use [from_scitiff][..from_scitiff] instead.
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
@@ -318,27 +351,29 @@ class Measurement(NewBase):
         return instance
 
     def save_scitiff(self, filename: str | Path) -> None:
-        """Save the measurement data to a SciTIFF file with its time-of-flight and physical coordinate information.
+        """Save the [Measurement][..] data to a [SciTIFF](https://scipp.github.io/scitiff/) file with the time-of-flight values
+         and other provided metadata.
 
-        Note that it is the rebinned data array that is saved if rebinning has been applied.
+        Note that [SciTIFF](https://scipp.github.io/scitiff/) does not support ``float64`` precision numbers, so if the
+         [Measurement][..] contains data of type ``float64``, it will be downcast to ``float32`` when saving, causing a small
+          loss of precision.
 
         Parameters
         ----------
         filename : str | Path
-            Path to the output SciTIFF file.
+            Path to the output [SciTIFF](https://scipp.github.io/scitiff/) file.
 
         Raises
         ------
         TypeError
-            If ``filename`` is not a string or :class:`pathlib.Path` object.
+            If ``filename`` is not a string or a [`Path`](https://docs.python.org/3/library/pathlib.html) object.
         RuntimeError
-            If the file cannot be written.
+            If the file cannot be written to the specified ``filename`` path.
 
         Warns
         -----
         UserWarning
-            If the data array is of type ``float64``, which will be downcast to ``float32``
-            when saving, potentially causing loss of precision.
+            If the [Measurement][..] object's data is of type ``float64``; It will be downcast to ``float32``.
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
@@ -514,16 +549,28 @@ class Measurement(NewBase):
     def set_physical_coord_positions(
         self, x_positions: sc.Variable | np.ndarray, y_positions: sc.Variable | np.ndarray
     ) -> None:
-        """Set the physical coordinate positions for the measurement corresponding to the pixel indices.
+        """Set the physical xy-coordinate positions for the pixels of the [Measurement][..] image stack.
 
         Parameters
         ----------
         x_positions : sc.Variable | np.ndarray
-            The x-coordinate positions to set.
-            If a numpy array is provided, the unit is assumed to be meters.
+            A 1-dimensional array of physical x-axis positions for the image stack pixels.<br>
+            If a [numpy array][numpy.ndarray] is provided, it is assumed to be in units of meters.
         y_positions : sc.Variable | np.ndarray
-            The y-coordinate positions to set.
-            If a numpy array is provided, the unit is assumed to be meters.
+            A 1-dimensional array of physical y-axis positions for the image stack pixels.<br>
+            If a [numpy array][numpy.ndarray] is provided, it is assumed to be in units of meters.
+
+        Raises
+        ------
+        TypeError
+            If either of ``x_positions`` or ``y_positions`` are not a [`sc.Variable`][scipp.Variable] or a
+             [numpy.ndarray][numpy.ndarray].
+        ValueError
+            If either ``x_positions`` or ``y_positions`` are not 1-dimensional with the same length as the number of pixels in
+             the corresponding dimension of the image stack.
+        UnitError
+            If either ``x_positions`` or ``y_positions`` are a [`sc.Variable`][scipp.Variable] without a unit of
+             length.
         """
         x_positions = self._validate_provided_coord(
             data_array=self._data_array,
@@ -548,12 +595,12 @@ class Measurement(NewBase):
         self._has_physical_coords = True
 
     def delete_physical_coord_positions(self) -> None:
-        """Delete the physical coordinate positions for the measurement.
+        """Delete the physical coordinate positions for the pixels of the [Measurement][..] image stack.
 
         Raises
         ------
         ValueError
-            If physical coordinate positions are not currently set.
+            If the [Measurement][..] does not currently have physical coordinate positions set.
         """
         if self._has_physical_coords:
             del self._data_array.coords['x']
@@ -607,20 +654,21 @@ class Measurement(NewBase):
 
     @property
     def regions_of_interest(self) -> EasyList[RectangleROI]:
-        """Get the list of regions of interest (ROIs) defined for this measurement.<br>
-        This attribute is **read-only**, to modify or set new ROIs, interact directly with the list.
+        """Get the [list][easyscience.base_classes.EasyList] of [regions of interest][...regions_of_interest.RectangleROI]
+         (ROIs) defined for this measurement.<br>
+        This attribute is **read-only**, to modify or set new ROIs, interact with the returned list.
 
         Example
         -------
         ```python
         measurement.regions_of_interest.append(new_roi)  # Add a new ROI to the measurement
-        measurement.regions_of_interest.remove(existing_roi)  # Remove an existing ROI
+        measurement.regions_of_interest.remove("existing_roi")  # Remove an existing ROI
         ```
 
         Returns
         -------
         EasyList[RectangleROI]
-            A list of the regions of interest (ROIs) attached to this measurement.[`ROIs`][...regions_of_interest.RectangleROI]
+            A list of the regions of interest (ROIs) attached to this measurement.
         """
         return self._regions_of_interest
 
@@ -640,9 +688,9 @@ class Measurement(NewBase):
     #     )
 
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
-        """Rebin the measurement image stack.
+        """Rebin the [Measurement][..] image stack.
 
-        This operation reduces the resolution of the data by combining adjacent pixels or time bins.
+        This operation reduces the resolution of the data by combining adjacent pixels.
         The rebinned dimensions must be evenly divisible by their specific rebin factor.
 
         Parameters
