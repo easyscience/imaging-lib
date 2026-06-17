@@ -153,7 +153,9 @@ class RectangleROI(NewBase):
         self._has_physical_coords = True
 
     def delete_physical_coord_range(self) -> None:
-        """Delete the physical coordinate ranges for the ROI, reverting the ROI to using pixel coordinates only.
+        """Delete the physical coordinate ranges for the ROI.
+
+        This enforces the ROI to use pixel coordinates only.
 
         Raises
         ------
@@ -170,7 +172,7 @@ class RectangleROI(NewBase):
             raise ValueError('Cannot delete physical coordinate ranges because they are not set.')
 
     def pixel_slice(self) -> Tuple[slice, slice]:
-        """Get the pixel index slice corresponding to the ROI.
+        """Get a pixel index slice object corresponding to the ROI.
 
         Returns
         -------
@@ -180,13 +182,17 @@ class RectangleROI(NewBase):
         return slice(self._x_pixel_start, self._x_pixel_end), slice(self._y_pixel_start, self._y_pixel_end)
 
     def slice(self) -> Tuple[slice, slice]:
-        """Get the slice corresponding to the ROI, using physical coordinates if available,
-         but falling back to pixel coordinates if not.
+        """Get a physical coordinate slice object corresponding to the ROI.
 
         Returns
         -------
         tuple
             Two (x,y) slice objects representing the physical coordinate ranges of the ROI.
+
+        Raises
+        ------
+        ValueError
+            If physical coordinate ranges are not set for this ROI.
         """
         if self._has_physical_coords:
             return slice(self._x_start, self._x_end), slice(self._y_start, self._y_end)
@@ -564,7 +570,9 @@ class RectangleROI(NewBase):
             )
 
     def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
-        """Convert the ROI instance to a dictionary representation. Used for saving the ROI to file.
+        """Convert the ROI instance to a dictionary representation. 
+
+        Used for saving the ROI to file.
 
         Parameters
         ----------
@@ -622,7 +630,7 @@ class RectangleROI(NewBase):
 
     @classmethod
     def from_dict(cls, input_dict: Dict[str, Any]) -> RectangleROI:
-        """Create a RectangleROI instance from a dictionary representation.
+        """Create a [`RectangleROI`][..] instance from a dictionary representation.
 
         Parameters
         ----------

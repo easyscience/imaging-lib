@@ -186,8 +186,7 @@ class Measurement(NewBase):
     def from_scitiff(
         cls, filename: str | Path, unique_name: str | None = None, display_name: str | None = None
     ) -> Measurement:  # noqa: E501
-        """Create a [`Measurement`][..] object by loading normalized image data from a
-         [SciTiff](https://scipp.github.io/scitiff/) file.
+        """Create a `Measurement` object by loading normalized image data from a **SciTiff** file.
 
         Time-of-flight values and other relevant metadata, such as the flight-path, are automatically extracted from the file,
         if present.
@@ -242,7 +241,7 @@ class Measurement(NewBase):
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> Measurement:
-        """Create a [`Measurement`][..] object by loading data from a regular TIFF stack file.
+        """Create a `Measurement` object by loading normalized image data from a regular **TIFF** stack file.
 
         Since a regular TIFF file does not contain the necessary metadata for Bragg-edge imaging,
          such as **time-of-flight** values for each frame in the image stack, they have to be provided manually.
@@ -351,17 +350,16 @@ class Measurement(NewBase):
         return instance
 
     def save_scitiff(self, filename: str | Path) -> None:
-        """Save the [Measurement][..] data to a [SciTIFF](https://scipp.github.io/scitiff/) file with the time-of-flight values
-         and other provided metadata.
+        """Save the `Measurement` data to a **SciTiff** file with the time-of-flight values and other provided metadata.
 
-        Note that [SciTIFF](https://scipp.github.io/scitiff/) does not support ``float64`` precision numbers, so if the
-         [Measurement][..] contains data of type ``float64``, it will be downcast to ``float32`` when saving, causing a small
+        Note that [SciTiff](https://scipp.github.io/scitiff/) does not support ``float64`` precision numbers, so if the
+         [`Measurement`][..] contains data of type ``float64``, it will be downcast to ``float32`` when saving, causing a small
           loss of precision.
 
         Parameters
         ----------
         filename : str | Path
-            Path to the output [SciTIFF](https://scipp.github.io/scitiff/) file.
+            Path to the output [SciTiff](https://scipp.github.io/scitiff/) file.
 
         Raises
         ------
@@ -448,7 +446,7 @@ class Measurement(NewBase):
 
     @property
     def x_positions(self) -> sc.Variable:
-        """The x-coordinate physical positions of the pixels.
+        """The x-coordinates of the physical positions of the pixels.
 
         Parameters
         ----------
@@ -498,7 +496,7 @@ class Measurement(NewBase):
 
     @property
     def y_positions(self) -> sc.Variable:
-        """The y-coordinate physical positions of the pixels.
+        """The y-coordinates of the physical positions of the pixels.
 
         Parameters
         ----------
@@ -549,7 +547,7 @@ class Measurement(NewBase):
     def set_physical_coord_positions(
         self, x_positions: sc.Variable | np.ndarray, y_positions: sc.Variable | np.ndarray
     ) -> None:
-        """Set the physical xy-coordinate positions for the pixels of the [Measurement][..] image stack.
+        """Set the physical xy-coordinate positions for the pixels of the measurement image stack.
 
         Parameters
         ----------
@@ -595,7 +593,7 @@ class Measurement(NewBase):
         self._has_physical_coords = True
 
     def delete_physical_coord_positions(self) -> None:
-        """Delete the physical coordinate positions for the pixels of the [Measurement][..] image stack.
+        """Delete the physical coordinate positions for the pixels of the measurement image stack.
 
         Raises
         ------
@@ -654,9 +652,11 @@ class Measurement(NewBase):
 
     @property
     def regions_of_interest(self) -> EasyList[RectangleROI]:
-        """Get the [list][easyscience.base_classes.EasyList] of [regions of interest][...regions_of_interest.RectangleROI]
-         (ROIs) defined for this measurement.<br>
-        This attribute is **read-only**, to modify or set new ROIs, interact with the returned list.
+        """The list of regions of interest (ROIs) defined for this measurement.<br> This attribute is **read-only**.
+
+        The returned list is an [EasyList][easyscience.base_classes.EasyList] of
+         [regions of interest][...regions_of_interest.RectangleROI] objects.
+        To modify the list or set new ROIs, interact directly with the returned list.
 
         Example
         -------
@@ -688,28 +688,58 @@ class Measurement(NewBase):
     #     )
 
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
-        """Rebin the [Measurement][..] image stack.
+        """Rebin the measurement image stack.
 
-        This operation reduces the resolution of the data by combining adjacent pixels.
-        The rebinned dimensions must be evenly divisible by their specific rebin factor.
+        This operation increases the signal-to-noise ratio of the [Measurement][..] data, at the cost of a reduced resolution,
+         by averaging adjacent pixels.<br>
+        The rebinned dimensions must be evenly divisible by their specific rebin factors, as the operation is otherwise
+         ill-defined.
+
+        Example
+        -------
+        Setting up a [Measurement][..]:
+        ```python
+        import scipp as sc
+        from easyimaging import Measurement
+
+        tof = sc.arange('t', 0, 10, 1, unit='s')
+        coords = {'tof': tof}
+        data = sc.ones(dims=['t', 'y', 'x'], shape=[10, 6, 6])
+
+        data_array = sc.DataArray(data=data, coords=coords)
+
+        measurement = Measurement(data_array=data_array)
+        ```
+        Halve the spatial resolution by rebinning by a factor of 2 in both dimensions:
+        ```python
+        measurement.rebin({'x': 2, 'y': 2})
+        ```
+        You can also rebin by different factors in the different dimensions,
+         if the `Measurement` data dimensions are evenly divisible by those factors:
+        ```python
+        measurement.rebin({'x': 3, 'y': 2})
+        ```
+        You can also rebin only one dimension, leaving the other unchanged:
+        ```python
+        measurement.rebin({'x': 2})
+        ```
 
         Parameters
         ----------
-        dimensions : dict[str, Numeric]
-            A dictionary specifying the rebinning factors for each dimension.
-            For example, ``{'x': 2, 'y': 2}`` will halve the spatial resolution.
+        dimensions : dict[str, int | float]
+            A dictionary of dimension-rebin factor pairs, specifying the rebinning factors for each dimension.
 
         Raises
         ------
         TypeError
-            If ``dimensions`` is not a :class:`dict`, or a dimension key is not a string,
-            or a rebin factor is not a positive integer (or integer-valued float).
+            If ``dimensions`` is not a `dict`.<br>
+            If any keys in ``dimensions`` are not strings.<br>
+            If a rebin factor is not a positive integer (or integer-valued float).
         ValueError
-            If rebinning of the ``'t'`` dimension is requested (not yet supported), if a
-            rebin factor is less than 1, or if a dimension size is not evenly divisible by
-            the rebin factor.
+            If a dimension size is not evenly divisible by the requested rebin factor.
         KeyError
-            If a specified dimension name does not exist in the data array.
+            If rebinning of the ``'t'`` dimension is requested (not yet supported).<br>
+            If rebinning is attempted on a non-existing dimension.
         """
         if not isinstance(dimensions, dict):
             raise TypeError('dimensions must be a dictionary mapping dimension names to rebin factors.')
@@ -718,7 +748,7 @@ class Measurement(NewBase):
             return
         sizes = dimensions.copy()
         if 't' in dimensions:
-            raise ValueError("Rebinning of the time-of-flight ('t') dimension is not yet supported.")
+            raise KeyError("Rebinning of the time-of-flight ('t') dimension is not yet supported.")
         for dim, value in dimensions.items():
             if not isinstance(dim, str):
                 raise TypeError(f'Dimension keys must be strings. Got {type(dim)} for {dim} instead.')
@@ -729,11 +759,11 @@ class Measurement(NewBase):
             if isinstance(value, float) and value.is_integer():  # I allow eg. 2.0 as well as 2
                 value = int(value)
             if not isinstance(value, int) or value < 1:
-                raise ValueError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 1.")
+                raise TypeError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 1.")
             if self._full_data_array.sizes[dim] % value != 0:
                 raise ValueError(
-                    f"Dimension '{dim}' with size {self._full_data_array.sizes[dim]} is not evenly divisible by rebin size {value}."  # noqa: E501
-                )  # noqa: E501
+                    f"Dimension '{dim}' with size {self._full_data_array.sizes[dim]} is not evenly divisible by the requested rebin factor {value}."
+                )
             sizes[dim] = int(self._data_array.sizes[dim] // value)  # Convert to target size
         temp_array = essimaging.tools.analysis.resize(self._data_array, sizes=sizes, method='mean')
         non_finite_mask = ~sc.isfinite(temp_array.data)

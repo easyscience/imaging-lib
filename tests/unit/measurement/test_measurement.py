@@ -976,7 +976,7 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(ValueError, match='Rebinning of the time-of-flight'):
+        with pytest.raises(KeyError, match='Rebinning of the time-of-flight'):
             measurement.rebin(dimensions={'t': 2, 'x': 2})
 
     def test_rebin_invalid_dimensions_key_type(self, valid_data_array):
@@ -998,7 +998,7 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
         with pytest.raises(
-            ValueError,
+            TypeError,
             match="Rebin size for dimension 'x' must be a positive integer of at least 1.",
         ):
             measurement.rebin(dimensions={'x': 'not_an_integer'})
@@ -1008,7 +1008,7 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
         with pytest.raises(
-            ValueError,
+            TypeError,
             match="Rebin size for dimension 'x' must be a positive integer of at least 1.",
         ):
             measurement.rebin(dimensions={'x': 0})
@@ -1018,7 +1018,7 @@ class TestMeasurement:
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
         with pytest.raises(
-            ValueError,
+            TypeError,
             match="Rebin size for dimension 'x' must be a positive integer of at least 1.",
         ):
             measurement.rebin(dimensions={'x': -2})
@@ -1027,7 +1027,7 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(ValueError, match="Dimension 'x' with size 6 is not evenly divisible by rebin size 4."):
+        with pytest.raises(ValueError, match="Dimension 'x' with size 6 is not evenly divisible by the requested rebin factor 4."):
             measurement.rebin(dimensions={'x': 4})
 
     def test_revert_rebin(self, valid_data_array):
