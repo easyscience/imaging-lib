@@ -662,7 +662,7 @@ class Measurement(NewBase):
         -------
         ```python
         measurement.regions_of_interest.append(new_roi)  # Add a new ROI to the measurement
-        measurement.regions_of_interest.remove("existing_roi")  # Remove an existing ROI
+        measurement.regions_of_interest.remove('existing_roi')  # Remove an existing ROI
         ```
 
         Returns
@@ -694,6 +694,10 @@ class Measurement(NewBase):
          by averaging adjacent pixels.<br>
         The rebinned dimensions must be evenly divisible by their specific rebin factors, as the operation is otherwise
          ill-defined.
+
+        Repeating this operation will rebin the already rebinned data, not the original data.<br>
+        This operation can be undone by using the [revert_rebin][..revert_rebin] method,
+         which restores the original full-resolution data.
 
         Example
         -------
@@ -762,7 +766,8 @@ class Measurement(NewBase):
                 raise TypeError(f"Rebin size for dimension '{dim}' must be a positive integer of at least 1.")
             if self._full_data_array.sizes[dim] % value != 0:
                 raise ValueError(
-                    f"Dimension '{dim}' with size {self._full_data_array.sizes[dim]} is not evenly divisible by the requested rebin factor {value}."
+                    f"Dimension '{dim}' with size {self._full_data_array.sizes[dim]} is not"
+                    f' evenly divisible by the requested rebin factor {value}.'
                 )
             sizes[dim] = int(self._data_array.sizes[dim] // value)  # Convert to target size
         temp_array = essimaging.tools.analysis.resize(self._data_array, sizes=sizes, method='mean')
@@ -773,8 +778,12 @@ class Measurement(NewBase):
     def revert_rebin(self) -> None:
         """Revert any rebinning applied to the measurement data, restoring it to its original resolution.
 
-        If no rebinning has been applied, a :class:`UserWarning` is issued and no action
-        is taken.
+        This method undos the rebinning performed by the [rebin][..rebin] method, if it has been applied.
+
+        Warns
+        ------
+        UserWarning
+            If no rebinning has been applied and the measurement data is already in its original state.
         """
         if hasattr(self, '_rebinned_data_array'):
             del self._rebinned_data_array
@@ -789,33 +798,32 @@ class Measurement(NewBase):
     # -------------------------------------------------------------------------------------------------------------------------
 
     def plot(self, time_of_flight: int | sc.Variable | None = None, **kwargs) -> None:
-        """Plot the measurement image at a specific time-of-flight.
+        """Plot the 2d spatial measurement image data.
 
-        If no time-of-flight is provided, the plot will average over all time-of-flight values.
+        If no `time-of-flight` is provided, the plot will average over all time-of-flight values.<br>
+        If `time-of-flight` is provided as a [Scipp](https://scipp.github.io/) variable scalar, the nearest time-of-flight
+         frame in time will be plotted.
 
-        This method uses the plopp library for plotting:
-        https://scipp.github.io/plopp/plotting/image-plot.html
+        This method uses the [plopp](https://scipp.github.io/plopp/plotting/image-plot.html) library for plotting.
+
+        To customize the plot appearance, additional keyword arguments can be passed to the underlying plopp plotting function.
+        See [plopp.plot][] for which keyword arguments are available and how to use them.
 
         Parameters
         ----------
-        time_of_flight : int | sc.Variable | None, optional
-            The time-of-flight value to plot. If None, the time-of-flight axis is averaged. By default, None.
+        time_of_flight : int | sc.Variable | None
+            The time-of-flight value to plot, as an index (int) or a value (sc.Variable).<br>
+            If None, the time-of-flight axis is averaged.
         **kwargs : dict
-            Additional keyword arguments to pass to the plotting function.
-            See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
-
-        Returns
-        -------
-        plopp.Figure or None
-            The plot object when running inside a Jupyter notebook, otherwise ``None``
-            (the plot is displayed directly via :meth:`show`).
+            Additional keyword arguments to pass to the plotting function.<br>
+            See [plopp.plot][] for options.
 
         Raises
         ------
         TypeError
-            If ``time_of_flight`` is not an integer, :class:`scipp.Variable` scalar, or ``None``.
+            If ``time_of_flight`` is not an integer, a `sc.Variable` scalar, or ``None``.
         UnitError
-            If a :class:`scipp.Variable` ``time_of_flight`` does not carry a unit of time.
+            If a `sc.Variable` ``time_of_flight`` is provided without a unit of time.
         """
         if time_of_flight is None:
             title_suffix = ' (averaged over TOF)'
@@ -850,21 +858,18 @@ class Measurement(NewBase):
             plot.show()
 
     def slicer_plot(self, **kwargs) -> None:
-        """Launch an interactive slicer plot for exploring the measurement data.
+        """Launch an interactive slicer plot for exploring the 2d spatial measurement image data.
 
-        This method uses the plopp library for interactive slicing:
-        https://scipp.github.io/plopp/plotting/slicer-plot.html
+        This method uses the [plopp](https://scipp.github.io/plopp/plotting/slicer-plot.html) library for interactive slicing.
+
+        To customize the plot appearance, additional keyword arguments can be passed to the underlying plopp plotting function.
+        See [plopp.slicer][] for which keyword arguments are available and how to use them.
 
         Parameters
         ----------
         **kwargs : dict
-            Additional keyword arguments to pass to the slicer function.
-            See https://scipp.github.io/plopp/generated/plopp.slicer.html for options.
-
-        Returns
-        -------
-        plopp.widgets.Slicer
-            The interactive slicer widget.
+            Additional keyword arguments to pass to the slicer function.<br>
+            See [plopp.slicer][] for options.
 
         Raises
         ------
@@ -888,21 +893,28 @@ class Measurement(NewBase):
             raise RuntimeError('Interactive slicer is only supported in Jupyter notebooks.')
 
     def spectrum_inspector(self, **kwargs) -> None:
-        """Launch an interactive spectrum inspector plot for exploring the measurement data.
+        """Launch an interactive spectrum inspector plot for exploring the measurements time-of-flight spectrums.
 
-        This method uses the plopp library for interactive inspection:
-        https://scipp.github.io/plopp/plotting/inspector-plot.html
+        This method uses the [plopp](https://scipp.github.io/plopp/plotting/inspector-plot.html) library for interactive
+         inspection.
+
+        To customize the plot appearance, additional keyword arguments can be passed to the underlying plopp plotting function.
+        See [plopp.inspector][] for which keyword arguments are available and how to use them.
+
+        Interactive controls
+        --------
+        Click the ![](../../assets/images/crosshairs.png){width=15px} button in the toolbar on the left to activate/deactivate
+         the spectrum investigator tool. When active, the following controls are available:
+
+        - Left-click on a pixel to make a new point and view the spectrum for that pixel
+        - Left-click and drag existing points to adjust which pixel's spectrum is being viewed
+        - Middle-click on a point to delete it and remove its spectrum
 
         Parameters
         ----------
         **kwargs : dict
-            Additional keyword arguments to pass to the inspector function.
-            See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
-
-        Returns
-        -------
-        list
-            A list of plopp figure objects comprising the inspector widget.
+            Additional keyword arguments to pass to the inspector function.<br>
+            See [plopp.inspector][] for options.
 
         Raises
         ------
@@ -940,14 +952,27 @@ class Measurement(NewBase):
     def roi_creator(self, **kwargs) -> None:
         """Launch an interactive ROI creator for defining regions of interest on the measurement data.
 
-        This method uses the plopp library for interactive ROI creation:
-        https://scipp.github.io/plopp/plotting/roi-selector.html
+        This method uses the [plopp](https://scipp.github.io/plopp/plotting/roi-selector.html) library for interactive ROI
+         creation.
 
-        Controls:
-        - Left-click to make new rectangles
-        - Left-click and hold on rectangle vertices to resize rectangle
-        - Right-click and hold to drag/move the entire rectangle
-        - Middle-click to delete rectangle
+        To customize the plot appearance, additional keyword arguments can be passed to the underlying plopp plotting function.
+        See [plopp.inspector][] for which keyword arguments are available and how to use them.
+
+
+        Interactive controls
+        --------
+        Click the ![](../../assets/images/vector-square.png){width=15px} button in the toolbar on the left to
+         activate/deactivate the ROI creator tool. When active, the following controls are available:
+
+        - Left-click to start drawing a new rectangular ROI, and left-click again to finish drawing the rectangle and create
+         the ROI
+        - Left-click and hold on ROI corners to resize the ROI
+        - Right-click and hold to drag/move the entire ROI
+        - Middle-click in the ROI to delete it
+
+        Example
+        ---------
+        An example on how to use this method is shown in the tutorial notebook 
 
         Parameters
         ----------

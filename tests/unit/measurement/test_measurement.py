@@ -1027,7 +1027,9 @@ class TestMeasurement:
         # When
         measurement = Measurement(data_array=valid_data_array)
         # Then Expect
-        with pytest.raises(ValueError, match="Dimension 'x' with size 6 is not evenly divisible by the requested rebin factor 4."):
+        with pytest.raises(
+            ValueError, match="Dimension 'x' with size 6 is not evenly divisible by the requested rebin factor 4."
+        ):
             measurement.rebin(dimensions={'x': 4})
 
     def test_revert_rebin(self, valid_data_array):

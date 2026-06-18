@@ -570,7 +570,7 @@ class RectangleROI(NewBase):
             )
 
     def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
-        """Convert the ROI instance to a dictionary representation. 
+        """Convert the ROI instance to a dictionary representation.
 
         Used for saving the ROI to file.
 
