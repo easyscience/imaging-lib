@@ -903,8 +903,9 @@ class Measurement(NewBase):
 
         Interactive controls
         --------
-        Click the ![](../../assets/images/crosshairs.png){width=15px} button in the toolbar on the left to activate/deactivate
-         the spectrum investigator tool. When active, the following controls are available:
+        Click the ![](../../assets/images/crosshairs_dark.png#gh-dark-mode-only){width=15px}
+        ![](../../assets/images/crosshairs_light.png#gh-light-mode-only){width=15px} button in the toolbar on the left to
+         activate/deactivate the spectrum investigator tool. When active, the following controls are available:
 
         - Left-click on a pixel to make a new point and view the spectrum for that pixel
         - Left-click and drag existing points to adjust which pixel's spectrum is being viewed
@@ -950,18 +951,19 @@ class Measurement(NewBase):
             raise RuntimeError('Interactive spectrum inspector is only supported in Jupyter notebooks.')
 
     def roi_creator(self, **kwargs) -> None:
-        """Launch an interactive ROI creator for defining regions of interest on the measurement data.
+        """Launch an interactive Region Of Interest (ROI) creator for defining regions of interest on the measurement data.
 
         This method uses the [plopp](https://scipp.github.io/plopp/plotting/roi-selector.html) library for interactive ROI
-         creation.
+         creation. ROI's created with this method are automatically added to the [Measurement][..] object's
+         [list of ROIs][..regions_of_interest].
 
         To customize the plot appearance, additional keyword arguments can be passed to the underlying plopp plotting function.
         See [plopp.inspector][] for which keyword arguments are available and how to use them.
 
-
         Interactive controls
         --------
-        Click the ![](../../assets/images/vector-square.png){width=15px} button in the toolbar on the left to
+        Click the ![](../../assets/images/vector-square_dark.png#gh-dark-mode-only){width=15px}
+         ![](../../assets/images/vector-square_light.png#gh-light-mode-only){width=15px} button in the toolbar on the left to
          activate/deactivate the ROI creator tool. When active, the following controls are available:
 
         - Left-click to start drawing a new rectangular ROI, and left-click again to finish drawing the rectangle and create
@@ -972,19 +974,14 @@ class Measurement(NewBase):
 
         Example
         ---------
-        An example on how to use this method is shown in the tutorial notebook 
+        An example on how to use this method is shown in the tutorial:
+         [The **Measurement** class](../../tutorials/measurement.ipynb).
 
         Parameters
         ----------
         **kwargs : dict
-            Additional keyword arguments to pass to the ROI creator function.
-            See https://scipp.github.io/plopp/generated/plopp.inspector.html for options.
-
-        Returns
-        -------
-        list
-            A list of plopp figure objects comprising the ROI creator widget.
-            Changes made interactively are reflected in :attr:`regions_of_interest`.
+            Additional keyword arguments to pass to the inspector function.<br>
+            See [plopp.inspector][] for options.
 
         Raises
         ------
@@ -1145,29 +1142,30 @@ class Measurement(NewBase):
         return plots
 
     def spectrum(self, roi: RectangleROI | str | None = None) -> sc.DataArray:
-        """Extract the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
+        """Extract the measured time-of-flight spectrum in a specified Region Of Interest (ROI).
 
-        If no ROI is provided, the spectrum is calculated over the entire image.
+        The ROI can either be passed directly as an object, or by its ``unique_name`` as a string, if it has been added to
+         the measurement's [regions of interest list][..regions_of_interest].
+
+        If no ROI is provided, the spectrum is calculated over the entire measurement image stack.
 
         Parameters
         ----------
-        roi : RectangleROI | str | None, optional
-            The region of interest for which to extract the spectrum.
-            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
-            By default, None.
+        roi : RectangleROI | str | None
+            The ROI for which to extract the spectrum.<br>
+            If a string, it should be the ``unique_name`` of a ROI in the [regions_of_interest][] list.<br>
 
         Returns
         -------
         sc.DataArray
-            A 1-D DataArray containing the spatially averaged spectrum along the
-            time-of-flight axis.
+            A 1-D [sc.DataArray][scipp.DataArray] containing the spatially averaged time-of-flight spectrum.
 
         Raises
         ------
         TypeError
-            If ``roi`` is not a :class:`RectangleROI`, string, or ``None``.
+            If ``roi`` is not a [`RectangleROI`][RectangleROI], string, or ``None``.
         KeyError
-            If a string ``roi`` does not match any ROI in :attr:`regions_of_interest`.
+            If a string ``roi`` does not match the `unique_name` of any ROI in [`regions_of_interest`][regions_of_interest].
         """
         if roi is not None and not isinstance(roi, (RectangleROI, str)):
             raise TypeError('roi must be a string, None, or an instance of RectangleROI.')
@@ -1191,35 +1189,33 @@ class Measurement(NewBase):
         return spectrum_data
 
     def spectrum_plot(self, roi: RectangleROI | str | None = None, **kwargs) -> None:
-        """Plot the spectrum (intensity vs. time-of-flight) for a specified region of interest (ROI).
+        """Plot the measured time-of-flight spectrum in a specified Region Of Interest (ROI).
 
-        If no ROI is provided, the spectrum is calculated over the entire image.
+        The ROI can either be passed directly as an object, or by its ``unique_name`` as a string, if it has been added to
+         the measurement's [regions of interest list][..regions_of_interest].
 
-        This method uses the plopp library for plotting:
-        https://scipp.github.io/plopp/plotting/line-plot.html
+        If no ROI is provided, the spectrum is calculated over the entire measurement image stack.
+
+        This method uses the [plopp](https://scipp.github.io/plopp/plotting/line-plot.html) library for plotting.
+
+        To customize the plot appearance, additional keyword arguments can be passed to the underlying plopp plotting function.
+         See [plopp.plot][] for which keyword arguments are available and how to use them.
 
         Parameters
         ----------
-        roi : RectangleROI | str | None, optional
-            The region of interest for which to plot the spectrum.
-            If a string is provided, it should be the unique name of a predefined ROI in the measurement's list of ROIs.
-            By default, None.
+        roi : RectangleROI | str | None
+            The ROI for which to extract the spectrum.<br>
+            If a string, it should be the ``unique_name`` of a ROI in the [regions_of_interest][] list.<br>
         **kwargs : dict
-            Additional keyword arguments to pass to the plotting function.
-            See https://scipp.github.io/plopp/generated/plopp.plot.html for options.
-
-        Returns
-        -------
-        plopp.Figure or None
-            The plot object when running inside a Jupyter notebook, otherwise ``None``
-            (the plot is displayed directly via :meth:`show`).
+            Additional keyword arguments to pass to the plotting function.<br>
+            See [plopp.plot][] for options.
 
         Raises
         ------
         TypeError
-            If ``roi`` is not a :class:`RectangleROI`, string, or ``None``.
+            If ``roi`` is not a [`RectangleROI`][RectangleROI], string, or ``None``.
         KeyError
-            If a string ``roi`` does not match any ROI in :attr:`regions_of_interest`.
+            If a string ``roi`` does not match the `unique_name` of any ROI in [`regions_of_interest`][regions_of_interest].
         """
         spectrum_data = self.spectrum(roi=roi)
 

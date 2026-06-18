@@ -17,6 +17,6 @@ The tutorials are organized into the following categories:
 
 ## Getting Started
 
-- [The **Measurement** class](measurement.ipynb) – A tutorial which
+- [The **Measurement** class](measurement.ipynb){ #measurement_tutorial} – A tutorial which
   explores the purpose and functions of the core-component: The
   **Measurement** class.
