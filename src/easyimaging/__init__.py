@@ -8,5 +8,3 @@ from importlib.metadata import version
 from .measurement import Measurement
 
 __version__ = version(__package__)
-
-__all__ = [Measurement, __version__]
