@@ -1,0 +1,40 @@
+# Verifies if the current issue has at least one `[scope]` label and one
+# `[priority]` label. If either is missing, the workflow adds a reminder label.
+
+name: Issue labels check
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled]
+
+permissions:
+  issues: write
+
+jobs:
+  check-labels:
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: issue-labels-${{ github.event.issue.number }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Ensure [scope] label
+        uses: Rindrics/expect-label-prefix@v1.2.1
+        with:
+          repository_full_name: ${{ github.repository }}
+          token: ${{ github.token }}
+          label_prefix: '[scope]'
+          label_separator: ' '
+          add_label: 'true'
+          default_label: '[scope] ⚠️ label needed'
+
+      - name: Ensure [priority] label
+        uses: Rindrics/expect-label-prefix@v1.2.1
+        with:
+          repository_full_name: ${{ github.repository }}
+          token: ${{ github.token }}
+          label_prefix: '[priority]'
+          label_separator: ' '
+          add_label: 'true'
+          default_label: '[priority] ⚠️ label needed'
