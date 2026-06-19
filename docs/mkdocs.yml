@@ -84,6 +84,7 @@ extra:
 # Customization to be included by the theme
 extra_css:
   - assets/stylesheets/extra.css
+  - assets/stylesheets/scipp_style.css # Scipp's style.css got overwritten by the Material theme.
 
 extra_javascript:
   - assets/javascripts/extra.js

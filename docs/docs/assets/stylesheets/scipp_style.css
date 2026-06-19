@@ -1,0 +1,495 @@
+/* CSS stylesheet for displaying scipp objects in jupyterlab.
+* Original source from
+* https://github.com/jsignell/xarray/blob/1d960933ab252e0f79f7e050e6c9261d55568057/xarray/static/css/style.css
+*/
+
+.sc-root {
+  --sc-background-color0: var(--jp-layout-color0, #fff) !important;
+  --sc-background-color1: var(--jp-layout-color1, #fcfcfc) !important;
+  --sc-background-color2: var(--jp-layout-color2, #efefef) !important;
+  --sc-inverse-background-color0: var(--jp-inverse-layout-color4, #111) !important;
+  --sc-font-color0: var(--jp-content-font-color0, #000) !important;
+  --sc-font-color1: var(--jp-content-font-color1, #555) !important;
+  --sc-font-color2: var(--jp-content-font-color2, #888) !important;
+  --sc-font-color3: var(--jp-content-font-color3, #ccc) !important;
+}
+
+body.vscode-dark .sc-root {
+  --sc-font-color0: rgba(255, 255, 255, 1) !important;
+  --sc-font-color1: rgba(255, 255, 255, 0.70) !important;
+  --sc-font-color2: rgba(255, 255, 255, 0.54) !important;
+  --sc-font-color3: rgba(255, 255, 255, 0.38) !important;
+  --sc-border-color: #1F1F1F !important;
+  --sc-disabled-color: #515151 !important;
+  --sc-background-color0: #111111 !important;
+  --sc-background-color1: #111111 !important;
+  --sc-background-color2: #313131 !important;
+}
+
+.sc-wrap {
+  font-size: 14px !important;
+  min-width: 300px !important;
+  max-width: 800px !important;
+}
+
+/* The CSS styling for the inline attributes table */
+.sc-var-attrs .sc-wrap{
+  padding-left: 3em !important;
+}
+
+.sc-header {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  margin-bottom: 4px !important;
+  border-bottom: solid 1px #ddd !important;
+}
+
+.sc-header > div,
+.sc-header > ul {
+  display: inline !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.sc-obj-type,
+.sc-array-name {
+  margin-left: 2px !important;
+  margin-right: 10px !important;
+}
+
+.sc-obj-type {
+  color: var(--sc-font-color1) !important;
+}
+
+.sc-underlying-size {
+  color: var(--sc-font-color2) !important;
+}
+
+/* Also override settings of reveal.js as introduced when
+   generating slides using the rise package.
+   There are selectors for `.reveal ul` and `.reveal ul ul`
+   which take precedence over ours and mess up the formatting.*/
+.sc-sections, .reveal .sc-sections {
+  padding-left: 0 !important;
+  display: grid !important;
+  grid-template-columns: 150px auto auto auto 1fr 20px 20px !important;
+}
+
+.sc-section-item {
+  display: contents !important;
+}
+
+.sc-section-item input {
+  display: none !important;
+}
+
+.sc-section-item input:enabled + label {
+  cursor: pointer !important;
+  color: var(--sc-font-color1) !important;
+}
+
+.sc-section-item input:enabled + label:hover {
+  color: var(--sc-font-color0) !important;
+}
+
+.sc-section-summary {
+  grid-column: 1 !important;
+  font-weight: 500 !important;
+}
+
+.sc-section-summary > span {
+  display: inline-block !important;
+  padding-left: 0.5em !important;
+}
+
+.sc-section-summary-in:disabled + label {
+  color: var(--sc-font-color1) !important;
+}
+
+.sc-section-summary-in + label:before {
+  display: inline-block !important;
+  content: '►' !important;
+  font-size: 11px !important;
+  width: 15px !important;
+  text-align: center !important;
+}
+
+.sc-section-summary-in:disabled + label:before {
+  display: none !important;
+}
+
+.sc-section-summary-in:checked + label:before {
+  content: '▼' !important;
+}
+
+.sc-section-summary-in:checked + label > span {
+  display: none !important;
+}
+
+.sc-section-summary,
+.sc-section-inline-details {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.sc-section-inline-details {
+  grid-column: 2 / 6 !important;
+}
+
+.sc-section-details {
+  display: none !important;
+  grid-column: 1 / -1 !important;
+  margin-bottom: 5px !important;
+}
+
+.sc-section-summary-in:checked ~ .sc-section-details {
+  display: contents !important;
+}
+
+.sc-array-wrap {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 20px auto !important;
+}
+
+.sc-array-wrap > label {
+  grid-column: 1 !important;
+  vertical-align: top !important;
+}
+
+.sc-preview {
+  color: var(--sc-font-color2) !important;
+}
+
+.sc-array-preview,
+.sc-array-data {
+  padding: 0 5px !important;
+  grid-column: 2 !important;
+}
+
+.sc-array-data,
+.sc-array-in:checked ~ .sc-array-preview {
+  display: none !important;
+}
+
+.sc-array-in:checked ~ .sc-array-data,
+.sc-array-preview {
+  display: inline-block !important;
+}
+
+.sc-dim-list {
+  display: inline-block !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.sc-dim-list li {
+  display: inline-block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.sc-dim-list:before {
+  content: '(' !important;
+}
+
+.sc-dim-list:after {
+  content: ')' !important;
+}
+
+.sc-dim-list li:not(:last-child):after {
+  content: ',' !important;
+  padding-right: 5px !important;
+}
+
+/*
+This selector is for avoiding unexpected extra padding
+caused by <span> tag wrapping around the dollar-sign in the Jpyter notebook.
+*/
+.sc-dim-list li span,
+.sc-standalone-var-name > span span,
+.sc-var-name > span span {
+  padding: 0 !important;
+}
+
+.sc-aligned {
+  font-weight: bold !important;
+}
+
+.sc-var-list,
+.sc-var-item,
+.reveal .sc-var-list,
+.reveal .sc-var-item {
+  display: contents !important;
+}
+
+.sc-var-item > div,
+.sc-var-item label,
+.sc-var-item > .sc-var-name span {
+  background-color: var(--sc-background-color1) !important;
+  margin-bottom: 0 !important;
+}
+
+.sc-var-item > .sc-var-name:hover span {
+  padding-right: 5px !important;
+}
+
+.sc-var-list > li:nth-child(odd) > div,
+.sc-var-list > li:nth-child(odd) > label,
+.sc-var-list > li:nth-child(odd) > .sc-var-name span {
+  background-color: var(--sc-background-color2) !important;
+}
+
+.sc-var-name {
+  grid-column: 1 !important;
+}
+
+.sc-var-dims {
+  grid-column: 2 !important;
+}
+
+.sc-var-dtype {
+  grid-column: 3 !important;
+  text-align: right !important;
+  color: var(--sc-font-color2) !important;
+}
+.sc-var-unit{
+  grid-column: 4 !important;
+  text-align: left !important;
+  color: var(--sc-font-color1) !important;
+  max-width: 50pt !important;
+  text-overflow: ellipsis !important;
+}
+.sc-value-preview {
+  grid-column: 5 !important;
+}
+.sc-var-preview-variances{
+  text-align:right !important;
+}
+
+.sc-sections .sc-section-item .sc-section-summary,
+.sc-sections .sc-section-item .sc-section-inline-details,
+.sc-section-item .sc-var-list .sc-var-item > div,
+.sc-section-item .sc-var-list .sc-var-item > label,
+.sc-section-details .sc-var-list .sc-var-item > div,
+.sc-section-details .sc-var-list .sc-var-item > label {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.sc-var-name,
+.sc-var-dims,
+.sc-var-dtype,
+.sc-var-unit,
+.sc-preview,
+.sc-attrs dt {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  padding-right: 10px !important;
+}
+
+.sc-var-name:hover,
+.sc-var-dims:hover,
+.sc-var-dtype:hover,
+.sc-var-unit:hover,
+.sc-attrs dt:hover {
+  overflow: visible !important;
+  width: auto !important;
+  z-index: 1 !important;
+}
+
+.sc-var-attrs {
+  display: block !important;
+}
+.sc-var-data, .reveal .sc-var-data {
+  display: none !important;
+}
+.sc-var-attrs,
+.sc-var-data {
+  background-color: var(--sc-background-color0) !important;
+  padding-bottom: 5px !important;
+}
+
+.sc-var-attrs-in:checked ~ .sc-var-attrs {
+  display: none !important;
+}
+.sc-var-data-in:checked ~ .sc-var-data {
+  display: block !important;
+}
+
+.sc-var-data > table {
+  float: right !important;
+}
+
+.sc-var-name span,
+.sc-var-data {
+  padding-left: 25px !important;
+}
+
+.sc-var-attrs,
+.sc-var-data {
+  grid-column: 1 / -1 !important;
+}
+
+dl.sc-attrs {
+  padding: 0 !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-columns: 125px auto !important;
+}
+
+.sc-attrs dt, dd {
+  padding: 0 !important;
+  margin: 0 !important;
+  float: left !important;
+  padding-right: 10px !important;
+  width: auto !important;
+}
+
+.sc-attrs dt {
+  font-weight: normal !important;
+  grid-column: 1 !important;
+}
+
+.sc-attrs dt:hover span {
+  display: inline-block !important;
+  padding-right: 10px !important;
+}
+
+.sc-attrs dd {
+  grid-column: 2 !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+}
+
+.sc-icon-database,
+.sc-icon-file-text2 {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  width: 1em !important;
+  height: 1.5em !important;
+  stroke-width: 0 !important;
+  stroke: currentColor !important;
+  fill: currentColor !important;
+}
+
+label.sc-hide-icon svg{
+  opacity: 0;
+}
+
+.sc-standalone-var-name{
+  grid-column: 1/3 !important;
+}
+
+.sc-standalone-var-name span{
+  padding-left: 25px !important;
+  padding-right:10px !important;
+}
+
+.sc-title {
+  font-weight:bold !important;
+  font-size:1.5em !important;
+}
+
+.sc-subtitle {
+  font-weight:normal !important;
+  font-style:italic !important;
+  text-align:left !important;
+  font-size:1.2em !important;
+  padding: 1px !important;
+}
+
+.sc-label {
+  fill: var(--sc-font-color0, #444444) !important;
+  text-anchor: middle !important;
+}
+
+.sc-name {
+  fill: var(--sc-font-color0, #111111) !important;
+}
+
+.sc-inset-line {
+  stroke: var(--sc-font-color1) !important;
+  stroke-width: 0.05 !important;
+  stroke-dasharray: 0.2, 0.2 !important;
+}
+
+.sc-log-wrap {
+  height: 25ex;
+  resize: vertical;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column-reverse;
+  border: 1px solid !important;
+  border-color: var(--jp-border-color2) !important;
+  background-color: var(--sc-background-color1) !important;
+}
+
+div.sc-log {
+  line-height: 2.5ex !important;
+}
+
+table.sc-log {
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+}
+
+tr.sc-log:nth-child(even) {
+  background-color: var(--sc-background-color0) !important;
+}
+
+tr.sc-log > td {
+  vertical-align: top !important;
+  padding-bottom: 0.5ex !important;
+}
+
+.sc-log-time-stamp {
+  min-width: 22ch !important;
+  font-family: var(--jp-code-font-family) !important;
+  color: var(--sc-font-color2) !important;
+}
+
+.sc-log-level {
+  min-width: 10ch !important;
+}
+
+tr.sc-log-debug td.sc-log-level {
+  color: var(--jp-accent-color1) !important;
+}
+
+tr.sc-log-info td.sc-log-level {
+  color: var(--jp-info-color1) !important;
+}
+
+tr.sc-log-warning td.sc-log-level {
+  color: var(--jp-warn-color1) !important;
+}
+
+tr.sc-log-error td.sc-log-level {
+  font-weight: bold !important;
+  color: var(--jp-error-color2) !important;
+}
+
+tr.sc-log-critical td.sc-log-level {
+  font-weight: bold !important;
+  color: var(--sc-background-color0) !important;
+  background-color: var(--jp-error-color1) !important;
+}
+
+.sc-log-message {
+  white-space: pre-wrap !important;
+  width: 100% !important;
+}
+
+.sc-log-html-payload {
+  white-space: normal !important;
+}
+
+.sc-log-name {
+  padding-right: 0.5em !important;
+  text-align: right !important;
+  white-space: pre-wrap !important;
+  color: var(--sc-font-color3) !important;
+}
