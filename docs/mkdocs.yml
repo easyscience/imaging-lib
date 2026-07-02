@@ -159,6 +159,8 @@ plugins:
             show_submodules: true
             show_source: false
             show_bases: false
+            # Uncomment when the project depends on `easyscience` and inherited
+            # EasyScience base-class members should be shown in the API docs.
             preload_modules:
               - easyscience
             inherited_members: true
@@ -169,11 +171,11 @@ plugins:
             summary: true
             relative_crossrefs: true
             scoped_crossrefs: true
-            filters: ['!^_[^_]', '!__repr__', '!__dir__']
+            filters: ['!^_[^_]', '!__repr__', '!__dir__'] # This is the default filter minus __repr__ and __dir__
           inventories:
             - url: https://scipp.github.io/objects.inv
             - url: https://numpy.org/doc/stable/objects.inv
-            - url: https://easyscience.github.io/core/2.3.1/objects.inv
+            - url: https://easyscience.github.io/core/latest/objects.inv
             - url: https://scipp.github.io/scitiff/objects.inv
             - url: https://scipp.github.io/plopp/objects.inv
   - search
