@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block extrahead %}
+  {{ super() }}
+  {# FA5 webfonts: provides the "Font Awesome 5 Free" font-face needed by Jupyter widget toolbars.
+     The !important content overrides in extra.css fix the icons; this supplies the font file. #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
 {% block content %}
 
 {% if page.nb_url %}

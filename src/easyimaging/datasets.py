@@ -15,8 +15,8 @@ BRAIN = pooch.create(
     registry={
         'iron_alpha_scitiff/iron_alpha_v1.tiff': 'sha256:ada3d50a5324362add0b8787e11b87b5f33e1dd7e3862f92face03671a20a282',
         'iron_alpha_tiff/iron_alpha_v1.tiff': 'sha256:a1e4a14bfff3d7c0e92cc42f65f7931536d01f763ba7df2a0e4c0aac851f3594',
-        'small_test_scitiff/small_test_scitiff_v1.tiff': (
-            'sha256:2ce4088fad10437a1180855fba4ebfefad0c98b252be36d6fc046a1aa6ca922d'
+        'small_test_scitiff/small_test_scitiff_v2.tiff': (
+            'sha256:bdf62c9a982a9fe13449b08ff1919c9a2bf1d7a84998eeb007e232d4b4d32981'
         ),
         'small_test_tiff/small_test_tiff_v1.tiff': 'sha256:99e5558db28d0d5d5ca46d159791b3649d5a61b6cb4ff67bedaf5485b7d6ea35',
     },
@@ -43,7 +43,7 @@ def small_test_scitiff():
     """
     Load a small test scitiff file.
     """
-    fname = BRAIN.fetch('small_test_scitiff/small_test_scitiff_v1.tiff')
+    fname = BRAIN.fetch('small_test_scitiff/small_test_scitiff_v2.tiff')
     return fname
 
 

@@ -364,3 +364,36 @@ h1 .label-experiment {
 .label-experiment:hover {
   color: white !important;
 }
+
+/*
+ * FontAwesome 5 icon fix for Jupyter widget toolbars (ipympl / plopp)
+ * This is a temporary workaround until this is fixed on Plopps side
+ *
+ * Comment on the issue from Claude:
+ * embed-amd.js injects FA5 SVG-framework CSS inline, which intentionally sets
+ * content:"" on all icon classes (expecting FA5 JS to replace elements with SVGs).
+ * Since FA5 JS conflicts with RequireJS (breaking widget rendering), we instead:
+ *   1. Load FA5 webfonts via <link> in overrides/main.html so the font file is available.
+ *   2. Use !important below to override the content:"" with the correct FA5 Solid glyphs.
+ */
+.fa::before {
+  font-family: "Font Awesome 5 Free" !important;
+  font-weight: 900 !important;
+}
+.fa-home::before         { content: "\f015" !important; }
+.fa-save::before         { content: "\f0c7" !important; }
+.fa-camera::before       { content: "\f030" !important; }
+.fa-cube::before         { content: "\f1b2" !important; }
+.fa-arrows-alt::before   { content: "\f0b2" !important; }
+.fa-arrows::before       { content: "\f0b2" !important; }  /* FA5 equivalent: arrows-alt */
+.fa-times::before        { content: "\f00d" !important; }
+.fa-plus::before         { content: "\f067" !important; }
+.fa-minus::before        { content: "\f068" !important; }
+.fa-search-plus::before  { content: "\f00e" !important; }
+.fa-crosshairs::before   { content: "\f05b" !important; }
+.fa-arrow-left::before   { content: "\f060" !important; }
+.fa-arrow-right::before  { content: "\f061" !important; }
+.fa-expand::before       { content: "\f065" !important; }
+.fa-compress::before     { content: "\f066" !important; }
+/* fa-arrows-v was removed in FA5; map to arrows-alt-v (\f338) */
+.fa-arrows-v::before     { content: "\f338" !important; }
