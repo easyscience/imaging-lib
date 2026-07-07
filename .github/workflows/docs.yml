@@ -57,7 +57,7 @@ jobs:
   # Single job that builds and deploys documentation.
   # Uses macOS runner for consistent Plotly chart rendering.
   build-deploy-docs:
-    runs-on: ubuntu-latest # macos-latest
+    runs-on: macos-latest
 
     permissions:
       contents: write # Required for pushing to the gh-pages branch
@@ -111,15 +111,15 @@ jobs:
       - name: Pre-build site step
         run: pixi run python -c "import easyimaging"
 
-      # # Prepare the Jupyter notebooks for documentation (strip output, etc.).
-      # - name: Prepare notebooks
-      #   run: pixi run notebook-prepare
+      # Prepare the Jupyter notebooks for documentation (strip output, etc.).
+      - name: Prepare notebooks
+        run: pixi run notebook-prepare
 
-      # # Execute all Jupyter notebooks to generate output cells (plots, tables, etc.).
-      # # Uses multiple cores for parallel execution to speed up the process.
-      # - name: Run notebooks
-      #   # if: false # Temporarily disabled to speed up the docs build
-      #   run: pixi run notebook-exec
+      # Execute all Jupyter notebooks to generate output cells (plots, tables, etc.).
+      # Uses multiple cores for parallel execution to speed up the process.
+      - name: Run notebooks
+        # if: false # Temporarily disabled to speed up the docs build
+        run: pixi run notebook-exec
 
       # Build the static files for the documentation site for local inspection
       # Input: docs/ directory containing the Markdown files
