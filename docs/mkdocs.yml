@@ -208,3 +208,6 @@ nav:
       - regions_of_interest:
           - regions_of_interest: api-reference/regions_of_interest/index.md
           - RectangleROI: api-reference/regions_of_interest/rectangle_roi.md
+      - SampleModel:
+          - SampleModel: api-reference/sample_model/index.md
+          - AtomSite: api-reference/sample_model/atom_site.md

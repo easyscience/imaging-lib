@@ -13,3 +13,4 @@ available in EasyImaging.
   contains all types of Regions Of Interests (ROIs) available:
   - [RectangleROI](regions_of_interest/rectangle_roi.md) - A rectangular
     ROI. The most basic and common type of ROI
+- [SampleModel](sample_model/index.md) - Some text
