@@ -5,6 +5,8 @@ from easyscience import global_object
 from easyscience.base_classes import ModelBase
 from easyscience.variable import Parameter
 
+from ..utils import generate_unique_name_no_zero
+
 Numeric = int | float
 
 KNOWN_SPECIES = [
@@ -104,9 +106,9 @@ class AtomSite(ModelBase):
         if self._default_unique_name:
             self.unique_name = global_object.generate_unique_name(f'{value} AtomSite')
             # Change _default_unique_name when Parameter uses NewBase
-            self.fract_x.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_x')
-            self.fract_y.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_y')
-            self.fract_z.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_z')
+            self.fract_x.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_x')
+            self.fract_y.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_y')
+            self.fract_z.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_z')
 
     @property
     def fract_x(self) -> Parameter:
@@ -149,12 +151,10 @@ class AtomSite(ModelBase):
 
     def _generate_fract_parameter(self, fract_value: Numeric, axis: str) -> Parameter:
 
-        unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_{axis}')
-        if unique_name.endswith('_0'):
-            unique_name = unique_name[:-2]
+        unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_{axis}')
 
         # Change _default_unique_name when Parameter uses NewBase
-        return Parameter(value=fract_value, min=0.0, max=1.0, unique_name=unique_name)
+        return Parameter(value=fract_value, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
 
     def __repr__(self):
         return (f"AtomSite(atomic_species='{self.atomic_species}', fract_x={self.fract_x.value},"
