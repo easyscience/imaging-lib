@@ -47,6 +47,7 @@ class AtomSite(ModelBase):
             fract_x: Numeric,
             fract_y: Numeric,
             fract_z: Numeric,
+            debye_temperature: Numeric | None = None,
             unique_name: str | None = None,
             display_name: str | None = None,
     ):
@@ -95,6 +96,15 @@ class AtomSite(ModelBase):
         self._fract_y = self._generate_fract_parameter(fract_y, 'y')
         self._fract_z = self._generate_fract_parameter(fract_z, 'z')
 
+        if debye_temperature is None:
+            global_object.log.warning(f"Debye temperature not provided for AtomSite '{self.unique_name}'."
+                                      "Setting to default value of 300 K.")
+            debye_temperature = 300.0
+        else:
+            self._validate_debye_temperature(debye_temperature)
+        debye_name = generate_unique_name_no_zero(f'{self.unique_name}_debye_temperature')
+        self._debye_temperature = Parameter(value=debye_temperature, unit='K', min=0.0, fixed=True, unique_name=debye_name)
+
     @property
     def atomic_species(self) -> str:
         return self._atomic_species
@@ -109,6 +119,7 @@ class AtomSite(ModelBase):
             self.fract_x.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_x')
             self.fract_y.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_y')
             self.fract_z.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_z')
+            self.debye_temperature.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_debye_temperature')
 
     @property
     def fract_x(self) -> Parameter:
@@ -137,6 +148,20 @@ class AtomSite(ModelBase):
         self._validate_fract_value(value, 'z')
         self._fract_z.value = value
 
+    @property
+    def debye_temperature(self) -> Parameter:
+        return self._debye_temperature
+
+    @debye_temperature.setter
+    def debye_temperature(self, value: Numeric):
+        self._validate_debye_temperature(value)
+        self._debye_temperature.value = value
+
+    @fract_z.setter
+    def fract_z(self, value: Numeric):
+        self._validate_fract_value(value, 'z')
+        self._fract_z.value = value
+
     def _validate_atomic_species(self, value: str):
         if not isinstance(value, str):
             raise TypeError('"atomic_species" must be a string representing an element or isotope')
@@ -148,6 +173,12 @@ class AtomSite(ModelBase):
             raise TypeError(f'"fract_{axis}" must be a numeric value')
         if not (0.0 <= value <= 1.0):
             raise ValueError(f'"fract_{axis}" must be between 0.0 and 1.0')
+
+    def _validate_debye_temperature(self, value: Numeric):
+        if not isinstance(value, Numeric):
+            raise TypeError('"debye_temperature" must be a numeric value')
+        if value < 0.0:
+            raise ValueError('"debye_temperature" must be non-negative')
 
     def _generate_fract_parameter(self, fract_value: Numeric, axis: str) -> Parameter:
 

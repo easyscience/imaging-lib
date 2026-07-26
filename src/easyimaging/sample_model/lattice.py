@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from easyscience import Parameter
+from easyscience import global_object
 from easyscience.base_classes import ModelBase
 from easysience.base_classes import EasyList
 
@@ -34,11 +35,11 @@ class Lattice(ModelBase):
         Parameters
         ----------
         length_a : float | int
-            The length of the lattice vector along the x-axis.
+            The length of the lattice vector along the x-axis in angstrom.
         length_b : float | int
-            The length of the lattice vector along the y-axis.
+            The length of the lattice vector along the y-axis in angstrom.
         length_c : float | int
-            The length of the lattice vector along the z-axis.
+            The length of the lattice vector along the z-axis in angstrom.
         alpha : float | int
             The angle between the b and c lattice vectors (in degrees).
         beta : float | int
@@ -64,11 +65,6 @@ class Lattice(ModelBase):
             unique_name=generate_unique_name_no_zero(f'{self.unique_name}_atom_sites')
             )
         self._atom_sites._default_unique_name = True  # This gets set to False by the super init
-        self._debye_temperatures = EasyList(
-            protected_types=Parameter,
-            unique_name=generate_unique_name_no_zero(f'{self.unique_name}_debye_temperatures')
-        )
-        self._debye_temperatures._default_unique_name = True  # This gets set to False by the super init
 
         if atom_sites is not None:
             if not isinstance(atom_sites, list) and not all(isinstance(site, AtomSite) for site in atom_sites):
@@ -81,6 +77,45 @@ class Lattice(ModelBase):
         self._alpha = self._create_angle_parameter(alpha, 'alpha')
         self._beta = self._create_angle_parameter(beta, 'beta')
         self._gamma = self._create_angle_parameter(gamma, 'gamma')
+
+    @classmethod
+    def cubic(cls,
+              length_a: Numeric,
+              atom_sites: list[AtomSite] | None = None,
+              unique_name: str | None = None,
+              display_name: str | None = None
+              ):
+        """
+        Create a cubic lattice with equal lengths and 90-degree angles.
+
+        Parameters
+        ----------
+        length_a : float | int
+            The length of the cubic lattice vectors in angstrom.
+        atom_sites : list[AtomSite] | None
+            A list of [`AtomSite`][..] objects to insert into the lattice.
+        unique_name : str | None
+            A unique identifier for the [`Lattice`][..]. Defaults to ``'CubicLattice'`` appended by a unique integer.
+        display_name : str | None
+            A prettily formatted name for the [`Lattice`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
+
+        Returns
+        -------
+        Lattice
+            A new instance of a cubic [`Lattice`][..].
+        """
+        if unique_name is None:
+            unique_name = global_object.generate_unique_name('CubicLattice')
+        lattice = cls(length_a=length_a, length_b=length_a, length_c=length_a,
+                   alpha=90.0, beta=90.0, gamma=90.0,
+                   atom_sites=atom_sites,
+                   unique_name=unique_name,
+                   display_name=display_name
+                  )
+        lattice._default_unique_name = True  # This gets set to False by the super init
+        lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
+        lattice.length_c.make_dependent_on('length_a', {'length_a': lattice.length_a})
+        return lattice
 
     @property
     def length_a(self) -> Parameter:
@@ -145,44 +180,6 @@ class Lattice(ModelBase):
     @property
     def atom_sites(self) -> EasyList:
         return self._atom_sites
-
-    def add_atom_site(
-            self,
-            atomic_species: str,
-            fract_x: Numeric,
-            fract_y: Numeric,
-            fract_z: Numeric,
-            unique_name: str | None = None,
-            display_name: str | None = None
-            ):
-        """
-        Create a new AtomSite and add it to the lattice.
-
-        Parameters
-        ----------
-        atomic_species : str
-            The atomic species of the atom site.
-        fract_x : float | int
-            The fractional x-coordinate of the atom site.
-        fract_y : float | int
-            The fractional y-coordinate of the atom site.
-        fract_z : float | int
-            The fractional z-coordinate of the atom site.
-        unique_name : str | None
-            A unique identifier for the [`AtomSite`][..]. Defaults to ``'AtomSite'``, prepended with the atomic species label,
-            and appended with a unique integer.
-        display_name : str | None
-            A prettily formatted name for the [`AtomSite`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
-        """
-        new_atom_site = AtomSite(
-            atomic_species=atomic_species,
-            fract_x=fract_x,
-            fract_y=fract_y,
-            fract_z=fract_z,
-            unique_name=unique_name,
-            display_name=display_name
-        )
-        self._atom_sites.append(new_atom_site)
 
     def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:
         unique_name = generate_unique_name_no_zero(f'{self.unique_name}_length_{axis}')
