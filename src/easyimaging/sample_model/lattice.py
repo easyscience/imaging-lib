@@ -26,6 +26,7 @@ class Lattice(ModelBase):
             beta: Numeric = 90.0,
             gamma: Numeric = 90.0,
             atom_sites: list[AtomSite] | None = None,
+            temperature: Numeric = 300.0,
             unique_name: str | None = None,
             display_name: str | None = None
             ):
@@ -48,6 +49,8 @@ class Lattice(ModelBase):
             The angle between the a and b lattice vectors (in degrees).
         atom_sites : list[AtomSite] | None
             A list of [`AtomSite`][..] objects to insert into the lattice.
+        temperature : float | int
+            The temperature of the lattice in Kelvin.
         unique_name : str | None
             A unique identifier for the [`Lattice`][..]. Defaults to ``'Lattice'`` appended by a unique integer.
         display_name : str | None
@@ -77,11 +80,13 @@ class Lattice(ModelBase):
         self._alpha = self._create_angle_parameter(alpha, 'alpha')
         self._beta = self._create_angle_parameter(beta, 'beta')
         self._gamma = self._create_angle_parameter(gamma, 'gamma')
+        self._temperature = self._create_temperature_parameter(temperature)
 
     @classmethod
     def cubic(cls,
               length_a: Numeric,
               atom_sites: list[AtomSite] | None = None,
+              temperature: Numeric = 300.0,
               unique_name: str | None = None,
               display_name: str | None = None
               ):
@@ -94,6 +99,8 @@ class Lattice(ModelBase):
             The length of the cubic lattice vectors in angstrom.
         atom_sites : list[AtomSite] | None
             A list of [`AtomSite`][..] objects to insert into the lattice.
+        temperature : float | int
+            The temperature of the lattice in Kelvin.
         unique_name : str | None
             A unique identifier for the [`Lattice`][..]. Defaults to ``'CubicLattice'`` appended by a unique integer.
         display_name : str | None
@@ -109,6 +116,7 @@ class Lattice(ModelBase):
         lattice = cls(length_a=length_a, length_b=length_a, length_c=length_a,
                    alpha=90.0, beta=90.0, gamma=90.0,
                    atom_sites=atom_sites,
+                   temperature=temperature,
                    unique_name=unique_name,
                    display_name=display_name
                   )
@@ -181,6 +189,16 @@ class Lattice(ModelBase):
     def atom_sites(self) -> EasyList:
         return self._atom_sites
 
+    @property
+    def temperature(self) -> Parameter:
+        return self._temperature
+
+    @temperature.setter
+    def temperature(self, value: Numeric):
+        if value < 0:
+            raise ValueError("Temperature must be non-negative.")
+        self._temperature.value = value
+
     def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:
         unique_name = generate_unique_name_no_zero(f'{self.unique_name}_length_{axis}')
         parameter = Parameter(value=length_value, unit='angstrom', min=0.0, fixed=True, unique_name=unique_name)
@@ -190,5 +208,11 @@ class Lattice(ModelBase):
     def _create_angle_parameter(self, angle_value: Numeric, axis: str) -> Parameter:
         unique_name = generate_unique_name_no_zero(f'{self.unique_name}_angle_{axis}')
         parameter = Parameter(value=angle_value, min=0.0, max=180.0, fixed=True, unique_name=unique_name)
+        parameter._default_unique_name = True  # This gets set to False by the super init
+        return parameter
+
+    def _create_temperature_parameter(self, temperature_value: Numeric) -> Parameter:
+        unique_name = generate_unique_name_no_zero(f'{self.unique_name}_temperature')
+        parameter = Parameter(value=temperature_value, unit='K', min=0.0, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
