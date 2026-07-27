@@ -8,9 +8,7 @@ def generate_unique_name_no_zero(name_prefix: str) -> str:
     """
     Temporary workaround until this method is changed in EasyScience
     """
-    names_with_prefix = [
-        name for name in global_object.map.vertices() if name.startswith(name_prefix + '_')
-    ]
+    names_with_prefix = [name for name in global_object.map.vertices() if name.startswith(name_prefix + '_')]
     if names_with_prefix:
         name_with_prefix_count = [0]
         for name in names_with_prefix:

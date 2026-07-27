@@ -8,7 +8,7 @@ from easyscience.variable import Parameter
 from ..utils import generate_unique_name_no_zero
 
 Numeric = int | float
-
+# fmt: off
 KNOWN_SPECIES = [
  'H', 'H1', 'H2', 'H3', 'He', 'He3', 'He4', 'Li', 'Li6', 'Li7', 'Be', 'Be9', 'B', 'B10', 'B11', 'C', 'C12', 'C13', 'N', 'N14',
  'N15', 'O', 'O16', 'O17', 'O18', 'F', 'F19', 'Ne', 'Ne20', 'Ne21', 'Ne22', 'Na', 'Na23', 'Mg', 'Mg24', 'Mg25', 'Mg26', 'Al',
@@ -33,6 +33,7 @@ KNOWN_SPECIES = [
  'Pt190', 'Pt192', 'Pt194', 'Pt195', 'Pt196', 'Pt198', 'Au', 'Au197', 'Hg', 'Hg196', 'Hg199', 'Tl', 'Tl203', 'Tl205', 'Pb',
  'Pb204', 'Pb206', 'Pb207', 'Pb208', 'Bi', 'Bi209', 'Ra', 'Th', 'Th232', 'Pa', 'U', 'U233', 'U234', 'U235', 'U238'
  ]
+# fmt: on
 
 
 class AtomSite(ModelBase):
@@ -42,14 +43,14 @@ class AtomSite(ModelBase):
     """
 
     def __init__(
-            self,
-            atomic_species: str,
-            fract_x: Numeric,
-            fract_y: Numeric,
-            fract_z: Numeric,
-            debye_temperature: Numeric | None = None,
-            unique_name: str | None = None,
-            display_name: str | None = None,
+        self,
+        atomic_species: str,
+        fract_x: Numeric,
+        fract_y: Numeric,
+        fract_z: Numeric,
+        debye_temperature: Numeric | None = None,
+        unique_name: str | None = None,
+        display_name: str | None = None,
     ):
         """
         Initialize an AtomSite instance.
@@ -97,8 +98,9 @@ class AtomSite(ModelBase):
         self._fract_z = self._generate_fract_parameter(fract_z, 'z')
 
         if debye_temperature is None:
-            global_object.log.warning(f"Debye temperature not provided for AtomSite '{self.unique_name}'."
-                                      "Setting to default value of 300 K.")
+            global_object.log.warning(
+                f"Debye temperature not provided for AtomSite '{self.unique_name}'.Setting to default value of 300 K."
+            )
             debye_temperature = 300.0
         else:
             self._validate_debye_temperature(debye_temperature)
@@ -188,5 +190,7 @@ class AtomSite(ModelBase):
         return Parameter(value=fract_value, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
 
     def __repr__(self):
-        return (f"AtomSite(atomic_species='{self.atomic_species}', fract_x={self.fract_x.value},"
-                f" fract_y={self.fract_y.value}, fract_z={self.fract_z.value})")
+        return (
+            f"AtomSite(atomic_species='{self.atomic_species}', fract_x={self.fract_x.value},"
+            f' fract_y={self.fract_y.value}, fract_z={self.fract_z.value})'
+        )

@@ -18,18 +18,18 @@ class Lattice(ModelBase):
     """
 
     def __init__(
-            self,
-            length_a: Numeric,
-            length_b: Numeric,
-            length_c: Numeric,
-            alpha: Numeric = 90.0,
-            beta: Numeric = 90.0,
-            gamma: Numeric = 90.0,
-            atom_sites: list[AtomSite] | None = None,
-            temperature: Numeric = 300.0,
-            unique_name: str | None = None,
-            display_name: str | None = None
-            ):
+        self,
+        length_a: Numeric,
+        length_b: Numeric,
+        length_c: Numeric,
+        alpha: Numeric = 90.0,
+        beta: Numeric = 90.0,
+        gamma: Numeric = 90.0,
+        atom_sites: list[AtomSite] | None = None,
+        temperature: Numeric = 300.0,
+        unique_name: str | None = None,
+        display_name: str | None = None,
+    ):
         """
         Initialize a Lattice instance.
 
@@ -59,19 +59,18 @@ class Lattice(ModelBase):
         super().__init__(unique_name=unique_name, display_name=display_name)
         for length in (length_a, length_b, length_c):
             if length <= 0:
-                raise ValueError("Lattice lengths must be positive.")
+                raise ValueError('Lattice lengths must be positive.')
         if not (0 < alpha < 180 and 0 < beta < 180 and 0 < gamma < 180):
-            raise ValueError("Lattice angles alpha, beta, and gamma must be between 0 and 180 degrees.")
+            raise ValueError('Lattice angles alpha, beta, and gamma must be between 0 and 180 degrees.')
 
         self._atom_sites = EasyList(
-            protected_types=AtomSite,
-            unique_name=generate_unique_name_no_zero(f'{self.unique_name}_atom_sites')
-            )
+            protected_types=AtomSite, unique_name=generate_unique_name_no_zero(f'{self.unique_name}_atom_sites')
+        )
         self._atom_sites._default_unique_name = True  # This gets set to False by the super init
 
         if atom_sites is not None:
             if not isinstance(atom_sites, list) and not all(isinstance(site, AtomSite) for site in atom_sites):
-                raise TypeError("atom_sites must be a list of AtomSite objects.")
+                raise TypeError('atom_sites must be a list of AtomSite objects.')
             self._atom_sites.extend(atom_sites)
 
         self._length_a = self._create_length_parameter(length_a, 'a')
@@ -83,13 +82,14 @@ class Lattice(ModelBase):
         self._temperature = self._create_temperature_parameter(temperature)
 
     @classmethod
-    def cubic(cls,
-              length_a: Numeric,
-              atom_sites: list[AtomSite] | None = None,
-              temperature: Numeric = 300.0,
-              unique_name: str | None = None,
-              display_name: str | None = None
-              ):
+    def cubic(
+        cls,
+        length_a: Numeric,
+        atom_sites: list[AtomSite] | None = None,
+        temperature: Numeric = 300.0,
+        unique_name: str | None = None,
+        display_name: str | None = None,
+    ):
         """
         Create a cubic lattice with equal lengths and 90-degree angles.
 
@@ -113,13 +113,18 @@ class Lattice(ModelBase):
         """
         if unique_name is None:
             unique_name = global_object.generate_unique_name('CubicLattice')
-        lattice = cls(length_a=length_a, length_b=length_a, length_c=length_a,
-                   alpha=90.0, beta=90.0, gamma=90.0,
-                   atom_sites=atom_sites,
-                   temperature=temperature,
-                   unique_name=unique_name,
-                   display_name=display_name
-                  )
+        lattice = cls(
+            length_a=length_a,
+            length_b=length_a,
+            length_c=length_a,
+            alpha=90.0,
+            beta=90.0,
+            gamma=90.0,
+            atom_sites=atom_sites,
+            temperature=temperature,
+            unique_name=unique_name,
+            display_name=display_name,
+        )
         lattice._default_unique_name = True  # This gets set to False by the super init
         lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
         lattice.length_c.make_dependent_on('length_a', {'length_a': lattice.length_a})
@@ -132,7 +137,7 @@ class Lattice(ModelBase):
     @length_a.setter
     def length_a(self, value: Numeric):
         if value <= 0:
-            raise ValueError("Lattice length must be positive.")
+            raise ValueError('Lattice length must be positive.')
         self._length_a.value = value
 
     @property
@@ -142,7 +147,7 @@ class Lattice(ModelBase):
     @length_b.setter
     def length_b(self, value: Numeric):
         if value <= 0:
-            raise ValueError("Lattice length must be positive.")
+            raise ValueError('Lattice length must be positive.')
         self._length_b.value = value
 
     @property
@@ -152,7 +157,7 @@ class Lattice(ModelBase):
     @length_c.setter
     def length_c(self, value: Numeric):
         if value <= 0:
-            raise ValueError("Lattice length must be positive.")
+            raise ValueError('Lattice length must be positive.')
         self._length_c.value = value
 
     @property
@@ -162,7 +167,7 @@ class Lattice(ModelBase):
     @alpha.setter
     def alpha(self, value: Numeric):
         if not (0 < value < 180):
-            raise ValueError("Lattice angle must be between 0 and 180 degrees.")
+            raise ValueError('Lattice angle must be between 0 and 180 degrees.')
         self._alpha.value = value
 
     @property
@@ -172,7 +177,7 @@ class Lattice(ModelBase):
     @beta.setter
     def beta(self, value: Numeric):
         if not (0 < value < 180):
-            raise ValueError("Lattice angle must be between 0 and 180 degrees.")
+            raise ValueError('Lattice angle must be between 0 and 180 degrees.')
         self._beta.value = value
 
     @property
@@ -182,7 +187,7 @@ class Lattice(ModelBase):
     @gamma.setter
     def gamma(self, value: Numeric):
         if not (0 < value < 180):
-            raise ValueError("Lattice angle must be between 0 and 180 degrees.")
+            raise ValueError('Lattice angle must be between 0 and 180 degrees.')
         self._gamma.value = value
 
     @property
@@ -196,7 +201,7 @@ class Lattice(ModelBase):
     @temperature.setter
     def temperature(self, value: Numeric):
         if value < 0:
-            raise ValueError("Temperature must be non-negative.")
+            raise ValueError('Temperature must be non-negative.')
         self._temperature.value = value
 
     def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:

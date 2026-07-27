@@ -3,14 +3,7 @@
 
 from __future__ import annotations
 
-import numpy as np
-import plopp as pp
-import scipp as sc
-from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
-from easyscience.base_classes import NewBase
-from scipp import DimensionError
-from scipp import UnitError
 
 
 class SampleModel(ModelBase):
