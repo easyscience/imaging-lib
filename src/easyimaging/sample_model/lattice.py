@@ -6,7 +6,6 @@ from easyscience import global_object
 from easyscience.base_classes import ModelBase
 from easysience.base_classes import EasyList
 
-from ..utils import generate_unique_name_no_zero
 from .atom_site import AtomSite
 
 Numeric = int | float
@@ -64,7 +63,7 @@ class Lattice(ModelBase):
             raise ValueError('Lattice angles alpha, beta, and gamma must be between 0 and 180 degrees.')
 
         self._atom_sites = EasyList(
-            protected_types=AtomSite, unique_name=generate_unique_name_no_zero(f'{self.unique_name}_atom_sites')
+            protected_types=AtomSite, unique_name=global_object.generate_unique_name(f'{self.unique_name}_atom_sites')
         )
         self._atom_sites._default_unique_name = True  # This gets set to False by the super init
 
@@ -205,19 +204,19 @@ class Lattice(ModelBase):
         self._temperature.value = value
 
     def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:
-        unique_name = generate_unique_name_no_zero(f'{self.unique_name}_length_{axis}')
+        unique_name = global_object.generate_unique_name(f'{self.unique_name}_length_{axis}')
         parameter = Parameter(value=length_value, unit='angstrom', min=0.0, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
     def _create_angle_parameter(self, angle_value: Numeric, axis: str) -> Parameter:
-        unique_name = generate_unique_name_no_zero(f'{self.unique_name}_angle_{axis}')
+        unique_name = global_object.generate_unique_name(f'{self.unique_name}_angle_{axis}')
         parameter = Parameter(value=angle_value, min=0.0, max=180.0, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
     def _create_temperature_parameter(self, temperature_value: Numeric) -> Parameter:
-        unique_name = generate_unique_name_no_zero(f'{self.unique_name}_temperature')
+        unique_name = global_object.generate_unique_name(f'{self.unique_name}_temperature')
         parameter = Parameter(value=temperature_value, unit='K', min=0.0, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter

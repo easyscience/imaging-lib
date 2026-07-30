@@ -5,8 +5,6 @@ from easyscience import global_object
 from easyscience.base_classes import ModelBase
 from easyscience.variable import Parameter
 
-from ..utils import generate_unique_name_no_zero
-
 Numeric = int | float
 # fmt: off
 KNOWN_SPECIES = [
@@ -104,7 +102,7 @@ class AtomSite(ModelBase):
             debye_temperature = 300.0
         else:
             self._validate_debye_temperature(debye_temperature)
-        debye_name = generate_unique_name_no_zero(f'{self.unique_name}_debye_temperature')
+        debye_name = global_object.generate_unique_name(f'{self.unique_name}_debye_temperature')
         self._debye_temperature = Parameter(value=debye_temperature, unit='K', min=0.0, fixed=True, unique_name=debye_name)
 
     @property
@@ -118,10 +116,10 @@ class AtomSite(ModelBase):
         if self._default_unique_name:
             self.unique_name = global_object.generate_unique_name(f'{value} AtomSite')
             # Change _default_unique_name when Parameter uses NewBase
-            self.fract_x.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_x')
-            self.fract_y.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_y')
-            self.fract_z.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_z')
-            self.debye_temperature.unique_name = generate_unique_name_no_zero(f'{self.unique_name}_debye_temperature')
+            self.fract_x.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_x')
+            self.fract_y.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_y')
+            self.fract_z.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_z')
+            self.debye_temperature.unique_name = global_object.generate_unique_name(f'{self.unique_name}_debye_temperature')
 
     @property
     def fract_x(self) -> Parameter:
@@ -184,7 +182,7 @@ class AtomSite(ModelBase):
 
     def _generate_fract_parameter(self, fract_value: Numeric, axis: str) -> Parameter:
 
-        unique_name = generate_unique_name_no_zero(f'{self.unique_name}_fract_{axis}')
+        unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_{axis}')
 
         # Change _default_unique_name when Parameter uses NewBase
         return Parameter(value=fract_value, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
