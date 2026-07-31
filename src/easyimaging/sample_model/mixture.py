@@ -1,17 +1,14 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
-import inspect
 import math
 from typing import TYPE_CHECKING
 from typing import Sequence
 
+from easyscience import Parameter
 from easyscience import global_object
 from easyscience.base_classes import ModelBase
 
-from easyimaging import Parameter
-
-from ..utils import generate_unique_name_no_zero
 from .lattice import Lattice
 
 if TYPE_CHECKING:
@@ -25,12 +22,13 @@ class Mixture(ModelBase):
     A Mixture is a combination of two or more substances, each represented by a [`Lattice`][..lattice] object.<br>
     The Mixture class allows for the representation of complex materials with multiple phases or components.
     """
+
     def __init__(
-            self,
-            components: Sequence[Sequence[Lattice, Numeric]] = None,
-            force_normalization: bool = False,
-            unique_name: str | None = None,
-            display_name: str | None = None,
+        self,
+        components: Sequence[Sequence[Lattice, Numeric]] = None,
+        auto_normalize: bool = False,
+        unique_name: str | None = None,
+        display_name: str | None = None,
     ):
         """
         Initialize a Mixture instance.
@@ -39,8 +37,8 @@ class Mixture(ModelBase):
         ----------
         components : Sequence[Sequence[Lattice, int | float]] | None
             A sequence of 2-element sequences containing [`Lattice`][..lattice] objects and their respective mixing fractions.
-        force_normalization : bool
-            Whether to force normalization of the component fractions.
+        auto_normalize : bool
+            Whether to use automatically normalized component fractions for calculations.
         unique_name : str | None
             A unique identifier for the [`Mixture`][..]. Defaults to ``'Mixture'`` appended by a unique integer.
         display_name : str | None
@@ -64,10 +62,14 @@ class Mixture(ModelBase):
             self._components.append(lattice)
             self._fractions.append(self._create_fraction_parameter(fraction, lattice))
 
-        if force_normalization:
-            self.force_normalization = force_normalization  # Use the setter logic
-        else:
-            self._force_normalization = force_normalization
+        self._auto_normalize = auto_normalize
+        self._normalized_fractions = []
+
+    def _create_fraction_parameter(self, fraction: Numeric, lattice: Lattice) -> Parameter:
+        unique_name = global_object.generate_unique_name(f'{self.unique_name}_{lattice.unique_name}_fraction')
+        parameter = Parameter(value=fraction, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
+        parameter._default_unique_name = True  # This gets set to False by the super init
+        return parameter
 
     @property
     def components(self) -> list[Lattice]:
@@ -104,42 +106,75 @@ class Mixture(ModelBase):
         return list(self._fractions)
 
     @property
-    def force_normalization(self) -> bool:
+    def auto_normalize(self) -> bool:
         """
-        Whether to automatically enforce that the Mixtures fractions sum up to 1 always.
+        Whether to use automatically normalized fractions for the components in the Mixture.
+        If True, the defined components given by the fractions property act as scaling factors for the normalized fraction.
 
         Returns
         -------
         bool
-            True if the Mixture is set to force normalization of component fractions, False otherwise.
+            Whether to use automatically normalized fractions for the components in the Mixture for calculations.
         """
-        return self._force_normalization
+        return self._auto_normalize
 
-    @force_normalization.setter
-    def force_normalization(self, value: bool):
+    @auto_normalize.setter
+    def auto_normalize(self, value: bool):
         if not isinstance(value, bool):
-            raise TypeError(f'force_normalization must be a boolean, got {type(value)}')
-        if value == self._force_normalization:
-            return  # No change, do nothing
-        if value:
-            free_fractions = [fraction for fraction in self._fractions if not fraction.fixed and fraction.independent]
-            if len(free_fractions) == 0:
-                global_object.log.warning('force_normalization is set to True, but there are no free components. '
-                'Normalization cannot be enforced.')
+            raise TypeError(f'auto_normalize must be a boolean, got {type(value)}')
+        self._auto_normalize = value
+
+    def display_auto_normalized_fractions(self) -> list[float]:
+        """
+        Get a list of the current values of the auto-normalized mixing fractions for each component in the Mixture.
+
+        Returns
+        -------
+        list[float]
+            A list of auto-normalized mixing fractions for each component in the Mixture.
+        """
+        self._create_normalized_fractions()
+        return [fraction.value for fraction in self._normalized_fractions]
+
+    @property
+    def _fractions(self) -> list[Parameter]:
+        """
+        This property is used by the calculator to get the correct fractions to use for calculations.
+        """
+        if self._auto_normalize:
+            # Always create new to ensure correctness
+            self._create_normalized_fractions()
+            return self._normalized_fractions
+        return self._fractions
+
+    def _create_normalized_fractions(self):
+        for parameter in self._normalized_fractions:
+            parameter.make_independent()
+        self._normalized_fractions.clear()
+        for fraction in self._fractions:
+            if not fraction.fixed:
+                unique_name = global_object.generate_unique_name(f'Normalized {fraction.unique_name}')
+                scaling = ' - '.join(f.unique_name for f in self._fractions if f.fixed)
+                denominator = '(' + ' + '.join(f.unique_name for f in self._fractions if not f.fixed) + ')'
+                dependency_expression = f'{fraction.unique_name} / {denominator}'
+                if scaling:
+                    dependency_expression = f'(1.0 - {scaling}) * ({dependency_expression})'
+                dependency_map = {f.unique_name: f for f in self._fractions}
+                parameter = Parameter.from_dependency(
+                    name=unique_name,
+                    dependency_expression=dependency_expression,
+                    dependency_map=dependency_map,
+                    unique_name=unique_name,
+                )
             else:
-                self.normalize_fractions()
-            for fraction in self._fractions:
-                fraction._attach_observer(self)
-                # If the Parameter was not a dependent parameter, delete the created serializer ID
-                # to avoid messing up the serialization/deserialization.
-                if len(fraction._observers) == 1:
-                    del fraction.__serializer_id
-        else:
-            for fraction in self._fractions:
-                if len(fraction._observers) == 1 and fraction._observers[0] is self:
-                    fraction.__serializer_id = 'temp'  # this is needed to avoid an error since _detach_observer deletes it
-                fraction._detach_observer(self)
-        self._force_normalization = value
+                unique_name = global_object.generate_unique_name(f'{fraction.unique_name} pass through')
+                parameter = Parameter.from_dependency(
+                    name=unique_name,
+                    dependency_expression=f'{fraction.unique_name}',
+                    dependency_map={fraction.unique_name: fraction},
+                    unique_name=unique_name,
+                )
+            self._normalized_fractions.append(parameter)
 
     def normalize_fractions(self):
         """
@@ -161,20 +196,22 @@ class Mixture(ModelBase):
         total_fraction_after = sum(fraction.value for fraction in self._fractions)
         if math.isclose(total_fraction_after, 1.0, rel_tol=1e-3):
             return
-        global_object.log.warning('Normalization did not succeed, possibly due to Dependent Parameters.'
-                                      f'Total fraction after normalization: {total_fraction_after}.'
-                                      ' Trying again updating only the unobserved fractions, if any.')
+        global_object.log.warning(
+            'Normalization did not succeed, possibly due to Dependent Parameters.'
+            f'Total fraction after normalization: {total_fraction_after}.'
+            ' Trying again updating only the unobserved fractions, if any.'
+        )
         unobserved_fractions = [fraction for fraction in independent_fractions if len(fraction._observers) == 0]
         if len(unobserved_fractions) == 0:
-            global_object.log.warning('All independent fractions are being observed.'
-            'Normalization could not be completed.')
+            global_object.log.warning('All independent fractions are being observed.Normalization could not be completed.')
             return
         remainder = 1.0 - sum(fraction.value for fraction in self._fractions)
         self._distribute_remainder(remainder, unobserved_fractions)
         total_fraction_after = sum(fraction.value for fraction in self._fractions)
         if not math.isclose(total_fraction_after, 1.0, rel_tol=1e-3):
-            global_object.log.warning('Normalization still did not succeed.'
-                                      f'Total fraction after second normalization: {total_fraction_after}.')
+            global_object.log.warning(
+                f'Normalization still did not succeed.Total fraction after second normalization: {total_fraction_after}.'
+            )
 
     def _distribute_remainder(self, remainder: float, fractions: list[Parameter]):
         sorted_fractions = sorted(fractions, key=lambda f: f.value)
@@ -198,33 +235,6 @@ class Mixture(ModelBase):
         """
         variables = []
         for index, lattice in enumerate(self._components):
-            variables.extend(lattice.get_all_variables())
             variables.append(self._fractions[index])
+            variables.extend(lattice.get_all_variables())
         return variables
-
-    def _update(self):
-        """
-        This method uses the observer pattern of the dependent Parameter implementation to enforce the normalization of
-        mixture fractions when force_normalization is True.
-        """
-        total_fraction = sum(fraction.value for fraction in self._fractions)
-        if total_fraction == 1.0:
-            return
-        fractions = self.fractions
-        # Get the object which called this method
-        caller_frame = inspect.stack()[1].frame
-        local_variables = caller_frame.f_locals
-        caller = local_variables['self']
-        # Only re-normalize the other Parameters
-        fractions.remove(caller)
-        for fraction in fractions:
-            fraction._scalar.value = fraction.value + (total_fraction - 1) / len(fractions)
-        # Update values first, then notify potential observers to avoid infinite loop
-        for fraction in fractions:
-            fraction._notify_observers()
-
-    def _create_fraction_parameter(self, fraction: Numeric, lattice: Lattice) -> Parameter:
-        unique_name = generate_unique_name_no_zero(f'{self.unique_name}_{lattice.unique_name}_fraction')
-        parameter = Parameter(value=fraction, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
-        parameter._default_unique_name = True  # This gets set to False by the super init
-        return parameter
