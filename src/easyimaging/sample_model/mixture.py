@@ -176,6 +176,68 @@ class Mixture(ModelBase):
                 )
             self._normalized_fractions.append(parameter)
 
+    def add_component(self, lattice: Lattice, fraction: Numeric):
+        """
+        Add a new component to the Mixture.
+
+        Parameters
+        ----------
+        lattice : Lattice
+            The [`Lattice`][..lattice] object representing the new component.
+        fraction : int | float
+            The mixing fraction for the new component. Must be between 0.0 and 1.0.
+
+        Raises
+        ------
+        TypeError
+            If `lattice` is not a [`Lattice`][..lattice] object or if `fraction` is not a numeric value.
+        ValueError
+            If `fraction` is not between 0.0 and 1.0.
+        """
+        if not isinstance(lattice, Lattice):
+            raise TypeError(f'lattice must be a Lattice object, got {type(lattice)}')
+        if not isinstance(fraction, Numeric):
+            raise TypeError(f'fraction must be a numeric value, got {type(fraction)}')
+        if not (0.0 <= fraction <= 1.0):
+            raise ValueError('fraction must be between 0.0 and 1.0')
+        self._fractions.append(self._create_fraction_parameter(fraction, lattice))
+        self._components.append(lattice)
+
+    def remove_component(self, lattice: Lattice | int):
+        """
+        Remove a component from the Mixture.
+
+        Parameters
+        ----------
+        lattice : Lattice | int
+            The [`Lattice`][..lattice] object or its index in the components list to be removed.
+
+        Raises
+        ------
+        ValueError
+            If `lattice` is not found in the components list.
+        IndexError
+            If `lattice` is an index that is out of range for the components list.
+        TypeError
+            If `lattice` is neither a [`Lattice`][..lattice] object nor an integer index.
+        """
+        if isinstance(lattice, int):
+            if 0 <= lattice < len(self._components):
+                self._fractions.pop(lattice)
+                self._components.pop(lattice)
+            else:
+                raise IndexError(f'Index {lattice} is out of range for the components list of length {len(self._components)}.')
+        elif isinstance(lattice, Lattice):
+            try:
+                index = self._components.index(lattice)
+                self._fractions.pop(index)
+                self._components.pop(index)
+            except ValueError:
+                raise ValueError('The specified Lattice component is not in the Mixture.')
+        else:
+            raise TypeError(f'lattice must be a Lattice object or an integer index, got {type(lattice)}')
+        self._create_normalized_fractions()  # Recreate normalized fractions after removal to avoid stale observer references
+
     def normalize_fractions(self):
         """
         Normalize the mixing fractions of the components in the Mixture so that they sum to 1.0.
