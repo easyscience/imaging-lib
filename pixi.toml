@@ -182,6 +182,12 @@ notebook-prepare = { depends-on = [
   #'notebook-tweak',
 ] }
 
+##################
+# 🖥️ Voila Apps
+##################
+
+voila-app = 'voila examples/voila_measurement_app.ipynb'
+
 ########################
 # 📚 Documentation Tasks
 ########################
