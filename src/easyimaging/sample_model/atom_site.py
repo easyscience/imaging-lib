@@ -42,7 +42,7 @@ class AtomSite(ModelBase):
 
     def __init__(
         self,
-        atomic_species: str,
+        atomic_specie: str,
         fract_x: Numeric,
         fract_y: Numeric,
         fract_z: Numeric,
@@ -55,7 +55,7 @@ class AtomSite(ModelBase):
 
         Parameters
         ----------
-        atomic_species : str
+        atomic_specie : str
             The atomic species of the site.
         fract_x : int | float
             The fractional x-coordinate of the site.
@@ -72,20 +72,20 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
-            If `atomic_species` is not a string.<br>
+            If `atomic_specie` is not a string.<br>
             If any of the fractional coordinates are not floats or ints.
         ValueError
-            If `atomic_species` is not a valid element or isotope, or if any of the
+            If `atomic_specie` is not a valid element or isotope, or if any of the fractional coordinates are out of range.
         """
-        self._validate_atomic_species(atomic_species)
-        self._atomic_species = atomic_species
+        self._validate_atomic_species(atomic_specie)
+        self._atomic_species = atomic_specie
 
         self._validate_fract_value(fract_x, 'x')
         self._validate_fract_value(fract_y, 'y')
         self._validate_fract_value(fract_z, 'z')
 
         if unique_name is None:
-            unique_name = global_object.generate_unique_name(f'{atomic_species} AtomSite')
+            unique_name = global_object.generate_unique_name(f'{atomic_specie} AtomSite')
             super().__init__(unique_name=unique_name, display_name=display_name)
             self._default_unique_name = True  # This gets set to False by the super init
         else:
