@@ -3,8 +3,8 @@
 
 from easyscience import Parameter
 from easyscience import global_object
+from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
-from easysience.base_classes import EasyList
 
 from .atom_site import AtomSite
 
@@ -81,7 +81,6 @@ class Lattice(ModelBase):
         cls,
         length_a: Numeric,
         atom_sites: list[AtomSite] | None = None,
-        temperature: Numeric = 300.0,
         unique_name: str | None = None,
         display_name: str | None = None,
     ):
@@ -94,8 +93,6 @@ class Lattice(ModelBase):
             The length of the cubic lattice vectors in angstrom.
         atom_sites : list[AtomSite] | None
             A list of [`AtomSite`][..] objects to insert into the lattice.
-        temperature : float | int
-            The temperature of the lattice in Kelvin.
         unique_name : str | None
             A unique identifier for the [`Lattice`][..]. Defaults to ``'CubicLattice'`` appended by a unique integer.
         display_name : str | None

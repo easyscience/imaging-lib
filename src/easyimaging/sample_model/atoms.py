@@ -11,7 +11,7 @@ class Atom:
     A class representing a known atomic species with its element symbol and optional isotope number.
     """
     element: str
-    isotope: int | None = None
+    isotope: int | None
     enum_id: int
 
 
