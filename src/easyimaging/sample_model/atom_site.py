@@ -39,6 +39,8 @@ class AtomSite(ModelBase):
             The fractional y-coordinate of the site.
         fract_z : int | float
             The fractional z-coordinate of the site.
+        debye_temperature : float | int | None
+            The Debye temperature of the atom site in Kelvin. If None, a default value of 300 K is used.
         unique_name : str | None
             A unique identifier for the [`AtomSite`][..]. Defaults to ``'AtomSite'``, prepended with the atomic species label,
              and appended with a unique integer.

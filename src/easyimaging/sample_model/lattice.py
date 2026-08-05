@@ -121,6 +121,53 @@ class Lattice(ModelBase):
         lattice.length_c.make_dependent_on('length_a', {'length_a': lattice.length_a})
         return lattice
 
+    @classmethod
+    def hexagonal(
+        cls,
+        length_a: Numeric,
+        length_c: Numeric,
+        atom_sites: list[AtomSite] | None = None,
+        unique_name: str | None = None,
+        display_name: str | None = None,
+    ):
+        """
+        Create a hexagonal lattice with equal lengths for a and b, and 90-degree angles for alpha and beta, and 120-degree angle for gamma.
+
+        Parameters
+        ----------
+        length_a : float | int
+            The length of the a and b lattice vectors in angstrom.
+        length_c : float | int
+            The length of the c lattice vector in angstrom.
+        atom_sites : list[AtomSite] | None
+            A list of [`AtomSite`][..] objects to insert into the lattice.
+        unique_name : str | None
+            A unique identifier for the [`Lattice`][..]. Defaults to ``'HexagonalLattice'`` appended by a unique integer.
+        display_name : str | None
+            A prettily formatted name for the [`Lattice`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
+
+        Returns
+        -------
+        Lattice
+            A new instance of a hexagonal [`Lattice`][..].
+        """
+        if unique_name is None:
+            unique_name = global_object.generate_unique_name('HexagonalLattice')
+        lattice = cls(
+            length_a=length_a,
+            length_b=length_a,
+            length_c=length_c,
+            alpha=90.0,
+            beta=90.0,
+            gamma=120.0,
+            atom_sites=atom_sites,
+            unique_name=unique_name,
+            display_name=display_name,
+        )
+        lattice._default_unique_name = True  # This gets set to False by the super init
+        lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
+        return lattice
+
     @property
     def length_a(self) -> Parameter:
         return self._length_a
