@@ -5,6 +5,7 @@ from easyscience import Parameter
 from easyscience import global_object
 from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
+from gemmi import cif
 
 from .atom_site import AtomSite
 
@@ -167,6 +168,48 @@ class Lattice(ModelBase):
         lattice._default_unique_name = True  # This gets set to False by the super init
         lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
         return lattice
+
+    @classmethod
+    def from_cif(cls, file_path: str, unique_name: str | None = None, display_name: str | None = None):
+        """
+        Create a Lattice instance from a CIF file.
+
+        Parameters
+        ----------
+        file_path : str
+            The path to the CIF file.
+        unique_name : str | None
+            A unique identifier for the [`Lattice`][..]. Defaults to ``'LatticeFromCIF'`` appended by a unique integer.
+        display_name : str | None
+            A prettily formatted name for the [`Lattice`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
+
+        Returns
+        -------
+        Lattice
+            A new instance of a [`Lattice`][..] created from the CIF file.
+        """
+        if not isinstance(file_path, str):
+            raise TypeError(f'"file_path" must be a string. Got: {type(file_path).__name__}')
+        try:
+            cif_block = cif.read_file(file_path)[0]
+        except Exception as e:
+            raise ValueError(f'Failed to read CIF file at {file_path}. Error: {e}')
+
+        if unique_name is None:
+            block_name = cif_block.name
+            unique_name = global_object.generate_unique_name(f'{block_name}_Lattice')
+
+        return cls(
+            length_a=float(cif_block.find_values('_cell.length_a')),
+            length_b=float(cif_block.find_values('_cell.length_b')),
+            length_c=float(cif_block.find_values('_cell.length_c')),
+            alpha=float(cif_block.find_values('_cell.angle_alpha')),
+            beta=float(cif_block.find_values('_cell.angle_beta')),
+            gamma=float(cif_block.find_values('_cell.angle_gamma')),
+            atom_sites=[AtomSite.from_cif_row(row) for row in cif_block.find_loop('_atom_site_label')],
+            unique_name=unique_name,
+            display_name=display_name,
+        )
 
     @property
     def length_a(self) -> Parameter:

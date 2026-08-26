@@ -30,6 +30,7 @@ dependencies = [
   'plopp',              # The plotting library of scipp
   'ncrystal[composer]', # The backend calculator
   'pooch',              # Data downloader
+  'gemmi',              # For parsing CIF files
 ]
 
 [project.optional-dependencies]
