@@ -170,7 +170,7 @@ class Lattice(ModelBase):
         return lattice
 
     @classmethod
-    def from_cif(cls, file_path: str, unique_name: str | None = None, display_name: str | None = None):
+    def from_cif(cls, file_path: str, block: int = 0, unique_name: str | None = None, display_name: str | None = None):
         """
         Create a Lattice instance from a CIF file.
 
@@ -190,14 +190,23 @@ class Lattice(ModelBase):
         """
         if not isinstance(file_path, str):
             raise TypeError(f'"file_path" must be a string. Got: {type(file_path).__name__}')
+        if not isinstance(block, int):
+            raise TypeError(f'"block" must be an integer. Got: {type(block).__name__}')
+        if block < 0:
+            raise ValueError(f'"block" must be a non-negative integer. Got: {block}')
         try:
-            cif_block = cif.read_file(file_path)[0]
+            cif_file = cif.read_file(file_path)
         except Exception as e:
             raise ValueError(f'Failed to read CIF file at {file_path}. Error: {e}')
+
+        if abs(block) >= len(cif_file):
+            raise ValueError(f'Block index {block} is out of range for CIF file with {len(cif_file)} blocks.')
+        cif_block = cif_file[block]
 
         if unique_name is None:
             block_name = cif_block.name
             unique_name = global_object.generate_unique_name(f'{block_name}_Lattice')
+
 
         return cls(
             length_a=float(cif_block.find_values('_cell.length_a')),
@@ -286,3 +295,18 @@ class Lattice(ModelBase):
         parameter = Parameter(value=angle_value, min=0.0, max=180.0, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
+
+    @classmethod
+    def _find_value_in_cif_block(cls, cif_block: cif.Block, key: str) -> float | None:
+        search_result = cif_block.find_values(key)
+        if not search_result:
+            search_result = cif_block.find_values(key.replace('.', '_'))
+        if not search_result:
+            return None
+        if len(search_result) > 1:
+            global_object.logger.warning(f'Multiple values found for key "{key}" in CIF block. Using the first one.')
+        string_value = search_result[0].split('(')[0].strip()  # Remove any uncertainty notation
+        try:
+            return float(string_value)
+        except ValueError:
+            raise ValueError(f'Value for key "{key}" in CIF block is not a valid float: {string_value}')
