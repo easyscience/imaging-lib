@@ -1,13 +1,16 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+from pathlib import Path
+
 from easyscience import Parameter
 from easyscience import global_object
 from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
-from gemmi import cif
 
 from .atom_site import AtomSite
+from .cif_loader import cif_loader
+from .cif_loader import find_value_in_cif_block
 
 Numeric = int | float
 
@@ -170,51 +173,76 @@ class Lattice(ModelBase):
         return lattice
 
     @classmethod
-    def from_cif(cls, file_path: str, block: int = 0, unique_name: str | None = None, display_name: str | None = None):
+    def from_cif(
+        cls,
+        file_path: str | Path,
+        block: int = 0,
+        unique_name: str | None = None,
+        display_name: str | None = None,
+        quiet: bool = False
+        ):
         """
         Create a Lattice instance from a CIF file.
 
         Parameters
         ----------
-        file_path : str
+        file_path : str | Path
             The path to the CIF file.
         unique_name : str | None
             A unique identifier for the [`Lattice`][..]. Defaults to ``'LatticeFromCIF'`` appended by a unique integer.
         display_name : str | None
             A prettily formatted name for the [`Lattice`][..]. Defaults to [`unique_name`][..unique_name] if not provided.
+        quiet : bool
+            If True, suppress warnings and informational messages.
 
         Returns
         -------
         Lattice
             A new instance of a [`Lattice`][..] created from the CIF file.
         """
-        if not isinstance(file_path, str):
-            raise TypeError(f'"file_path" must be a string. Got: {type(file_path).__name__}')
+
+        if quiet:
+            global_object.log.setLevel(global_object.logging.ERROR)
+        if not isinstance(file_path, (str, Path)):
+            raise TypeError(f'"file_path" must be a string or pathlib.Path. Got: {type(file_path).__name__}')
         if not isinstance(block, int):
             raise TypeError(f'"block" must be an integer. Got: {type(block).__name__}')
-        if block < 0:
-            raise ValueError(f'"block" must be a non-negative integer. Got: {block}')
-        try:
-            cif_file = cif.read_file(file_path)
-        except Exception as e:
-            raise ValueError(f'Failed to read CIF file at {file_path}. Error: {e}')
 
-        if abs(block) >= len(cif_file):
-            raise ValueError(f'Block index {block} is out of range for CIF file with {len(cif_file)} blocks.')
-        cif_block = cif_file[block]
+        cif_data = cif_loader(file_path, block)
 
         if unique_name is None:
-            block_name = cif_block.name
-            unique_name = global_object.generate_unique_name(f'{block_name}_Lattice')
+            unique_name = global_object.generate_unique_name(f"{cif_data['block_name']}_Lattice")
 
+        # Populate all the lattice parameters (lengths and angles) from the CIF block
+        lattice_lengths = [cif_data[key] for key in ('length_a', 'length_b', 'length_c')]
+        if not all(lattice_lengths):
+            known_length = next((value for value in lattice_lengths if value), None)
+            if known_length is None:
+                raise ValueError('No lattice constant is specified in the CIF file.')
+            for i, key in enumerate(('a', 'b', 'c')):
+                if lattice_lengths[i] is None:
+                    lattice_lengths[i] = known_length
+                    global_object.logger.warning(f'Lattice constant "{key}" is not specified in the CIF file. '
+                                                  f'Using first found lattice constant, {known_length} Å, instead.')
+        length_a, length_b, length_c = lattice_lengths
+
+        lattice_angles = []
+        for key in ('alpha', 'beta', 'gamma'):
+            angle = cif_data[key]
+            if angle is None:
+                angle = 90.0
+                global_object.logger.warning(f'Lattice angle "{key}" is not specified in the CIF file. '
+                                              f'Using default value: {angle}')
+            lattice_angles.append(angle)
+        alpha, beta, gamma = lattice_angles
 
         return cls(
-            length_a=float(cif_block.find_values('_cell.length_a')),
-            length_b=float(cif_block.find_values('_cell.length_b')),
-            length_c=float(cif_block.find_values('_cell.length_c')),
-            alpha=float(cif_block.find_values('_cell.angle_alpha')),
-            beta=float(cif_block.find_values('_cell.angle_beta')),
-            gamma=float(cif_block.find_values('_cell.angle_gamma')),
+            length_a=length_a,
+            length_b=length_b,
+            length_c=length_c,
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
             atom_sites=[AtomSite.from_cif_row(row) for row in cif_block.find_loop('_atom_site_label')],
             unique_name=unique_name,
             display_name=display_name,
@@ -295,18 +323,3 @@ class Lattice(ModelBase):
         parameter = Parameter(value=angle_value, min=0.0, max=180.0, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
-
-    @classmethod
-    def _find_value_in_cif_block(cls, cif_block: cif.Block, key: str) -> float | None:
-        search_result = cif_block.find_values(key)
-        if not search_result:
-            search_result = cif_block.find_values(key.replace('.', '_'))
-        if not search_result:
-            return None
-        if len(search_result) > 1:
-            global_object.logger.warning(f'Multiple values found for key "{key}" in CIF block. Using the first one.')
-        string_value = search_result[0].split('(')[0].strip()  # Remove any uncertainty notation
-        try:
-            return float(string_value)
-        except ValueError:
-            raise ValueError(f'Value for key "{key}" in CIF block is not a valid float: {string_value}')
