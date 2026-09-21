@@ -83,7 +83,9 @@ class AtomSite(ModelBase):
         else:
             self._validate_debye_temperature(debye_temperature)
         debye_name = global_object.generate_unique_name(f'{self.unique_name}_debye_temperature')
-        self._debye_temperature = Parameter(value=debye_temperature, unit='K', min=0.0, fixed=True, unique_name=debye_name)
+        self._debye_temperature = Parameter(
+            name='debye_temperature', value=debye_temperature, unit='K', min=0.0, fixed=True, unique_name=debye_name
+        )
 
     @property
     def atom(self) -> Atoms:
@@ -160,7 +162,7 @@ class AtomSite(ModelBase):
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_{axis}')
 
         # Change _default_unique_name when Parameter uses NewBase
-        return Parameter(value=fract_value, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
+        return Parameter(name=f'fract_{axis}', value=fract_value, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
 
     def __repr__(self):
         return (

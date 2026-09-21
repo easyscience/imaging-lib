@@ -234,12 +234,14 @@ class Lattice(ModelBase):
 
     def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_length_{axis}')
-        parameter = Parameter(value=length_value, unit='angstrom', min=0.0, fixed=True, unique_name=unique_name)
+        parameter = Parameter(
+            name=f'length_{axis}', value=length_value, unit='angstrom', min=0.0, fixed=True, unique_name=unique_name
+        )
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
     def _create_angle_parameter(self, angle_value: Numeric, axis: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_angle_{axis}')
-        parameter = Parameter(value=angle_value, min=0.0, max=180.0, fixed=True, unique_name=unique_name)
+        parameter = Parameter(name=f'angle_{axis}', value=angle_value, min=0.0, max=180.0, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter

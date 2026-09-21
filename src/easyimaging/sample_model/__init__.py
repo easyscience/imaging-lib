@@ -2,4 +2,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from .atom_site import AtomSite
-from .sample_model import SampleModel
+from .atoms import Atoms
+from .lattice import Lattice

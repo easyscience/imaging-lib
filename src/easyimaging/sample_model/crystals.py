@@ -37,7 +37,8 @@ def body_centered_cubic(
         A [`Lattice`][..] object representing the BCC lattice with the specified parameters.
     """
     if unique_name is None:
-        unique_name = global_object.generate_unique_name(f'{atom._name_} BCC Lattice')
+        name = getattr(atom, '_name_', 'Unknown')
+        unique_name = global_object.generate_unique_name(f'{name} BCC Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -89,7 +90,8 @@ def face_centered_cubic(
         A [`Lattice`][..] object representing the FCC lattice with the specified parameters.
     """
     if unique_name is None:
-        unique_name = global_object.generate_unique_name(f'{atom._name_} FCC Lattice')
+        name = getattr(atom, '_name_', 'Unknown')
+        unique_name = global_object.generate_unique_name(f'{name} FCC Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -155,7 +157,8 @@ def diamond_cubic(
         A [`Lattice`][..] object representing the diamond cubic lattice with the specified parameters.
     """
     if unique_name is None:
-        unique_name = global_object.generate_unique_name(f'{atom._name_} Diamond Cubic Lattice')
+        name = getattr(atom, '_name_', 'Unknown')
+        unique_name = global_object.generate_unique_name(f'{name} Diamond Cubic Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -256,7 +259,9 @@ def zincblende(
         A [`Lattice`][..] object representing the zincblende lattice with the specified parameters.
     """
     if unique_name is None:
-        unique_name = global_object.generate_unique_name(f'{atom1._name_}{atom2._name_} Zincblende Lattice')
+        name1 = getattr(atom1, '_name_', 'Unknown')
+        name2 = getattr(atom2, '_name_', 'Unknown')
+        unique_name = global_object.generate_unique_name(f'{name1}{name2} Zincblende Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -354,7 +359,8 @@ def hexagonal_close_packed(
         A [`Lattice`][..] object representing the HCP lattice with the specified parameters.
     """
     if unique_name is None:
-        unique_name = global_object.generate_unique_name(f'{atom._name_} HCP Lattice')
+        name = getattr(atom, '_name_', 'Unknown')
+        unique_name = global_object.generate_unique_name(f'{name} HCP Lattice')
     lattice = Lattice.hexagonal(
         length_a=length_a,
         length_c=length_c,
