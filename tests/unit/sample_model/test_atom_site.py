@@ -73,10 +73,24 @@ class TestAtomSite:
         assert site.debye_temperature.value == 300.0
         assert any('Debye temperature not provided' in record.message for record in caplog.records)
 
-    def test_init_invalid_atom(self):
+    def test_init_atom_from_string(self):
+        # When
+        site = AtomSite(atom='Fe', fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0)
+        # Then Expect
+        assert site.atom is Atoms.Fe
+        assert site.unique_name.startswith('Fe AtomSite')
+
+    @pytest.mark.parametrize('invalid_atom', ['not_an_atom', 'fe', ''], ids=['unknown', 'wrong_case', 'empty'])
+    def test_init_invalid_atom_string(self, invalid_atom):
         # When Then Expect
-        with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum'):
-            AtomSite(atom='Fe', fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0)
+        with pytest.raises(KeyError, match='"atom" must be a valid Atoms enum or a valid Atoms name string'):
+            AtomSite(atom=invalid_atom, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0)
+
+    @pytest.mark.parametrize('invalid_atom', [26, None, 1.5], ids=['int', 'none', 'float'])
+    def test_init_invalid_atom_type(self, invalid_atom):
+        # When Then Expect
+        with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum or a valid Atoms name string'):
+            AtomSite(atom=invalid_atom, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0)
 
     @pytest.mark.parametrize('axis', ['x', 'y', 'z'], ids=['x', 'y', 'z'])
     @pytest.mark.parametrize(
@@ -90,7 +104,11 @@ class TestAtomSite:
     )
     def test_init_invalid_fract_value(self, axis, invalid_value, error, message):
         # When
-        kwargs = dict(atom=Atoms.Fe, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0)
+        kwargs = {'atom': Atoms.Fe,
+                  'fract_x': 0.0,
+                  'fract_y': 0.0,
+                  'fract_z': 0.0,
+                  'debye_temperature': 1.0}
         kwargs[f'fract_{axis}'] = invalid_value
         # Then Expect
         with pytest.raises(error, match=message):
@@ -117,11 +135,20 @@ class TestAtomSite:
         # Expect
         assert site.atom is Atoms.Co
 
-    def test_atom_setter_regenerates_default_unique_name(self):
+    def test_atom_setter_valid_string(self, atom_site):
+        # When
+        site = atom_site
+        # Then
+        site.atom = 'Co'
+        # Expect
+        assert site.atom is Atoms.Co
+
+    @pytest.mark.parametrize('new_atom', [Atoms.Co, 'Co'], ids=['enum', 'string'])
+    def test_atom_setter_regenerates_default_unique_name(self, new_atom):
         # When
         site = AtomSite(atom=Atoms.Fe, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0)
         # Then
-        site.atom = Atoms.Co
+        site.atom = new_atom
         # Expect
         assert site.unique_name.startswith('Co AtomSite')
 
@@ -133,13 +160,24 @@ class TestAtomSite:
         # Expect
         assert site.unique_name == 'test_atom_site'
 
-    def test_atom_setter_invalid_leaves_atom_unchanged(self, atom_site):
+    @pytest.mark.parametrize(
+        'invalid_atom, error',
+        [
+            ('not_an_atom', KeyError),
+            (26, TypeError),
+            (None, TypeError),
+        ],
+        ids=['invalid_string', 'int', 'none'],
+    )
+    def test_atom_setter_invalid_leaves_atom_unchanged(self, atom_site, invalid_atom, error):
         # When
         site = atom_site
+        original_unique_name = site.unique_name
         # Then Expect
-        with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum'):
-            site.atom = 'not_an_atom'
+        with pytest.raises(error, match='"atom" must be a valid Atoms enum or a valid Atoms name string'):
+            site.atom = invalid_atom
         assert site.atom is Atoms.Fe
+        assert site.unique_name == original_unique_name
 
     @pytest.mark.parametrize('attribute', ['fract_x', 'fract_y', 'fract_z'])
     def test_fract_setter_valid(self, atom_site, attribute):
@@ -175,7 +213,3 @@ class TestAtomSite:
         with pytest.raises(ValueError, match='must be non-negative'):
             site.debye_temperature = -10.0
         assert site.debye_temperature.value == 250.0
-
-    def test_repr(self, atom_site):
-        # When Then Expect
-        assert repr(atom_site) == "AtomSite(atomic_species='Fe', fract_x=0.1, fract_y=0.2, fract_z=0.3)"

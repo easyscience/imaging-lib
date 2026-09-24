@@ -18,7 +18,7 @@ class AtomSite(ModelBase):
 
     def __init__(
         self,
-        atom: Atoms,
+        atom: Atoms | str,
         fract_x: Numeric,
         fract_y: Numeric,
         fract_z: Numeric,
@@ -31,7 +31,7 @@ class AtomSite(ModelBase):
 
         Parameters
         ----------
-        atom : Atoms
+        atom : Atoms | str
             The atomic species of the site.
         fract_x : int | float
             The fractional x-coordinate of the site.
@@ -50,14 +50,15 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
+            If `atom` is not an Atoms enum.<br>
             If any of the fractional coordinates are not floats or ints.
         ValueError
-            If `atom` is not an Atoms enum.<br>
             If any of the fractional coordinates are out of range.
+        KeyError
+            If the provided atom string does not correspond to a valid Atoms enum member.
         """
 
-        if atom not in Atoms:
-            raise TypeError(f'"atom" must be a valid Atoms enum. Got: {atom}')
+        atom = self._validate_atom(atom)
         self._atom = atom
 
         self._validate_fract_value(fract_x, 'x')
@@ -92,9 +93,8 @@ class AtomSite(ModelBase):
         return self._atom
 
     @atom.setter
-    def atom(self, value: Atoms):
-        if value not in Atoms:
-            raise TypeError(f'"atom" must be a valid Atoms enum. Got: {value}')
+    def atom(self, value: Atoms | str):
+        value = self._validate_atom(value)
         self._atom = value
         if self._default_unique_name:
             self.unique_name = global_object.generate_unique_name(f'{value._name_} AtomSite')
@@ -156,6 +156,16 @@ class AtomSite(ModelBase):
             raise TypeError('"debye_temperature" must be a numeric value')
         if value < 0.0:
             raise ValueError('"debye_temperature" must be non-negative')
+
+    def _validate_atom(self, value):
+        if isinstance(value, str):
+            try:
+                value = Atoms[value]
+            except KeyError:
+                raise KeyError(f'"atom" must be a valid Atoms enum or a valid Atoms name string. Got: {value}')
+        elif value not in Atoms:
+            raise TypeError(f'"atom" must be a valid Atoms enum or a valid Atoms name string. Got: {value}')
+        return value
 
     def _generate_fract_parameter(self, fract_value: Numeric, axis: str) -> Parameter:
 
