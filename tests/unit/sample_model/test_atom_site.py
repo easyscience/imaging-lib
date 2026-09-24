@@ -3,10 +3,11 @@
 
 import logging
 
+import numpy as np
 import pytest
 
-from easyimaging.sample_model.atom_site import AtomSite
-from easyimaging.sample_model.atoms import Atoms
+from easyimaging.sample_model import Atoms
+from easyimaging.sample_model import AtomSite
 
 
 class TestAtomSite:
@@ -31,16 +32,38 @@ class TestAtomSite:
         assert site.fract_y.value == 0.2
         assert site.fract_z.value == 0.3
         assert site.debye_temperature.value == 250.0
-        assert site.debye_temperature.unit == 'K'
         assert site.unique_name == 'test_atom_site'
         assert site.display_name == 'Test Atom Site'
+
+    def test_init_parameter_defaults(self, atom_site):
+        # When
+        site = atom_site
+        # Then Expect
+        assert site.fract_x.min == 0.0
+        assert site.fract_x.max == 1.0
+        assert site.fract_x.unit == 'dimensionless'
+        assert site.fract_y.min == 0.0
+        assert site.fract_y.max == 1.0
+        assert site.fract_y.unit == 'dimensionless'
+        assert site.fract_z.min == 0.0
+        assert site.fract_z.max == 1.0
+        assert site.fract_z.unit == 'dimensionless'
+        assert site.debye_temperature.min == 0.0
+        assert site.debye_temperature.max == np.inf
+        assert site.debye_temperature.unit == 'K'
 
     def test_init_default_unique_name(self):
         # When
         site = AtomSite(atom=Atoms.Fe, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0)
-        # Then Expect
+        # Then
+        unique_name = site.unique_name
+        # Expect
         assert site.unique_name.startswith('Fe AtomSite')
         assert site.display_name == site.unique_name
+        assert site.debye_temperature.unique_name.startswith(unique_name + '_debye_temperature')
+        assert site.fract_x.unique_name.startswith(unique_name + '_fract_x')
+        assert site.fract_y.unique_name.startswith(unique_name + '_fract_y')
+        assert site.fract_z.unique_name.startswith(unique_name + '_fract_z')
 
     def test_init_missing_debye_temperature_defaults_and_warns(self, caplog):
         # When
@@ -49,15 +72,6 @@ class TestAtomSite:
         # Then Expect
         assert site.debye_temperature.value == 300.0
         assert any('Debye temperature not provided' in record.message for record in caplog.records)
-
-    @pytest.mark.parametrize('fract_x, fract_y, fract_z', [(0.0, 0.0, 0.0), (1.0, 1.0, 1.0)])
-    def test_init_boundary_fract_values_are_valid(self, fract_x, fract_y, fract_z):
-        # When Then
-        site = AtomSite(atom=Atoms.Fe, fract_x=fract_x, fract_y=fract_y, fract_z=fract_z, debye_temperature=1.0)
-        # Expect
-        assert site.fract_x.value == fract_x
-        assert site.fract_y.value == fract_y
-        assert site.fract_z.value == fract_z
 
     def test_init_invalid_atom(self):
         # When Then Expect
