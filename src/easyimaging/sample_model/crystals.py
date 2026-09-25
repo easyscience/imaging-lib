@@ -11,11 +11,12 @@ Numeric = int | float
 
 
 def body_centered_cubic(
-        length_a: Numeric,
-        atom: Atoms,
-        debye_temperature: Numeric | None = None,
-        unique_name: str | None = None,
-        display_name: str | None = None):
+    length_a: Numeric,
+    atom: Atoms,
+    debye_temperature: Numeric | None = None,
+    unique_name: str | None = None,
+    display_name: str | None = None,
+):
     """
     Create a body-centered cubic (BCC) lattice with two atom sites.
 
@@ -64,11 +65,12 @@ def body_centered_cubic(
 
 
 def face_centered_cubic(
-        length_a: Numeric,
-        atom: Atoms,
-        debye_temperature: Numeric | None = None,
-        unique_name: str | None = None,
-        display_name: str | None = None):
+    length_a: Numeric,
+    atom: Atoms,
+    debye_temperature: Numeric | None = None,
+    unique_name: str | None = None,
+    display_name: str | None = None,
+):
     """
     Create a face-centered cubic (FCC) lattice with four atom sites.
 
@@ -131,11 +133,12 @@ def face_centered_cubic(
 
 
 def diamond_cubic(
-        length_a: Numeric,
-        atom: Atoms,
-        debye_temperature: Numeric | None = None,
-        unique_name: str | None = None,
-        display_name: str | None = None):
+    length_a: Numeric,
+    atom: Atoms,
+    debye_temperature: Numeric | None = None,
+    unique_name: str | None = None,
+    display_name: str | None = None,
+):
     """
     Create a diamond cubic lattice with eight atom sites.
 
@@ -226,13 +229,14 @@ def diamond_cubic(
 
 
 def zincblende(
-        length_a: Numeric,
-        atom1: Atoms,
-        atom2: Atoms,
-        debye_temperature1: Numeric | None = None,
-        debye_temperature2: Numeric | None = None,
-        unique_name: str | None = None,
-        display_name: str | None = None):
+    length_a: Numeric,
+    atom1: Atoms,
+    atom2: Atoms,
+    debye_temperature1: Numeric | None = None,
+    debye_temperature2: Numeric | None = None,
+    unique_name: str | None = None,
+    display_name: str | None = None,
+):
     """
     Create a zincblende lattice with eight atom sites.
 
@@ -323,18 +327,19 @@ def zincblende(
             ),
         ],
         unique_name=unique_name,
-        display_name=display_name
+        display_name=display_name,
     )
     return lattice
 
 
 def hexagonal_close_packed(
-        length_a: Numeric,
-        length_c: Numeric,
-        atom: Atoms,
-        debye_temperature: Numeric | None = None,
-        unique_name: str | None = None,
-        display_name: str | None = None):
+    length_a: Numeric,
+    length_c: Numeric,
+    atom: Atoms,
+    debye_temperature: Numeric | None = None,
+    unique_name: str | None = None,
+    display_name: str | None = None,
+):
     """
     Create a hexagonal close-packed (HCP) lattice with four atom sites.
 
@@ -381,6 +386,6 @@ def hexagonal_close_packed(
             ),
         ],
         unique_name=unique_name,
-        display_name=display_name
+        display_name=display_name,
     )
     return lattice

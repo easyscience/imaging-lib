@@ -57,10 +57,11 @@ class Lattice(ModelBase):
         for length in (length_a, length_b, length_c):
             if length <= INFINITESIMAL:
                 raise ValueError('Lattice lengths must be positive and non-zero.')
-        if not (INFINITESIMAL < alpha < 180 - INFINITESIMAL and
-                INFINITESIMAL < beta < 180 - INFINITESIMAL and
-                INFINITESIMAL < gamma < 180 - INFINITESIMAL
-                ):
+        if not (
+            INFINITESIMAL < alpha < 180 - INFINITESIMAL
+            and INFINITESIMAL < beta < 180 - INFINITESIMAL
+            and INFINITESIMAL < gamma < 180 - INFINITESIMAL
+        ):
             raise ValueError('Lattice angles alpha, beta, and gamma must be between 0 and 180 degrees.')
 
         self._atom_sites = EasyList(
@@ -135,7 +136,8 @@ class Lattice(ModelBase):
         display_name: str | None = None,
     ):
         """
-        Create a hexagonal lattice with equal lengths for a and b, and 90-degree angles for alpha and beta, and 120-degree angle for gamma.
+        Create a hexagonal lattice with equal lengths for a and b, 90-degree angles for alpha and beta,
+        and 120-degree angle for gamma.
 
         Parameters
         ----------
@@ -253,6 +255,7 @@ class Lattice(ModelBase):
             min=INFINITESIMAL,
             max=180.0 - INFINITESIMAL,
             fixed=True,
-            unique_name=unique_name)
+            unique_name=unique_name,
+        )
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter

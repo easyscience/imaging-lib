@@ -60,7 +60,7 @@ class TestBodyCenteredCubic:
     def test_invalid_atom(self):
         # When Then Expect
         with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum'):
-            body_centered_cubic(length_a=2.87, atom='Fe')
+            body_centered_cubic(length_a=2.87, atom=255)
 
 
 class TestFaceCenteredCubic:
@@ -92,7 +92,7 @@ class TestFaceCenteredCubic:
     def test_invalid_atom(self):
         # When Then Expect
         with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum'):
-            face_centered_cubic(length_a=3.6, atom='Cu')
+            face_centered_cubic(length_a=3.6, atom=127)
 
 
 class TestDiamondCubic:
@@ -128,7 +128,7 @@ class TestDiamondCubic:
     def test_invalid_atom(self):
         # When Then Expect
         with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum'):
-            diamond_cubic(length_a=5.43, atom='Si')
+            diamond_cubic(length_a=5.43, atom=64)
 
 
 class TestZincblende:
@@ -187,7 +187,7 @@ class TestZincblende:
 
     @pytest.mark.parametrize(
         'atom1, atom2',
-        [('Ga', Atoms.As), (Atoms.Ga, 'As')],
+        [(255, Atoms.As), (Atoms.Ga, 127)],
         ids=['invalid_atom1', 'invalid_atom2'],
     )
     def test_invalid_atom(self, atom1, atom2):
@@ -223,4 +223,4 @@ class TestHexagonalClosePacked:
     def test_invalid_atom(self):
         # When Then Expect
         with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum'):
-            hexagonal_close_packed(length_a=2.95, length_c=4.68, atom='Mg')
+            hexagonal_close_packed(length_a=2.95, length_c=4.68, atom=13)

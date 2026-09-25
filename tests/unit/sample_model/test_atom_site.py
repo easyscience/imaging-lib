@@ -104,11 +104,7 @@ class TestAtomSite:
     )
     def test_init_invalid_fract_value(self, axis, invalid_value, error, message):
         # When
-        kwargs = {'atom': Atoms.Fe,
-                  'fract_x': 0.0,
-                  'fract_y': 0.0,
-                  'fract_z': 0.0,
-                  'debye_temperature': 1.0}
+        kwargs = {'atom': Atoms.Fe, 'fract_x': 0.0, 'fract_y': 0.0, 'fract_z': 0.0, 'debye_temperature': 1.0}
         kwargs[f'fract_{axis}'] = invalid_value
         # Then Expect
         with pytest.raises(error, match=message):

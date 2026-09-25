@@ -10,6 +10,7 @@ class Atom:
     """
     A class representing a known atomic species with its element symbol and optional isotope number.
     """
+
     element: str
     isotope: int | None
     enum_id: int
@@ -19,6 +20,7 @@ class Atoms(Atom, Enum):
     """
     An enumeration of known atomic species, each represented by an Atom instance.
     """
+
     H = 'H', None, 11
     H1 = 'H', 1, 12
     H2 = 'H', 2, 13

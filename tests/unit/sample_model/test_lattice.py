@@ -108,8 +108,7 @@ class TestLattice:
         with pytest.raises(ValueError, match='Lattice angles alpha, beta, and gamma must be between 0 and 180 degrees.'):
             Lattice(length_a=1.0, length_b=1.0, length_c=1.0, alpha=alpha, beta=beta, gamma=gamma)
 
-    @pytest.mark.parametrize('atom_sites', ['not_a_list', ['not_an_atom_site']],
-                             ids=['not_a_list', 'not_an_atom_site'])
+    @pytest.mark.parametrize('atom_sites', ['not_a_list', ['not_an_atom_site']], ids=['not_a_list', 'not_an_atom_site'])
     def test_init_invalid_atom_sites_type(self, atom_sites):
         # When Then Expect
         with pytest.raises(TypeError, match='atom_sites must be a list of AtomSite objects.'):
