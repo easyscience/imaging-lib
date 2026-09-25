@@ -9,6 +9,7 @@ from easyscience.base_classes import ModelBase
 from .atom_site import AtomSite
 
 Numeric = int | float
+INFINITESIMAL = 1e-3
 
 
 class Lattice(ModelBase):
@@ -54,9 +55,12 @@ class Lattice(ModelBase):
         """
         super().__init__(unique_name=unique_name, display_name=display_name)
         for length in (length_a, length_b, length_c):
-            if length <= 0:
-                raise ValueError('Lattice lengths must be positive.')
-        if not (0 < alpha < 180 and 0 < beta < 180 and 0 < gamma < 180):
+            if length <= INFINITESIMAL:
+                raise ValueError('Lattice lengths must be positive and non-zero.')
+        if not (INFINITESIMAL < alpha < 180 - INFINITESIMAL and
+                INFINITESIMAL < beta < 180 - INFINITESIMAL and
+                INFINITESIMAL < gamma < 180 - INFINITESIMAL
+                ):
             raise ValueError('Lattice angles alpha, beta, and gamma must be between 0 and 180 degrees.')
 
         self._atom_sites = EasyList(
@@ -65,7 +69,7 @@ class Lattice(ModelBase):
         self._atom_sites._default_unique_name = True  # This gets set to False by the super init
 
         if atom_sites is not None:
-            if not isinstance(atom_sites, list) and not all(isinstance(site, AtomSite) for site in atom_sites):
+            if not isinstance(atom_sites, list) or not all(isinstance(site, AtomSite) for site in atom_sites):
                 raise TypeError('atom_sites must be a list of AtomSite objects.')
             self._atom_sites.extend(atom_sites)
 
@@ -174,8 +178,8 @@ class Lattice(ModelBase):
 
     @length_a.setter
     def length_a(self, value: Numeric):
-        if value <= 0:
-            raise ValueError('Lattice length must be positive.')
+        if value <= INFINITESIMAL:
+            raise ValueError('Lattice length must be positive and non-zero.')
         self._length_a.value = value
 
     @property
@@ -184,8 +188,8 @@ class Lattice(ModelBase):
 
     @length_b.setter
     def length_b(self, value: Numeric):
-        if value <= 0:
-            raise ValueError('Lattice length must be positive.')
+        if value <= INFINITESIMAL:
+            raise ValueError('Lattice length must be positive and non-zero.')
         self._length_b.value = value
 
     @property
@@ -194,8 +198,8 @@ class Lattice(ModelBase):
 
     @length_c.setter
     def length_c(self, value: Numeric):
-        if value <= 0:
-            raise ValueError('Lattice length must be positive.')
+        if value <= INFINITESIMAL:
+            raise ValueError('Lattice length must be positive and non-zero.')
         self._length_c.value = value
 
     @property
@@ -204,7 +208,7 @@ class Lattice(ModelBase):
 
     @alpha.setter
     def alpha(self, value: Numeric):
-        if not (0 < value < 180):
+        if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
             raise ValueError('Lattice angle must be between 0 and 180 degrees.')
         self._alpha.value = value
 
@@ -214,7 +218,7 @@ class Lattice(ModelBase):
 
     @beta.setter
     def beta(self, value: Numeric):
-        if not (0 < value < 180):
+        if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
             raise ValueError('Lattice angle must be between 0 and 180 degrees.')
         self._beta.value = value
 
@@ -224,7 +228,7 @@ class Lattice(ModelBase):
 
     @gamma.setter
     def gamma(self, value: Numeric):
-        if not (0 < value < 180):
+        if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
             raise ValueError('Lattice angle must be between 0 and 180 degrees.')
         self._gamma.value = value
 
@@ -235,13 +239,20 @@ class Lattice(ModelBase):
     def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_length_{axis}')
         parameter = Parameter(
-            name=f'length_{axis}', value=length_value, unit='angstrom', min=0.0, fixed=True, unique_name=unique_name
+            name=f'length_{axis}', value=length_value, unit='angstrom', min=INFINITESIMAL, fixed=True, unique_name=unique_name
         )
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
     def _create_angle_parameter(self, angle_value: Numeric, axis: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_angle_{axis}')
-        parameter = Parameter(name=f'angle_{axis}', value=angle_value, min=0.0, max=180.0, fixed=True, unique_name=unique_name)
+        parameter = Parameter(
+            name=f'angle_{axis}',
+            value=angle_value,
+            unit='deg',
+            min=INFINITESIMAL,
+            max=180.0 - INFINITESIMAL,
+            fixed=True,
+            unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
