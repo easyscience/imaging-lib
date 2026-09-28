@@ -7,8 +7,20 @@ from enum import Enum
 
 @dataclass
 class Atom:
-    """
-    A class representing a known atomic species with its element symbol and optional isotope number.
+    """A dataclass representing a known atomic species, identified by its element symbol and an optional isotope
+    mass number.
+
+    This is the base class of the [`Atoms`][.Atoms] enumeration, where each member is an [`Atom`][.] instance.
+
+    Attributes
+    ----------
+    element : str
+        The chemical element symbol, e.g. ``'Fe'``.
+    isotope : int | None
+        The isotope mass number, e.g. ``56`` for iron-56. ``None`` indicates the naturally occurring
+        (isotopically unspecified) abundance of the element.
+    enum_id : int
+        A unique numeric identifier for the atomic species.
     """
 
     element: str
@@ -17,8 +29,25 @@ class Atom:
 
 
 class Atoms(Atom, Enum):
-    """
-    An enumeration of known atomic species, each represented by an Atom instance.
+    """An enumeration of known atomic species, each member being an [`Atom`][.] instance with its ``element``,
+    ``isotope``, and ``enum_id`` attributes.
+
+    Members are named after their element symbol for the naturally occurring abundance, e.g. ``Atoms.Fe``, and
+    after their element symbol followed by the isotope mass number for a specific isotope, e.g. ``Atoms.Fe56``.
+
+    Example
+    -------
+    ```python
+    from easyimaging.sample_model import Atoms
+
+    natural_iron = Atoms.Fe
+    iron_56 = Atoms.Fe56
+    iron_56_by_name = Atoms['Fe56']
+
+    print(natural_iron.element, natural_iron.isotope)  # 'Fe' None
+    print(iron_56.element, iron_56.isotope)  # 'Fe' 56
+    print(iron_56 in Atoms)  # True
+    ```
     """
 
     H = 'H', None, 11

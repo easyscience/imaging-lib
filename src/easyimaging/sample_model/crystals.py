@@ -24,8 +24,8 @@ def body_centered_cubic(
     ----------
     length_a : float | int
         The length of the cubic lattice vectors in angstrom.
-    atom : Atoms
-        The atomic species of the lattice.
+    atom : Atoms | str
+        The atomic species of the lattice, either an [`Atoms`][.atoms.Atoms] enum member or its name as a string.
     debye_temperature : float | int | None
         The Debye temperature of the atoms in Kelvin. If None, a default value of 300 K is used.
     unique_name : str | None
@@ -36,6 +36,15 @@ def body_centered_cubic(
     -------
     Lattice
         A [`Lattice`][..] object representing the BCC lattice with the specified parameters.
+
+    Raises
+    ------
+    ValueError
+        If ``length_a`` is not positive.
+    TypeError
+        If ``atom`` is neither an [`Atoms`][.atoms.Atoms] enum member nor a string.
+    KeyError
+        If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
         name = getattr(atom, '_name_', 'Unknown')
@@ -78,8 +87,8 @@ def face_centered_cubic(
     ----------
     length_a : float | int
         The length of the cubic lattice vectors in angstrom.
-    atom : Atoms
-        The atomic species of the lattice.
+    atom : Atoms | str
+        The atomic species of the lattice, either an [`Atoms`][.atoms.Atoms] enum member or its name as a string.
     debye_temperature : float | int | None
         The Debye temperature of the atoms in Kelvin. If None, a default value of 300 K is used.
     unique_name : str | None
@@ -90,6 +99,15 @@ def face_centered_cubic(
     -------
     Lattice
         A [`Lattice`][..] object representing the FCC lattice with the specified parameters.
+
+    Raises
+    ------
+    ValueError
+        If ``length_a`` is not positive.
+    TypeError
+        If ``atom`` is neither an [`Atoms`][.atoms.Atoms] enum member nor a string.
+    KeyError
+        If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
         name = getattr(atom, '_name_', 'Unknown')
@@ -146,8 +164,8 @@ def diamond_cubic(
     ----------
     length_a : float | int
         The length of the cubic lattice vectors in angstrom.
-    atom : Atoms
-        The atomic species of the lattice.
+    atom : Atoms | str
+        The atomic species of the lattice, either an [`Atoms`][.atoms.Atoms] enum member or its name as a string.
     debye_temperature : float | int | None
         The Debye temperature of the atoms in Kelvin. If None, a default value of 300 K is used.
     unique_name : str | None
@@ -158,6 +176,15 @@ def diamond_cubic(
     -------
     Lattice
         A [`Lattice`][..] object representing the diamond cubic lattice with the specified parameters.
+
+    Raises
+    ------
+    ValueError
+        If ``length_a`` is not positive.
+    TypeError
+        If ``atom`` is neither an [`Atoms`][.atoms.Atoms] enum member nor a string.
+    KeyError
+        If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
         name = getattr(atom, '_name_', 'Unknown')
@@ -244,10 +271,12 @@ def zincblende(
     ----------
     length_a : float | int
         The length of the cubic lattice vectors in angstrom.
-    atom1 : Atoms
-        The atomic species of the first FCC sub-lattice.
-    atom2 : Atoms
-        The atomic species of the second FCC sub-lattice.
+    atom1 : Atoms | str
+        The atomic species of the first FCC sub-lattice, either an [`Atoms`][.atoms.Atoms] enum member or its name as
+        a string.
+    atom2 : Atoms | str
+        The atomic species of the second FCC sub-lattice, either an [`Atoms`][.atoms.Atoms] enum member or its name
+        as a string.
     debye_temperature1 : float | int | None
         The Debye temperature of the first sub-lattice atomic species in Kelvin. If None, a default value of 300 K is used.
     debye_temperature2 : float | int | None
@@ -261,6 +290,15 @@ def zincblende(
     -------
     Lattice
         A [`Lattice`][..] object representing the zincblende lattice with the specified parameters.
+
+    Raises
+    ------
+    ValueError
+        If ``length_a`` is not positive.
+    TypeError
+        If ``atom1`` or ``atom2`` is neither an [`Atoms`][.atoms.Atoms] enum member nor a string.
+    KeyError
+        If ``atom1`` or ``atom2`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
         name1 = getattr(atom1, '_name_', 'Unknown')
@@ -349,8 +387,8 @@ def hexagonal_close_packed(
         The length of the a-axis lattice vector in angstrom.
     length_c : float | int
         The length of the c-axis lattice vector in angstrom.
-    atom : Atoms
-        The atomic species of the lattice.
+    atom : Atoms | str
+        The atomic species of the lattice, either an [`Atoms`][.atoms.Atoms] enum member or its name as a string.
     debye_temperature : float | int | None
         The Debye temperature of the atoms in Kelvin. If None, a default value of 300 K is used.
     unique_name : str | None
@@ -362,6 +400,15 @@ def hexagonal_close_packed(
     -------
     Lattice
         A [`Lattice`][..] object representing the HCP lattice with the specified parameters.
+
+    Raises
+    ------
+    ValueError
+        If ``length_a`` or ``length_c`` is not positive.
+    TypeError
+        If ``atom`` is neither an [`Atoms`][.atoms.Atoms] enum member nor a string.
+    KeyError
+        If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
         name = getattr(atom, '_name_', 'Unknown')

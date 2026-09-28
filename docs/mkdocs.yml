@@ -204,10 +204,13 @@ nav:
           - The Measurement class: tutorials/measurement.ipynb
   - API Reference:
       - API Reference: api-reference/index.md
-      - Measurement: api-reference/measurement/measurement.md
+      - measurement: api-reference/measurement/measurement.md
       - regions_of_interest:
           - regions_of_interest: api-reference/regions_of_interest/index.md
           - RectangleROI: api-reference/regions_of_interest/rectangle_roi.md
-      - SampleModel:
+      - sample_model:
           - SampleModel: api-reference/sample_model/index.md
+          - Lattice: api-reference/sample_model/lattice.md
           - AtomSite: api-reference/sample_model/atom_site.md
+          - Atom: api-reference/sample_model/atom.md
+          - crystals: api-reference/sample_model/crystals.md
