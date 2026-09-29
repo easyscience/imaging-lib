@@ -15,7 +15,7 @@ class Atom:
     Attributes
     ----------
     element : str
-        The chemical element symbol, e.g. ``'Fe'``.
+        The chemical element symbol, e.g. ``'Mg'``.
     isotope : int | None
         The isotope mass number, e.g. ``56`` for iron-56. ``None`` indicates the naturally occurring
         (isotopically unspecified) abundance of the element.

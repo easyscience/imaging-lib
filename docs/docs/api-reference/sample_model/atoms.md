@@ -1,2 +1,2 @@
-::: easyimaging.sample_model.atoms.Atom :::
-easyimaging.sample_model.atoms.Atoms
+::: easyimaging.sample_model.atoms.Atom
+::: easyimaging.sample_model.atoms.Atoms

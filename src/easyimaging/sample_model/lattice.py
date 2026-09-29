@@ -14,7 +14,7 @@ INFINITESIMAL = 1e-3
 
 class Lattice(ModelBase):
     """A Lattice represents the periodic arrangement of atoms in a crystal structure, defined by its lattice
-    parameters, lattice constants: (``length_a``, ``length_b``, ``length_c``) and angles: (``alpha``, ``beta``, ``gamma``)
+    parameter: (``length_a``, ``length_b``, ``length_c``), lattice-vector angles: (``alpha``, ``beta``, ``gamma``)
     and a list of [`AtomSite`][..atom_site.AtomSite] objects, with their corresponding [atomic species][..atoms.Atoms],
     occupying it.
 
@@ -98,17 +98,17 @@ class Lattice(ModelBase):
         Parameters
         ----------
         length_a : float | int
-            The lattice constant along the x-axis in Å.
+            The a-component of the lattice parameter in Å.
         length_b : float | int
-            The lattice constant along the y-axis in Å.
+            The b-component of the lattice parameter in Å.
         length_c : float | int
-            The lattice constant along the z-axis in Å.
+            The c-component of the lattice parameter in Å.
         alpha : float | int
-            The angle between the b and c lattice vectors (in degrees).
+            The angle between the $\\vec{b}$ and $\\vec{c}$ lattice vectors (in degrees).
         beta : float | int
-            The angle between the a and c lattice vectors (in degrees).
+            The angle between the $\\vec{a}$ and $\\vec{c}$ lattice vectors (in degrees).
         gamma : float | int
-            The angle between the a and b lattice vectors (in degrees).
+            The angle between the $\\vec{a}$ and $\\vec{b}$ lattice vectors (in degrees).
         atom_sites : list[AtomSite] | None
             A list of [`AtomSite`][..] objects to insert into the lattice.
         unique_name : str | None
@@ -122,8 +122,8 @@ class Lattice(ModelBase):
             If any of ``length_a``, ``length_b``, or ``length_c`` is not positive and non-zero.<br>
             If any of ``alpha``, ``beta``, or ``gamma`` is not between 0 and 180 degrees.
         TypeError
-            If any of ``length_a``, ``length_b``, or ``length_c`` is not a numeric value.
-            If any of ``alpha``, ``beta``, or ``gamma`` is not a numeric value.
+            If any of ``length_a``, ``length_b``, or ``length_c`` is not a numeric value.<br>
+            If any of ``alpha``, ``beta``, or ``gamma`` is not a numeric value.<br>
             If ``atom_sites`` is provided and is not a list of [`AtomSite`][...atom_site.AtomSite] objects.
         """
         super().__init__(unique_name=unique_name, display_name=display_name)
@@ -158,7 +158,7 @@ class Lattice(ModelBase):
         display_name: str | None = None,
     ):
         """
-        Create a cubic lattice with equal lattice constants and 90-degree angles.
+        Create a cubic lattice with $a=b=c$ and $\\alpha=\\beta=\\gamma=90^\\circ$.
 
         Parameters
         ----------
@@ -211,15 +211,14 @@ class Lattice(ModelBase):
         display_name: str | None = None,
     ):
         """
-        Create a hexagonal lattice with equal lengths for a and b, 90-degree angles for alpha and beta,
-        and 120-degree angle for gamma.
+        Create a hexagonal lattice with $a=b\\neq c$ and $\\alpha=\\beta=90^\\circ$, $\\gamma=120^\\circ$.
 
         Parameters
         ----------
         length_a : float | int
-            The length of the a and b lattice vectors in angstrom.
+            The lattice constant of the a and b lattice vectors in angstrom.
         length_c : float | int
-            The length of the c lattice vector in angstrom.
+            The lattice constant of the c lattice vector in angstrom.
         atom_sites : list[AtomSite] | None
             A list of [`AtomSite`][..] objects to insert into the lattice.
         unique_name : str | None
@@ -258,7 +257,7 @@ class Lattice(ModelBase):
 
     @property
     def length_a(self) -> Parameter:
-        """The length of the lattice vector along the x-axis.
+        """The a-component of the lattice parameter.
 
         Parameters
         ----------
@@ -286,7 +285,7 @@ class Lattice(ModelBase):
 
     @property
     def length_b(self) -> Parameter:
-        """The length of the lattice vector along the y-axis.
+        """The b-component of the lattice parameter.
 
         Parameters
         ----------
@@ -314,7 +313,7 @@ class Lattice(ModelBase):
 
     @property
     def length_c(self) -> Parameter:
-        """The length of the lattice vector along the z-axis.
+        """The c-component of the lattice parameter.
 
         Parameters
         ----------
@@ -342,7 +341,7 @@ class Lattice(ModelBase):
 
     @property
     def alpha(self) -> Parameter:
-        """The angle between the b and c lattice vectors.
+        """The angle between the $\\vec{b}$ and $\\vec{c}$ lattice vectors.
 
         Parameters
         ----------
@@ -370,7 +369,7 @@ class Lattice(ModelBase):
 
     @property
     def beta(self) -> Parameter:
-        """The angle between the a and c lattice vectors.
+        """The angle between the $\\vec{a}$ and $\\vec{c}$ lattice vectors.
 
         Parameters
         ----------
@@ -380,8 +379,8 @@ class Lattice(ModelBase):
         Returns
         -------
         Parameter
-            The [`Parameter`][easyscience.variable.Parameter] holding the angle between the a and c lattice vectors,
-            in degrees.
+            The [`Parameter`][easyscience.variable.Parameter] holding the angle between the $\\vec{a}$ and $\\vec{c}$ lattice 
+            vectors, in degrees.
 
         Raises
         ------
@@ -398,7 +397,7 @@ class Lattice(ModelBase):
 
     @property
     def gamma(self) -> Parameter:
-        """The angle between the a and b lattice vectors.
+        """The angle between the $\\vec{a}$ and $\\vec{b}$ lattice vectors.
 
         Parameters
         ----------
@@ -426,7 +425,7 @@ class Lattice(ModelBase):
 
     @property
     def atom_sites(self) -> EasyList:
-        """The atom sites contained in the lattice.
+        """The atomic sites of the lattice and their occupying [atomic species][...atoms.Atom].
 
         Returns
         -------
