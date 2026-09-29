@@ -14,28 +14,68 @@ INFINITESIMAL = 1e-3
 
 class Lattice(ModelBase):
     """A Lattice represents the periodic arrangement of atoms in a crystal structure, defined by its lattice
-    parameters (``length_a``, ``length_b``, ``length_c``, ``alpha``, ``beta``, ``gamma``) and a list of
-    [`AtomSite`][.atom_site.AtomSite] objects occupying it.
+    parameters, lattice constants: (``length_a``, ``length_b``, ``length_c``) and angles: (``alpha``, ``beta``, ``gamma``)
+    and a list of [`AtomSite`][..atom_site.AtomSite] objects, with their corresponding [atomic species][..atoms.Atoms],
+    occupying it.
 
-    A [`Lattice`][.] can be created directly via the constructor, via the [`cubic`][.cubic] or [`hexagonal`][.hexagonal]
-     convenience constructors for the corresponding lattice symmetries, or via one of the crystal-structure
-     convenience functions in [`easyimaging.sample_model.crystals`][..crystals], which additionally populate the
-     [`AtomSite`][.atom_site.AtomSite] objects for common crystal structures.
+    A [`Lattice`][.] object can currently be created in 3 ways of descending specificity:
+
+    - Directly via the constructor by supplying all lattice parameters and atomic sites.
+    - Using the [`cubic`][.cubic] or [`hexagonal`][.hexagonal] convenience methods for the corresponding lattice symmetries.
+    Atomic sites still needs to be supplied manually.
+    - With one of the crystal-structure convenience functions in the [`crystals`][..crystals] module, which
+    additionally populates the [`AtomSite`][..atom_site.AtomSite] objects for common crystal structures.
 
     Example
     -------
-    Creating a [Lattice][.] instance manually:
+    Creating a hexagonal close-packed (HCP) magnesium [Lattice][.]:
+
+    **1. Directly via the constructor**
+
     ```python
     from easyimaging.sample_model import AtomSite, Atoms, Lattice
 
     lattice = Lattice(
-        length_a=2.87,
-        length_b=2.87,
-        length_c=2.87,
+        length_a=3.21,
+        length_b=3.21,
+        length_c=5.21,
+        alpha=90.0,
+        beta=90.0,
+        gamma=120.0,
         atom_sites=[
-            AtomSite(atom=Atoms.Fe, fract_x=0.0, fract_y=0.0, fract_z=0.0),
-            AtomSite(atom=Atoms.Fe, fract_x=0.5, fract_y=0.5, fract_z=0.5),
+            AtomSite(atom=Atoms.Mg, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=400.0),
+            AtomSite(atom=Atoms.Mg, fract_x=2 / 3, fract_y=1 / 3, fract_z=0.5, debye_temperature=400.0),
         ],
+    )
+    ```
+
+    **2. Using the [`hexagonal`][.hexagonal] convenience constructor**
+
+    ```python
+    from easyimaging.sample_model import AtomSite, Atoms, Lattice
+
+    lattice = Lattice.hexagonal(
+        length_a=3.21,
+        length_c=5.21,
+        atom_sites=[
+            AtomSite(atom=Atoms.Mg, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=400.0),
+            AtomSite(atom=Atoms.Mg, fract_x=2 / 3, fract_y=1 / 3, fract_z=0.5, debye_temperature=400.0),
+        ],
+    )
+    ```
+
+    **3. Using the [`hexagonal_close_packed`][..crystals.hexagonal_close_packed] constructor from the
+    [`crystals`][..crystals] module**
+
+    ```python
+    from easyimaging.sample_model import Atoms
+    from easyimaging.sample_model.crystals import hexagonal_close_packed
+
+    lattice = hexagonal_close_packed(
+        length_a=3.21,
+        length_c=5.21,
+        atom=Atoms.Mg,
+        debye_temperature=400.0,
     )
     ```
     """
@@ -58,11 +98,11 @@ class Lattice(ModelBase):
         Parameters
         ----------
         length_a : float | int
-            The length of the lattice vector along the x-axis in angstrom.
+            The lattice constant along the x-axis in Å.
         length_b : float | int
-            The length of the lattice vector along the y-axis in angstrom.
+            The lattice constant along the y-axis in Å.
         length_c : float | int
-            The length of the lattice vector along the z-axis in angstrom.
+            The lattice constant along the z-axis in Å.
         alpha : float | int
             The angle between the b and c lattice vectors (in degrees).
         beta : float | int
@@ -79,21 +119,18 @@ class Lattice(ModelBase):
         Raises
         ------
         ValueError
-            If any of ``length_a``, ``length_b``, or ``length_c`` is not positive.<br>
+            If any of ``length_a``, ``length_b``, or ``length_c`` is not positive and non-zero.<br>
             If any of ``alpha``, ``beta``, or ``gamma`` is not between 0 and 180 degrees.
         TypeError
-            If ``atom_sites`` is provided and is not a list of [`AtomSite`][.atom_site.AtomSite] objects.
+            If any of ``length_a``, ``length_b``, or ``length_c`` is not a numeric value.
+            If any of ``alpha``, ``beta``, or ``gamma`` is not a numeric value.
+            If ``atom_sites`` is provided and is not a list of [`AtomSite`][...atom_site.AtomSite] objects.
         """
         super().__init__(unique_name=unique_name, display_name=display_name)
-        for length in (length_a, length_b, length_c):
-            if length <= INFINITESIMAL:
-                raise ValueError('Lattice lengths must be positive and non-zero.')
-        if not (
-            INFINITESIMAL < alpha < 180 - INFINITESIMAL
-            and INFINITESIMAL < beta < 180 - INFINITESIMAL
-            and INFINITESIMAL < gamma < 180 - INFINITESIMAL
-        ):
-            raise ValueError('Lattice angles alpha, beta, and gamma must be between 0 and 180 degrees.')
+        for length, axis in ((length_a, 'a'), (length_b, 'b'), (length_c, 'c')):
+            self._validate_length(length, axis)
+        for angle, name in ((alpha, 'alpha'), (beta, 'beta'), (gamma, 'gamma')):
+            self._validate_angle(angle, name)
 
         self._atom_sites = EasyList(
             protected_types=AtomSite, unique_name=global_object.generate_unique_name(f'{self.unique_name}_atom_sites')
@@ -244,8 +281,7 @@ class Lattice(ModelBase):
     @length_a.setter
     def length_a(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        if value <= INFINITESIMAL:
-            raise ValueError('Lattice length must be positive and non-zero.')
+        self._validate_length(value, 'a')
         self._length_a.value = value
 
     @property
@@ -273,8 +309,7 @@ class Lattice(ModelBase):
     @length_b.setter
     def length_b(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        if value <= INFINITESIMAL:
-            raise ValueError('Lattice length must be positive and non-zero.')
+        self._validate_length(value, 'b')
         self._length_b.value = value
 
     @property
@@ -302,8 +337,7 @@ class Lattice(ModelBase):
     @length_c.setter
     def length_c(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        if value <= INFINITESIMAL:
-            raise ValueError('Lattice length must be positive and non-zero.')
+        self._validate_length(value, 'c')
         self._length_c.value = value
 
     @property
@@ -331,8 +365,7 @@ class Lattice(ModelBase):
     @alpha.setter
     def alpha(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
-            raise ValueError('Lattice angle must be between 0 and 180 degrees.')
+        self._validate_angle(value, 'alpha')
         self._alpha.value = value
 
     @property
@@ -360,8 +393,7 @@ class Lattice(ModelBase):
     @beta.setter
     def beta(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
-            raise ValueError('Lattice angle must be between 0 and 180 degrees.')
+        self._validate_angle(value, 'beta')
         self._beta.value = value
 
     @property
@@ -389,8 +421,7 @@ class Lattice(ModelBase):
     @gamma.setter
     def gamma(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
-            raise ValueError('Lattice angle must be between 0 and 180 degrees.')
+        self._validate_angle(value, 'gamma')
         self._gamma.value = value
 
     @property
@@ -405,6 +436,18 @@ class Lattice(ModelBase):
         """
         return self._atom_sites
 
+    def _validate_length(self, value: Numeric, axis: str):
+        if not isinstance(value, Numeric):
+            raise TypeError(f'Lattice length_{axis} must be a numeric value. Got {type(value).__name__}')
+        if not (value > INFINITESIMAL):
+            raise ValueError(f'Lattice length_{axis} must be positive and non-zero.')
+
+    def _validate_angle(self, value: Numeric, name: str):
+        if not isinstance(value, Numeric):
+            raise TypeError(f'Lattice angle {name} must be a numeric value. Got {type(value).__name__}')
+        if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
+            raise ValueError(f'Lattice angle {name} must be between 0 and 180 degrees.')
+
     def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_length_{axis}')
         parameter = Parameter(
@@ -413,10 +456,10 @@ class Lattice(ModelBase):
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
-    def _create_angle_parameter(self, angle_value: Numeric, axis: str) -> Parameter:
-        unique_name = global_object.generate_unique_name(f'{self.unique_name}_angle_{axis}')
+    def _create_angle_parameter(self, angle_value: Numeric, name: str) -> Parameter:
+        unique_name = global_object.generate_unique_name(f'{self.unique_name}_angle_{name}')
         parameter = Parameter(
-            name=f'angle_{axis}',
+            name=f'angle_{name}',
             value=angle_value,
             unit='deg',
             min=INFINITESIMAL,

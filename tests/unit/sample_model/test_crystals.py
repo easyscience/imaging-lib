@@ -55,10 +55,15 @@ class TestBodyCenteredCubic:
         assert lattice.unique_name == 'my_bcc'
         assert lattice.display_name == 'My BCC'
 
-    def test_invalid_length(self):
+    def test_invalid_length_value(self):
         # When Then Expect
-        with pytest.raises(ValueError, match='Lattice lengths must be positive.'):
+        with pytest.raises(ValueError, match='Lattice length_a must be positive and non-zero.'):
             body_centered_cubic(length_a=0.0, atom=Atoms.Fe)
+
+    def test_invalid_length_type(self):
+        # When Then Expect
+        with pytest.raises(TypeError, match='Lattice length_a must be a numeric value'):
+            body_centered_cubic(length_a='2.87', atom=Atoms.Fe)
 
     def test_invalid_atom(self):
         # When Then Expect
@@ -110,10 +115,15 @@ class TestFaceCenteredCubic:
         # Then Expect
         assert lattice.unique_name == 'my_fcc'
 
-    def test_invalid_length(self):
+    def test_invalid_length_value(self):
         # When Then Expect
-        with pytest.raises(ValueError, match='Lattice lengths must be positive.'):
+        with pytest.raises(ValueError, match='Lattice length_a must be positive and non-zero.'):
             face_centered_cubic(length_a=-1.0, atom=Atoms.Cu)
+
+    def test_invalid_length_type(self):
+        # When Then Expect
+        with pytest.raises(TypeError, match='Lattice length_a must be a numeric value'):
+            face_centered_cubic(length_a='3.6', atom=Atoms.Cu)
 
     def test_invalid_atom(self):
         # When Then Expect
@@ -169,10 +179,15 @@ class TestDiamondCubic:
         # Then Expect
         assert lattice.unique_name == 'my_diamond_cubic'
 
-    def test_invalid_length(self):
+    def test_invalid_length_value(self):
         # When Then Expect
-        with pytest.raises(ValueError, match='Lattice lengths must be positive.'):
+        with pytest.raises(ValueError, match='Lattice length_a must be positive and non-zero.'):
             diamond_cubic(length_a=0.0, atom=Atoms.Si)
+
+    def test_invalid_length_type(self):
+        # When Then Expect
+        with pytest.raises(TypeError, match='Lattice length_a must be a numeric value'):
+            diamond_cubic(length_a='5.43', atom=Atoms.Si)
 
     def test_invalid_atom(self):
         # When Then Expect
@@ -252,10 +267,15 @@ class TestZincblende:
         # Then Expect
         assert lattice.unique_name == 'my_zincblende'
 
-    def test_invalid_length(self):
+    def test_invalid_length_value(self):
         # When Then Expect
-        with pytest.raises(ValueError, match='Lattice lengths must be positive.'):
+        with pytest.raises(ValueError, match='Lattice length_a must be positive and non-zero.'):
             zincblende(length_a=0.0, atom1=Atoms.Ga, atom2=Atoms.As)
+
+    def test_invalid_length_type(self):
+        # When Then Expect
+        with pytest.raises(TypeError, match='Lattice length_a must be a numeric value'):
+            zincblende(length_a='5.65', atom1=Atoms.Ga, atom2=Atoms.As)
 
     @pytest.mark.parametrize(
         'atom1, atom2',
@@ -307,10 +327,19 @@ class TestHexagonalClosePacked:
         # Then Expect
         assert lattice.unique_name == 'my_hcp'
 
-    def test_invalid_length(self):
+    def test_invalid_length_value(self):
         # When Then Expect
-        with pytest.raises(ValueError, match='Lattice lengths must be positive.'):
+        with pytest.raises(ValueError, match='Lattice length_a must be positive and non-zero.'):
             hexagonal_close_packed(length_a=0.0, length_c=4.68, atom=Atoms.Mg)
+
+    @pytest.mark.parametrize('axis', ['a', 'c'])
+    def test_invalid_length_type(self, axis):
+        # When
+        kwargs = dict(length_a=2.95, length_c=4.68, atom=Atoms.Mg)
+        kwargs[f'length_{axis}'] = '1.0'
+        # Then Expect
+        with pytest.raises(TypeError, match=f'Lattice length_{axis} must be a numeric value'):
+            hexagonal_close_packed(**kwargs)
 
     def test_invalid_atom(self):
         # When Then Expect

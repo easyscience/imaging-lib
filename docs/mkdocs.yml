@@ -212,5 +212,5 @@ nav:
           - SampleModel: api-reference/sample_model/index.md
           - Lattice: api-reference/sample_model/lattice.md
           - AtomSite: api-reference/sample_model/atom_site.md
-          - Atom: api-reference/sample_model/atom.md
+          - Atom: api-reference/sample_model/atoms.md
           - crystals: api-reference/sample_model/crystals.md
