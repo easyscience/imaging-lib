@@ -24,7 +24,7 @@ classifiers = [
 ]
 requires-python = '>=3.12, <3.15'
 dependencies = [
-  'easyscience<2.2.0', # The base library of the EasyScience framework
+  'easyscience>2.2.0', # The base library of the EasyScience framework
   'scitiff',            # The data-format loader/saver for neutron tiffs
   'essimaging',         # The ESS imaging reduction module
   'plopp',              # The plotting library of scipp
