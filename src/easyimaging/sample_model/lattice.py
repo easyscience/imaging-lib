@@ -158,12 +158,12 @@ class Lattice(ModelBase):
         display_name: str | None = None,
     ):
         """
-        Create a cubic lattice with equal lengths and 90-degree angles.
+        Create a cubic lattice with equal lattice constants and 90-degree angles.
 
         Parameters
         ----------
         length_a : float | int
-            The length of the cubic lattice vectors in angstrom.
+            The lattice constant of the cubic lattice in Å.
         atom_sites : list[AtomSite] | None
             A list of [`AtomSite`][..] objects to insert into the lattice.
         unique_name : str | None

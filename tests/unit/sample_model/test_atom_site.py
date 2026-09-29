@@ -5,6 +5,7 @@ import logging
 
 import numpy as np
 import pytest
+from easyscience import global_object
 
 from easyimaging.sample_model import Atoms
 from easyimaging.sample_model import AtomSite
@@ -19,7 +20,7 @@ class TestAtomSite:
             fract_y=0.2,
             fract_z=0.3,
             debye_temperature=250.0,
-            unique_name='test_atom_site',
+            unique_name=global_object.generate_unique_name('test_atom_site'),
             display_name='Test Atom Site',
         )
 
@@ -32,7 +33,7 @@ class TestAtomSite:
         assert site.fract_y.value == 0.2
         assert site.fract_z.value == 0.3
         assert site.debye_temperature.value == 250.0
-        assert site.unique_name == 'test_atom_site'
+        assert site.unique_name.startswith('test_atom_site')
         assert site.display_name == 'Test Atom Site'
 
     def test_init_parameter_defaults(self, atom_site):
@@ -154,7 +155,7 @@ class TestAtomSite:
         # Then
         site.atom = Atoms.Co
         # Expect
-        assert site.unique_name == 'test_atom_site'
+        assert site.unique_name.startswith('test_atom_site')
 
     @pytest.mark.parametrize(
         'invalid_atom, error',
