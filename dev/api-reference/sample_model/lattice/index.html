@@ -1650,7 +1650,11 @@
 
         <p>A Lattice represents the periodic arrangement of atoms in a crystal structure, defined by its lattice
 parameter: (<code>length_a</code>, <code>length_b</code>, <code>length_c</code>), lattice-vector angles: (<code>alpha</code>, <code>beta</code>, <code>gamma</code>)
-and a list of [<code>AtomSite</code>][easyimaging.sample_model.lattice.atom_site.AtomSite] objects, with their corresponding [atomic species][easyimaging.sample_model.lattice.atoms.Atoms],
+and a list of <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../atom_site/#easyimaging.sample_model.AtomSite"><code>AtomSite</code></a> objects, with their corresponding <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;Atoms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;isotope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;enum_id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="../atoms/#easyimaging.sample_model.atoms.Atoms">atomic species</a>,
 occupying it.</p>
 <p>A <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;Lattice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;alpha&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;90.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;beta&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;90.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gamma&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;90.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atom_sites&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="#easyimaging.sample_model.Lattice"><code>Lattice</code></a> object can currently be created in 3 ways of descending specificity:</p>
 <ul>
@@ -1665,8 +1669,8 @@ occupying it.</p>
       &lt;small class=&quot;doc doc-label doc-label-classmethod&quot;&gt;&lt;code&gt;classmethod&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="#easyimaging.sample_model.Lattice.hexagonal"><code>hexagonal</code></a> convenience methods for the corresponding lattice symmetries.
 Atomic sites still needs to be supplied manually.</li>
-<li>With one of the crystal-structure convenience functions in the [<code>crystals</code>][easyimaging.sample_model.lattice.crystals] module, which
-additionally populates the [<code>AtomSite</code>][easyimaging.sample_model.lattice.atom_site.AtomSite] objects for common crystal structures.</li>
+<li>With one of the crystal-structure convenience functions in the <a class="autorefs autorefs-internal" href="../crystals/#easyimaging.sample_model.crystals"><code>crystals</code></a> module, which
+additionally populates the <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../atom_site/#easyimaging.sample_model.AtomSite"><code>AtomSite</code></a> objects for common crystal structures.</li>
 </ul>
 <!-- prettier-ignore-start -->
 
@@ -1690,8 +1694,8 @@ additionally populates the [<code>AtomSite</code>][easyimaging.sample_model.latt
     <span class="n">beta</span><span class="o">=</span><span class="mf">90.0</span><span class="p">,</span>
     <span class="n">gamma</span><span class="o">=</span><span class="mf">120.0</span><span class="p">,</span>
     <span class="n">atom_sites</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
-        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_x</span><span class="o">=</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_y</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_z</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
+        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_a</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_b</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_c</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
+        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_a</span><span class="o">=</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_b</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_c</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
     <span class="p">],</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -1706,13 +1710,13 @@ additionally populates the [<code>AtomSite</code>][easyimaging.sample_model.latt
     <span class="n">length_a</span><span class="o">=</span><span class="mf">3.21</span><span class="p">,</span>
     <span class="n">length_c</span><span class="o">=</span><span class="mf">5.21</span><span class="p">,</span>
     <span class="n">atom_sites</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
-        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_x</span><span class="o">=</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_y</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_z</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
+        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_a</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_b</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fract_c</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
+        <span class="n">AtomSite</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="n">Atoms</span><span class="o">.</span><span class="n">Mg</span><span class="p">,</span> <span class="n">fract_a</span><span class="o">=</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_b</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">fract_c</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">debye_temperature</span><span class="o">=</span><span class="mf">400.0</span><span class="p">),</span>
     <span class="p">],</span>
 <span class="p">)</span>
 </code></pre></div>
-<p><strong>3. Using the [<code>hexagonal_close_packed</code>][easyimaging.sample_model.lattice.crystals.hexagonal_close_packed] constructor from the
-[<code>crystals</code>][easyimaging.sample_model.lattice.crystals] module</strong></p>
+<p><strong>3. Using the <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;hexagonal_close_packed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../crystals/#easyimaging.sample_model.crystals.hexagonal_close_packed"><code>hexagonal_close_packed</code></a> constructor from the
+<a class="autorefs autorefs-internal" href="../crystals/#easyimaging.sample_model.crystals"><code>crystals</code></a> module</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">easyimaging.sample_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Atoms</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">easyimaging.sample_model.crystals</span><span class="w"> </span><span class="kn">import</span> <span class="n">hexagonal_close_packed</span>
 
@@ -1859,7 +1863,7 @@ additionally populates the [<code>AtomSite</code>][easyimaging.sample_model.latt
                 <code>atom_sites</code>
             </td>
             <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyimaging.sample_model.atom_site.AtomSite&lt;/code&gt;)" href="../atom_site/#easyimaging.sample_model.AtomSite">AtomSite</a>] | None</code>
+                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyimaging.sample_model.atom_site.AtomSite&lt;/code&gt;)" href="../atom_site/#easyimaging.sample_model.AtomSite">AtomSite</a>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1951,7 +1955,7 @@ If any of <code>alpha</code>, <code>beta</code>, or <code>gamma</code> is not be
               <div class="doc-md-description">
                 <p>If any of <code>length_a</code>, <code>length_b</code>, or <code>length_c</code> is not a numeric value.<br>
 If any of <code>alpha</code>, <code>beta</code>, or <code>gamma</code> is not a numeric value.<br>
-If <code>atom_sites</code> is provided and is not a list of [<code>AtomSite</code>][easyimaging.sample_model.lattice.atom_site.AtomSite] objects.</p>
+If <code>atom_sites</code> is provided and is not a list of <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../atom_site/#easyimaging.sample_model.AtomSite"><code>AtomSite</code></a> objects.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2282,7 +2286,7 @@ If <code>atom_sites</code> is provided and is not a list of [<code>AtomSite</cod
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The atomic sites of the lattice and their occupying [atomic species][easyimaging.sample_model.lattice.atoms.Atom].</p>
+                <p>The list of atomic sites in the lattice.<br> This attribute is <strong>read-only</strong>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2424,7 +2428,7 @@ If <code>atom_sites</code> is provided and is not a list of [<code>AtomSite</cod
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A positive number, in angstrom.</p>
+                <p>A positive non-zero number for the length, in Å.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2453,8 +2457,7 @@ If <code>atom_sites</code> is provided and is not a list of [<code>AtomSite</cod
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> holding the length of the lattice vector along the
-x-axis, in angstrom.</p>
+                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> representing the length of the lattice vector <span class="arithmatex">\(\vec{a}\)</span>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2480,7 +2483,20 @@ x-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not positive.</p>
+                <p>If <code>value</code> is not positive and non-zero.</p>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2537,7 +2553,7 @@ x-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A positive number, in angstrom.</p>
+                <p>A positive non-zero number, in Å.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2566,8 +2582,7 @@ x-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> holding the length of the lattice vector along the
-y-axis, in angstrom.</p>
+                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> representing the length of the lattice vector <span class="arithmatex">\(\vec{b}\)</span>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2593,7 +2608,20 @@ y-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not positive.</p>
+                <p>If <code>value</code> is not positive and non-zero.</p>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2650,7 +2678,7 @@ y-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A positive number, in angstrom.</p>
+                <p>A positive non-zero number, in Å.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2679,8 +2707,7 @@ y-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> holding the length of the lattice vector along the
-z-axis, in angstrom.</p>
+                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> representing the length of the lattice vector <span class="arithmatex">\(\vec{c}\)</span>.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2706,7 +2733,20 @@ z-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not positive.</p>
+                <p>If <code>value</code> is not positive and non-zero.</p>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2792,8 +2832,8 @@ z-axis, in angstrom.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> holding the angle between the b and c lattice vectors,
-in degrees.</p>
+                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> representing the angle between the <span class="arithmatex">\(\vec{b}\)</span> and <span class="arithmatex">\(\vec{c}\)</span>
+lattice vectors.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2820,6 +2860,19 @@ in degrees.</p>
             <td>
               <div class="doc-md-description">
                 <p>If <code>value</code> is not between 0 and 180 degrees.</p>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2905,8 +2958,8 @@ in degrees.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> holding the angle between the <span class="arithmatex">\(\vec{a}\)</span> and <span class="arithmatex">\(\vec{c}\)</span> lattice 
-vectors, in degrees.</p>
+                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> representing the angle between the <span class="arithmatex">\(\vec{a}\)</span> and <span class="arithmatex">\(\vec{c}\)</span>
+lattice vectors.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2933,6 +2986,19 @@ vectors, in degrees.</p>
             <td>
               <div class="doc-md-description">
                 <p>If <code>value</code> is not between 0 and 180 degrees.</p>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -3018,8 +3084,8 @@ vectors, in degrees.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> holding the angle between the a and b lattice vectors,
-in degrees.</p>
+                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/variable/#easyscience.variable.parameter.Parameter"><code>Parameter</code></a> representing the angle between the <span class="arithmatex">\(\vec{a}\)</span> and <span class="arithmatex">\(\vec{b}\)</span>
+lattice vectors.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -3052,6 +3118,19 @@ in degrees.</p>
               </div>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="TypeError">TypeError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If <code>value</code> is not a number.</p>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
+              </div>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -3075,11 +3154,27 @@ in degrees.</p>
 
     <div class="doc doc-contents ">
 
-        <p>The atomic sites of the lattice and their occupying [atomic species][easyimaging.sample_model.lattice.atoms.Atom].</p>
+        <p>The list of atomic sites in the lattice.<br> This attribute is <strong>read-only</strong>.</p>
+<p>The returned list is an <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/base_classes/#easyscience.base_classes.easy_list.EasyList">EasyList</a> of
+<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../atom_site/#easyimaging.sample_model.AtomSite"><code>AtomSite</code></a> objects.
+To add or remove atomic sites to the lattice, interact directly with the returned list.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
 
+
+<details class="example" open>
+  <summary><p>Example</p>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end --></summary>
+  <div class="language-python highlight"><pre><span></span><code><span class="n">lattice</span><span class="o">.</span><span class="n">atom_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_site</span><span class="p">)</span>  <span class="c1"># Add a new atomic site to the lattice</span>
+<span class="n">lattice</span><span class="o">.</span><span class="n">atom_sites</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">'existing_site'</span><span class="p">)</span>  <span class="c1"># Remove an existing atomic site</span>
+</code></pre></div>
+<!-- prettier-ignore-start -->
+
+<!-- prettier-ignore-end -->
+</details>
 
     <p><span class="doc-section-title">Returns:</span></p>
     <table>
@@ -3092,12 +3187,11 @@ in degrees.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-external" title="&lt;code&gt;easyscience.base_classes.EasyList&lt;/code&gt;" href="https://easyscience.github.io/core/latest/api-reference/base_classes/#easyscience.base_classes.easy_list.EasyList">EasyList</a></code>
+                  <code><a class="autorefs autorefs-external" title="&lt;code&gt;easyscience.base_classes.EasyList&lt;/code&gt;" href="https://easyscience.github.io/core/latest/api-reference/base_classes/#easyscience.base_classes.easy_list.EasyList">EasyList</a>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyimaging.sample_model.atom_site.AtomSite&lt;/code&gt;)" href="../atom_site/#easyimaging.sample_model.AtomSite">AtomSite</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The <a class="autorefs autorefs-external" href="https://easyscience.github.io/core/latest/api-reference/base_classes/#easyscience.base_classes.easy_list.EasyList"><code>EasyList</code></a> of [<code>AtomSite</code>][easyimaging.sample_model.lattice.Lattice.atom_sites.atom_site.AtomSite] objects contained
-in the lattice.</p>
+                <p>A list of the atomic sites contained in the lattice.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -3615,7 +3709,7 @@ can be changed.</p>
                 <code>atom_sites</code>
             </td>
             <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyimaging.sample_model.atom_site.AtomSite&lt;/code&gt;)" href="../atom_site/#easyimaging.sample_model.AtomSite">AtomSite</a>] | None</code>
+                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyimaging.sample_model.atom_site.AtomSite&lt;/code&gt;)" href="../atom_site/#easyimaging.sample_model.AtomSite">AtomSite</a>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3820,7 +3914,7 @@ can be changed.</p>
                 <code>atom_sites</code>
             </td>
             <td>
-                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyimaging.sample_model.atom_site.AtomSite&lt;/code&gt;)" href="../atom_site/#easyimaging.sample_model.AtomSite">AtomSite</a>] | None</code>
+                  <code><span title="list">list</span>[<a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;easyimaging.sample_model.atom_site.AtomSite&lt;/code&gt;)" href="../atom_site/#easyimaging.sample_model.AtomSite">AtomSite</a>] | None</code>
             </td>
             <td>
               <div class="doc-md-description">
