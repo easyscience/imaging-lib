@@ -11,13 +11,12 @@ Numeric = int | float
 
 
 class AtomSite(ModelBase):
-    """An AtomSite represents a specific position in a crystal structure and its occupying atom, defined by its
-    atomic species and fractional coordinates (x, y, z) within the unit cell.
+    """An `AtomSite` object represents a specific position in a crystal structure and its occupying atom, defined by its
+    atomic species, vibrational properties, and fractional coordinates (a, b, c) within the host lattice's unit cell.
 
-    An [`AtomSite`][.] is most commonly created as part of a [`Lattice`][..lattice.Lattice], either directly via its
-     ``atom_sites`` parameter, or indirectly through one of the crystal-structure convenience functions in
-     [`easyimaging.sample_model.crystals`][..crystals]. It can also be created manually as shown in the example
-     below.
+    An [`AtomSite`][.] is most commonly created as part of a [`Lattice`][...lattice.Lattice], either directly via its
+    constructor, or indirectly through one of the crystal-structure convenience functions in
+    [`easyimaging.sample_model.crystals`][...crystals].
 
     Example
     -------
@@ -27,9 +26,9 @@ class AtomSite(ModelBase):
 
     site = AtomSite(
         atom=Atoms.Fe,
-        fract_x=0.0,
-        fract_y=0.0,
-        fract_z=0.0,
+        fract_a=0.0,
+        fract_b=0.0,
+        fract_c=0.0,
         debye_temperature=470.0,
     )
     ```
@@ -38,9 +37,9 @@ class AtomSite(ModelBase):
     def __init__(
         self,
         atom: Atoms | str,
-        fract_x: Numeric,
-        fract_y: Numeric,
-        fract_z: Numeric,
+        fract_a: Numeric,
+        fract_b: Numeric,
+        fract_c: Numeric,
         debye_temperature: Numeric | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
@@ -51,13 +50,13 @@ class AtomSite(ModelBase):
         Parameters
         ----------
         atom : Atoms | str
-            The atomic species of the site.
-        fract_x : int | float
-            The fractional x-coordinate of the site.
-        fract_y : int | float
-            The fractional y-coordinate of the site.
-        fract_z : int | float
-            The fractional z-coordinate of the site.
+            The atomic species that occupies the site.
+        fract_a : int | float
+            The fractional a-coordinate of the site.
+        fract_b : int | float
+            The fractional b-coordinate of the site.
+        fract_c : int | float
+            The fractional c-coordinate of the site.
         debye_temperature : float | int | None
             The Debye temperature of the atom site in Kelvin. If None, a default value of 300 K is used.
         unique_name : str | None
@@ -80,9 +79,9 @@ class AtomSite(ModelBase):
         atom = self._validate_atom(atom)
         self._atom = atom
 
-        self._validate_fract_value(fract_x, 'x')
-        self._validate_fract_value(fract_y, 'y')
-        self._validate_fract_value(fract_z, 'z')
+        self._validate_fract_value(fract_a, 'a')
+        self._validate_fract_value(fract_b, 'b')
+        self._validate_fract_value(fract_c, 'c')
 
         if unique_name is None:
             unique_name = global_object.generate_unique_name(f'{atom._name_} AtomSite')
@@ -91,9 +90,9 @@ class AtomSite(ModelBase):
         else:
             super().__init__(unique_name=unique_name, display_name=display_name)
 
-        self._fract_x = self._generate_fract_parameter(fract_x, 'x')
-        self._fract_y = self._generate_fract_parameter(fract_y, 'y')
-        self._fract_z = self._generate_fract_parameter(fract_z, 'z')
+        self._fract_a = self._generate_fract_parameter(fract_a, 'a')
+        self._fract_b = self._generate_fract_parameter(fract_b, 'b')
+        self._fract_c = self._generate_fract_parameter(fract_c, 'c')
 
         if debye_temperature is None:
             global_object.log.warning(
@@ -138,13 +137,13 @@ class AtomSite(ModelBase):
         if self._default_unique_name:
             self.unique_name = global_object.generate_unique_name(f'{value._name_} AtomSite')
             # Change _default_unique_name when Parameter uses NewBase
-            self.fract_x.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_x')
-            self.fract_y.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_y')
-            self.fract_z.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_z')
+            self.fract_a.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_a')
+            self.fract_b.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_b')
+            self.fract_c.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_c')
             self.debye_temperature.unique_name = global_object.generate_unique_name(f'{self.unique_name}_debye_temperature')
 
     @property
-    def fract_x(self) -> Parameter:
+    def fract_a(self) -> Parameter:
         """The fractional x-coordinate of the site.
 
         Parameters
@@ -164,16 +163,16 @@ class AtomSite(ModelBase):
         ValueError
             If ``value`` is not between 0.0 and 1.0.
         """
-        return self._fract_x
+        return self._fract_a
 
-    @fract_x.setter
-    def fract_x(self, value: Numeric):
+    @fract_a.setter
+    def fract_a(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        self._validate_fract_value(value, 'x')
-        self._fract_x.value = value
+        self._validate_fract_value(value, 'a')
+        self._fract_a.value = value
 
     @property
-    def fract_y(self) -> Parameter:
+    def fract_b(self) -> Parameter:
         """The fractional y-coordinate of the site.
 
         Parameters
@@ -193,16 +192,16 @@ class AtomSite(ModelBase):
         ValueError
             If ``value`` is not between 0.0 and 1.0.
         """
-        return self._fract_y
+        return self._fract_b
 
-    @fract_y.setter
-    def fract_y(self, value: Numeric):
+    @fract_b.setter
+    def fract_b(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        self._validate_fract_value(value, 'y')
-        self._fract_y.value = value
+        self._validate_fract_value(value, 'b')
+        self._fract_b.value = value
 
     @property
-    def fract_z(self) -> Parameter:
+    def fract_c(self) -> Parameter:
         """The fractional z-coordinate of the site.
 
         Parameters
@@ -222,13 +221,13 @@ class AtomSite(ModelBase):
         ValueError
             If ``value`` is not between 0.0 and 1.0.
         """
-        return self._fract_z
+        return self._fract_c
 
-    @fract_z.setter
-    def fract_z(self, value: Numeric):
+    @fract_c.setter
+    def fract_c(self, value: Numeric):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        self._validate_fract_value(value, 'z')
-        self._fract_z.value = value
+        self._validate_fract_value(value, 'c')
+        self._fract_c.value = value
 
     @property
     def debye_temperature(self) -> Parameter:
@@ -258,11 +257,6 @@ class AtomSite(ModelBase):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_debye_temperature(value)
         self._debye_temperature.value = value
-
-    @fract_z.setter
-    def fract_z(self, value: Numeric):
-        self._validate_fract_value(value, 'z')
-        self._fract_z.value = value
 
     def _validate_fract_value(self, value: Numeric, axis: str):
         if not isinstance(value, Numeric):
@@ -302,6 +296,6 @@ class AtomSite(ModelBase):
             A human-readable summary including the atomic species and fractional coordinates.
         """
         return (
-            f"AtomSite(atomic_species='{self.atom._name_}', fract_x={self.fract_x.value},"
-            f' fract_y={self.fract_y.value}, fract_z={self.fract_z.value})'
+            f"AtomSite(atomic_species='{self.atom._name_}', fract_a={self.fract_a.value},"
+            f' fract_b={self.fract_b.value}, fract_c={self.fract_c.value})'
         )

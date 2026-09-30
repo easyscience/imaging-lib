@@ -13,8 +13,8 @@ class TestLattice:
     @pytest.fixture
     def atom_sites(self):
         return [
-            AtomSite(atom=Atoms.Fe, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=1.0),
-            AtomSite(atom=Atoms.Fe, fract_x=0.5, fract_y=0.5, fract_z=0.5, debye_temperature=1.0),
+            AtomSite(atom=Atoms.Fe, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0),
+            AtomSite(atom=Atoms.Fe, fract_a=0.5, fract_b=0.5, fract_c=0.5, debye_temperature=1.0),
         ]
 
     @pytest.fixture
