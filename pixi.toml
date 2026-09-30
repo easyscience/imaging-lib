@@ -36,10 +36,10 @@ PYTHONIOENCODING = 'utf-8'
 # Set specific Python versions to be used in CI testing.
 
 [feature.py-min.dependencies]
-python = '3.11.*'
+python = '3.12.*'
 
 [feature.py-max.dependencies]
-python = '3.13.*'
+python = '3.14.*'
 
 # Development dependencies for local development and testing with
 # editable installations.
@@ -76,8 +76,8 @@ easyimaging = '*'
 # Additional features can be specified per environment.
 
 # Specific environments for CI testing with different Python versions.
-py-311-env = { features = ['py-min', 'dev'] }
-py-313-env = { features = ['py-max', 'dev'] }
+py-312-env = { features = ['py-min', 'dev'] }
+py-314-env = { features = ['py-max', 'dev'] }
 
 # The `default` environment is developer-oriented for local development
 # and testing with editable installation of the current package.
