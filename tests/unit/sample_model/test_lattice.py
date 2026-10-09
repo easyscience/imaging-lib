@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import pytest
+from easyscience import global_object
 
 from easyimaging.sample_model.atom_site import AtomSite
 from easyimaging.sample_model.atoms import Atoms
@@ -258,3 +259,13 @@ class TestLattice:
         # When Then Expect
         with pytest.raises(TypeError, match=f'Lattice angle {attribute} must be a numeric value'):
             setattr(lattice, attribute, invalid_value)
+
+    def test_from_dict_roundtrip(self, lattice):
+        # When
+        dict_repr = lattice.to_dict()
+        # Then
+        global_object.map._clear()
+        new_instance = Lattice.from_dict(dict_repr)
+        new_dict = new_instance.to_dict()
+        # Expect
+        assert new_dict == dict_repr

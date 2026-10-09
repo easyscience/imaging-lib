@@ -183,8 +183,10 @@ class Lattice(ModelBase):
         TypeError
             If ``atom_sites`` is provided and is not a list of [`AtomSite`][.atom_site.AtomSite] objects.
         """
+        default_unique_name = False
         if unique_name is None:
             unique_name = global_object.generate_unique_name('CubicLattice')
+            default_unique_name = True
         lattice = cls(
             length_a=length_a,
             length_b=length_a,
@@ -196,7 +198,7 @@ class Lattice(ModelBase):
             unique_name=unique_name,
             display_name=display_name,
         )
-        lattice._default_unique_name = True  # This gets set to False by the super init
+        lattice._default_unique_name = default_unique_name
         lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
         lattice.length_c.make_dependent_on('length_a', {'length_a': lattice.length_a})
         return lattice
@@ -238,8 +240,10 @@ class Lattice(ModelBase):
         TypeError
             If ``atom_sites`` is provided and is not a list of [`AtomSite`][.atom_site.AtomSite] objects.
         """
+        default_unique_name = False
         if unique_name is None:
             unique_name = global_object.generate_unique_name('HexagonalLattice')
+            default_unique_name = True
         lattice = cls(
             length_a=length_a,
             length_b=length_a,
@@ -251,7 +255,7 @@ class Lattice(ModelBase):
             unique_name=unique_name,
             display_name=display_name,
         )
-        lattice._default_unique_name = True  # This gets set to False by the super init
+        lattice._default_unique_name = default_unique_name
         lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
         return lattice
 
@@ -468,3 +472,23 @@ class Lattice(ModelBase):
         )
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
+
+    @classmethod
+    def from_dict(cls, obj_dict: dict):
+        """Populate the lattice object from a dictionary representation.
+
+        Parameters
+        ----------
+        obj_dict : dict
+            A dictionary containing the lattice parameters and atomic sites.
+        """
+
+        if not isinstance(obj_dict, dict):
+            raise TypeError(f'Expected a dictionary. Got {type(obj_dict).__name__}')
+        temp_obj_dict = dict(obj_dict)  # Don't modify the original dictionary
+        if 'atom_sites' not in temp_obj_dict:
+            raise ValueError('The dictionary does not represent a serialized Lattice. Missing "atom_sites" key.')
+        atom_sites_easy_list = temp_obj_dict.pop('atom_sites')
+        instance = super().from_dict(temp_obj_dict)
+        instance._atom_sites = atom_sites_easy_list
+        return instance
