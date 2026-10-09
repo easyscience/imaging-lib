@@ -12,7 +12,7 @@ from easyimaging.sample_model.crystals import zincblende
 
 
 def _fract_coords(lattice):
-    return [(site.fract_x.value, site.fract_y.value, site.fract_z.value) for site in lattice.atom_sites]
+    return [(site.fract_a.value, site.fract_b.value, site.fract_c.value) for site in lattice.atom_sites]
 
 
 class TestBodyCenteredCubic:

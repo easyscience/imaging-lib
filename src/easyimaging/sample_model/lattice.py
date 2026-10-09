@@ -15,7 +15,7 @@ INFINITESIMAL = 1e-3
 class Lattice(ModelBase):
     """A Lattice represents the periodic arrangement of atoms in a crystal structure, defined by its lattice
     parameter: (``length_a``, ``length_b``, ``length_c``), lattice-vector angles: (``alpha``, ``beta``, ``gamma``)
-    and a list of [`AtomSite`][..atom_site.AtomSite] objects, with their corresponding [atomic species][..atoms.Atoms],
+    and a list of [`AtomSite`][...atom_site.AtomSite] objects, with their corresponding [atomic species][...atoms.Atoms],
     occupying it.
 
     A [`Lattice`][.] object can currently be created in 3 ways of descending specificity:
@@ -23,8 +23,8 @@ class Lattice(ModelBase):
     - Directly via the constructor by supplying all lattice parameters and atomic sites.
     - Using the [`cubic`][.cubic] or [`hexagonal`][.hexagonal] convenience methods for the corresponding lattice symmetries.
     Atomic sites still needs to be supplied manually.
-    - With one of the crystal-structure convenience functions in the [`crystals`][..crystals] module, which
-    additionally populates the [`AtomSite`][..atom_site.AtomSite] objects for common crystal structures.
+    - With one of the crystal-structure convenience functions in the [`crystals`][...crystals] module, which
+    additionally populates the [`AtomSite`][...atom_site.AtomSite] objects for common crystal structures.
 
     Example
     -------
@@ -43,8 +43,8 @@ class Lattice(ModelBase):
         beta=90.0,
         gamma=120.0,
         atom_sites=[
-            AtomSite(atom=Atoms.Mg, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=400.0),
-            AtomSite(atom=Atoms.Mg, fract_x=2 / 3, fract_y=1 / 3, fract_z=0.5, debye_temperature=400.0),
+            AtomSite(atom=Atoms.Mg, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=400.0),
+            AtomSite(atom=Atoms.Mg, fract_a=2 / 3, fract_b=1 / 3, fract_c=0.5, debye_temperature=400.0),
         ],
     )
     ```
@@ -58,14 +58,14 @@ class Lattice(ModelBase):
         length_a=3.21,
         length_c=5.21,
         atom_sites=[
-            AtomSite(atom=Atoms.Mg, fract_x=0.0, fract_y=0.0, fract_z=0.0, debye_temperature=400.0),
-            AtomSite(atom=Atoms.Mg, fract_x=2 / 3, fract_y=1 / 3, fract_z=0.5, debye_temperature=400.0),
+            AtomSite(atom=Atoms.Mg, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=400.0),
+            AtomSite(atom=Atoms.Mg, fract_a=2 / 3, fract_b=1 / 3, fract_c=0.5, debye_temperature=400.0),
         ],
     )
     ```
 
-    **3. Using the [`hexagonal_close_packed`][..crystals.hexagonal_close_packed] constructor from the
-    [`crystals`][..crystals] module**
+    **3. Using the [`hexagonal_close_packed`][...crystals.hexagonal_close_packed] constructor from the
+    [`crystals`][...crystals] module**
 
     ```python
     from easyimaging.sample_model import Atoms
@@ -124,7 +124,7 @@ class Lattice(ModelBase):
         TypeError
             If any of ``length_a``, ``length_b``, or ``length_c`` is not a numeric value.<br>
             If any of ``alpha``, ``beta``, or ``gamma`` is not a numeric value.<br>
-            If ``atom_sites`` is provided and is not a list of [`AtomSite`][...atom_site.AtomSite] objects.
+            If ``atom_sites`` is provided and is not a list of [`AtomSite`][....atom_site.AtomSite] objects.
         """
         super().__init__(unique_name=unique_name, display_name=display_name)
         for length, axis in ((length_a, 'a'), (length_b, 'b'), (length_c, 'c')):
@@ -266,18 +266,19 @@ class Lattice(ModelBase):
         Parameters
         ----------
         value : int | float
-            A positive number, in angstrom.
+            A positive non-zero number for the length, in Å.
 
         Returns
         -------
         Parameter
-            The [`Parameter`][easyscience.variable.Parameter] holding the length of the lattice vector along the
-            x-axis, in angstrom.
+            The [`Parameter`][easyscience.variable.Parameter] representing the length of the lattice vector $\\vec{a}$.
 
         Raises
         ------
         ValueError
-            If ``value`` is not positive.
+            If ``value`` is not positive and non-zero.
+        TypeError
+            If ``value`` is not a number.
         """
         return self._length_a
 
@@ -294,18 +295,19 @@ class Lattice(ModelBase):
         Parameters
         ----------
         value : int | float
-            A positive number, in angstrom.
+            A positive non-zero number, in Å.
 
         Returns
         -------
         Parameter
-            The [`Parameter`][easyscience.variable.Parameter] holding the length of the lattice vector along the
-            y-axis, in angstrom.
+            The [`Parameter`][easyscience.variable.Parameter] representing the length of the lattice vector $\\vec{b}$.
 
         Raises
         ------
         ValueError
-            If ``value`` is not positive.
+            If ``value`` is not positive and non-zero.
+        TypeError
+            If ``value`` is not a number.
         """
         return self._length_b
 
@@ -322,18 +324,19 @@ class Lattice(ModelBase):
         Parameters
         ----------
         value : int | float
-            A positive number, in angstrom.
+            A positive non-zero number, in Å.
 
         Returns
         -------
         Parameter
-            The [`Parameter`][easyscience.variable.Parameter] holding the length of the lattice vector along the
-            z-axis, in angstrom.
+            The [`Parameter`][easyscience.variable.Parameter] representing the length of the lattice vector $\\vec{c}$.
 
         Raises
         ------
         ValueError
-            If ``value`` is not positive.
+            If ``value`` is not positive and non-zero.
+        TypeError
+            If ``value`` is not a number.
         """
         return self._length_c
 
@@ -355,13 +358,15 @@ class Lattice(ModelBase):
         Returns
         -------
         Parameter
-            The [`Parameter`][easyscience.variable.Parameter] holding the angle between the b and c lattice vectors,
-            in degrees.
+            The [`Parameter`][easyscience.variable.Parameter] representing the angle between the $\\vec{b}$ and $\\vec{c}$
+            lattice vectors.
 
         Raises
         ------
         ValueError
             If ``value`` is not between 0 and 180 degrees.
+        TypeError
+            If ``value`` is not a number.
         """
         return self._alpha
 
@@ -383,13 +388,15 @@ class Lattice(ModelBase):
         Returns
         -------
         Parameter
-            The [`Parameter`][easyscience.variable.Parameter] holding the angle between the $\\vec{a}$ and $\\vec{c}$ lattice 
-            vectors, in degrees.
+            The [`Parameter`][easyscience.variable.Parameter] representing the angle between the $\\vec{a}$ and $\\vec{c}$
+            lattice vectors.
 
         Raises
         ------
         ValueError
             If ``value`` is not between 0 and 180 degrees.
+        TypeError
+            If ``value`` is not a number.
         """
         return self._beta
 
@@ -411,13 +418,15 @@ class Lattice(ModelBase):
         Returns
         -------
         Parameter
-            The [`Parameter`][easyscience.variable.Parameter] holding the angle between the a and b lattice vectors,
-            in degrees.
+            The [`Parameter`][easyscience.variable.Parameter] representing the angle between the $\\vec{a}$ and $\\vec{b}$
+            lattice vectors.
 
         Raises
         ------
         ValueError
             If ``value`` is not between 0 and 180 degrees.
+        TypeError
+            If ``value`` is not a number.
         """
         return self._gamma
 
@@ -429,13 +438,23 @@ class Lattice(ModelBase):
 
     @property
     def atom_sites(self) -> EasyList:
-        """The atomic sites of the lattice and their occupying [atomic species][...atoms.Atom].
+        """The list of atomic sites in the lattice.<br> This attribute is **read-only**.
+
+        The returned list is an [EasyList][easyscience.base_classes.EasyList] of
+        [`AtomSite`][....atom_site.AtomSite] objects.
+        To add or remove atomic sites to the lattice, interact directly with the returned list.
+
+        Example
+        -------
+        ```python
+        lattice.atom_sites.append(new_site)  # Add a new atomic site to the lattice
+        lattice.atom_sites.remove('existing_site')  # Remove an existing atomic site
+        ```
 
         Returns
         -------
-        EasyList
-            The [`EasyList`][easyscience.base_classes.EasyList] of [`AtomSite`][.atom_site.AtomSite] objects contained
-            in the lattice.
+        EasyList[AtomSite]
+            A list of the atomic sites contained in the lattice.
         """
         return self._atom_sites
 
