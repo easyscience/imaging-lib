@@ -12,7 +12,7 @@ Numeric = int | float
 
 def body_centered_cubic(
     length_a: Numeric,
-    atom: Atoms,
+    atom: Atoms | str,
     debye_temperature: Numeric | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
@@ -47,7 +47,10 @@ def body_centered_cubic(
         If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
-        name = getattr(atom, '_name_', 'Unknown')
+        if isinstance(atom, str):
+            name = atom
+        else:
+            name = getattr(atom, '_name_', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} BCC Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -75,7 +78,7 @@ def body_centered_cubic(
 
 def face_centered_cubic(
     length_a: Numeric,
-    atom: Atoms,
+    atom: Atoms | str,
     debye_temperature: Numeric | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
@@ -110,7 +113,10 @@ def face_centered_cubic(
         If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
-        name = getattr(atom, '_name_', 'Unknown')
+        if isinstance(atom, str):
+            name = atom
+        else:
+            name = getattr(atom, '_name_', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} FCC Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -152,7 +158,7 @@ def face_centered_cubic(
 
 def diamond_cubic(
     length_a: Numeric,
-    atom: Atoms,
+    atom: Atoms | str,
     debye_temperature: Numeric | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
@@ -187,7 +193,10 @@ def diamond_cubic(
         If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
-        name = getattr(atom, '_name_', 'Unknown')
+        if isinstance(atom, str):
+            name = atom
+        else:
+            name = getattr(atom, '_name_', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} Diamond Cubic Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -257,8 +266,8 @@ def diamond_cubic(
 
 def zincblende(
     length_a: Numeric,
-    atom1: Atoms,
-    atom2: Atoms,
+    atom1: Atoms | str,
+    atom2: Atoms | str,
     debye_temperature1: Numeric | None = None,
     debye_temperature2: Numeric | None = None,
     unique_name: str | None = None,
@@ -301,8 +310,14 @@ def zincblende(
         If ``atom1`` or ``atom2`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
-        name1 = getattr(atom1, '_name_', 'Unknown')
-        name2 = getattr(atom2, '_name_', 'Unknown')
+        if isinstance(atom1, str):
+            name1 = atom1
+        else:
+            name1 = getattr(atom1, '_name_', 'Unknown')
+        if isinstance(atom2, str):
+            name2 = atom2
+        else:
+            name2 = getattr(atom2, '_name_', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name1}{name2} Zincblende Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -373,7 +388,7 @@ def zincblende(
 def hexagonal_close_packed(
     length_a: Numeric,
     length_c: Numeric,
-    atom: Atoms,
+    atom: Atoms | str,
     debye_temperature: Numeric | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
@@ -411,7 +426,10 @@ def hexagonal_close_packed(
         If ``atom`` is a string that does not correspond to a valid [`Atoms`][.atoms.Atoms] member.
     """
     if unique_name is None:
-        name = getattr(atom, '_name_', 'Unknown')
+        if isinstance(atom, str):
+            name = atom
+        else:
+            name = getattr(atom, '_name_', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} HCP Lattice')
     lattice = Lattice.hexagonal(
         length_a=length_a,

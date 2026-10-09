@@ -48,6 +48,12 @@ class TestBodyCenteredCubic:
         # Then Expect
         assert lattice.unique_name.startswith('Fe BCC Lattice')
 
+    def test_default_naming_with_atom_as_string(self):
+        # When
+        lattice = body_centered_cubic(length_a=2.87, atom='Fe')
+        # Then Expect
+        assert lattice.unique_name.startswith('Fe BCC Lattice')
+
     def test_explicit_naming(self):
         # When
         lattice = body_centered_cubic(length_a=2.87, atom=Atoms.Fe, unique_name='my_bcc', display_name='My BCC')
@@ -106,6 +112,12 @@ class TestFaceCenteredCubic:
     def test_default_naming(self):
         # When
         lattice = face_centered_cubic(length_a=3.6, atom=Atoms.Cu)
+        # Then Expect
+        assert lattice.unique_name.startswith('Cu FCC Lattice')
+
+    def test_default_naming_with_atom_as_string(self):
+        # When
+        lattice = face_centered_cubic(length_a=3.6, atom='Cu')
         # Then Expect
         assert lattice.unique_name.startswith('Cu FCC Lattice')
 
@@ -170,6 +182,12 @@ class TestDiamondCubic:
     def test_default_naming(self):
         # When
         lattice = diamond_cubic(length_a=5.43, atom=Atoms.Si)
+        # Then Expect
+        assert lattice.unique_name.startswith('Si Diamond Cubic Lattice')
+
+    def test_default_naming_with_atom_as_string(self):
+        # When
+        lattice = diamond_cubic(length_a=5.43, atom='Si')
         # Then Expect
         assert lattice.unique_name.startswith('Si Diamond Cubic Lattice')
 
@@ -261,6 +279,17 @@ class TestZincblende:
         # Then Expect
         assert lattice.unique_name.startswith('GaAs Zincblende Lattice')
 
+    @pytest.mark.parametrize(
+        'atom1, atom2',
+        [('Ga', Atoms.As), (Atoms.Ga, 'As'), ('Ga', 'As')],
+        ids=['atom1_as_string', 'atom2_as_string', 'both_as_strings'],
+    )
+    def test_default_naming_with_atom_as_string(self, atom1, atom2):
+        # When
+        lattice = zincblende(length_a=5.65, atom1=atom1, atom2=atom2)
+        # Then Expect
+        assert lattice.unique_name.startswith('GaAs Zincblende Lattice')
+
     def test_explicit_naming(self):
         # When
         lattice = zincblende(length_a=5.65, atom1=Atoms.Ga, atom2=Atoms.As, unique_name='my_zincblende')
@@ -318,6 +347,12 @@ class TestHexagonalClosePacked:
     def test_default_naming(self):
         # When
         lattice = hexagonal_close_packed(length_a=2.95, length_c=4.68, atom=Atoms.Mg)
+        # Then Expect
+        assert lattice.unique_name.startswith('Mg HCP Lattice')
+
+    def test_default_naming_with_atom_as_string(self):
+        # When
+        lattice = hexagonal_close_packed(length_a=2.95, length_c=4.68, atom='Mg')
         # Then Expect
         assert lattice.unique_name.startswith('Mg HCP Lattice')
 
