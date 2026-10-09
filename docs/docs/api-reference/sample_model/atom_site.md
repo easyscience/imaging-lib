@@ -1,0 +1,1 @@
+::: easyimaging.sample_model.AtomSite
