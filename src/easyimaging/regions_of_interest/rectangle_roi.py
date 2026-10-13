@@ -17,11 +17,11 @@ from scipp import UnitError
 class RectangleROI(NewBase):
     """Object representing a rectangular region of interest (ROI) in an image.
 
-    This object is most simply created by the [`roi_creator`][...Measurement.roi_creator] method in the
-      [Measurement][...Measurement] class. Alternatively it can be created manually as shown in the example below.
+    This object is most simply created by the [`roi_creator`][....Measurement.roi_creator] method in the
+      [Measurement][....Measurement] class. Alternatively it can be created manually as shown in the example below.
 
     Physical coordinate ranges are used by default, if they are provided **and** can be used in the
-      associated [Measurement][...Measurement] class.
+      associated [Measurement][....Measurement] class.
     Otherwise, the obligatory pixel coordinate ranges are used as a fallback.
 
     Example

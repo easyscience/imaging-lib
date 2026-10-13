@@ -655,7 +655,7 @@ class Measurement(NewBase):
         """The list of regions of interest (ROIs) defined for this measurement.<br> This attribute is **read-only**.
 
         The returned list is an [EasyList][easyscience.base_classes.EasyList] of
-         [regions of interest][...regions_of_interest.RectangleROI] objects.
+         [regions of interest][.....regions_of_interest.RectangleROI] objects.
         To modify the list or set new ROIs, interact directly with the returned list.
 
         Example

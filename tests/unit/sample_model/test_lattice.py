@@ -269,3 +269,139 @@ class TestLattice:
         new_dict = new_instance.to_dict()
         # Expect
         assert new_dict == dict_repr
+
+    def test_cubic_fittable_parameters_only_include_length_a(self):
+        # When
+        lattice = Lattice.cubic(length_a=3.0)
+        # Then
+        fittable_parameters = lattice.get_fittable_parameters()
+        # Expect
+        assert len(fittable_parameters) == 1
+        assert fittable_parameters[0] is lattice.length_a
+
+    def test_hexagonal_fittable_parameters_only_include_length_a_and_c(self):
+        # When
+        lattice = Lattice.hexagonal(length_a=2.0, length_c=4.0)
+        # Then
+        fittable_parameters = lattice.get_fittable_parameters()
+        # Expect
+        assert len(fittable_parameters) == 2
+        assert any(parameter is lattice.length_a for parameter in fittable_parameters)
+        assert any(parameter is lattice.length_c for parameter in fittable_parameters)
+
+    @pytest.mark.parametrize(
+        'constructor_kwargs', [{'length_a': 3.0}, {'length_a': 2.0, 'length_c': 4.0}], ids=['cubic', 'hexagonal']
+    )
+    @pytest.mark.parametrize('attribute', ['alpha', 'beta', 'gamma'])
+    def test_symmetry_constructors_lock_angles(self, constructor_kwargs, attribute):
+        # When
+        constructor = Lattice.hexagonal if 'length_c' in constructor_kwargs else Lattice.cubic
+        lattice = constructor(**constructor_kwargs)
+        original_value = getattr(lattice, attribute).value
+        # Then Expect
+        assert not getattr(lattice, attribute).independent
+        with pytest.raises(AttributeError, match='This is a dependent parameter'):
+            setattr(lattice, attribute, 100.0)
+        assert getattr(lattice, attribute).value == original_value
+
+    def test_to_dict_without_symmetry_constructor_has_no_angle_lock(self, lattice):
+        # When Then
+        dict_repr = lattice.to_dict()
+        # Expect
+        assert 'angle_lock' not in dict_repr
+        assert dict_repr['unique_name'] == 'test_lattice'
+        assert dict_repr['display_name'] == 'Test Lattice'
+        assert dict_repr['length_a']['value'] == 1.0
+        assert dict_repr['gamma']['value'] == 95.0
+        assert len(dict_repr['atom_sites']['data']) == 2
+
+    @pytest.mark.parametrize(
+        'constructor_kwargs', [{'length_a': 3.0}, {'length_a': 2.0, 'length_c': 4.0}], ids=['cubic', 'hexagonal']
+    )
+    def test_to_dict_with_symmetry_constructor_has_angle_lock(self, constructor_kwargs):
+        # When
+        constructor = Lattice.hexagonal if 'length_c' in constructor_kwargs else Lattice.cubic
+        lattice = constructor(**constructor_kwargs)
+        # Then
+        dict_repr = lattice.to_dict()
+        # Expect
+        assert dict_repr['angle_lock']['value'] == 90.0
+
+    def test_to_dict_skip_parameter(self, lattice):
+        # When Then
+        dict_repr = lattice.to_dict(skip=['unique_name', 'alpha'])
+        # Expect
+        assert 'unique_name' not in dict_repr
+        assert 'alpha' not in dict_repr
+        assert 'beta' in dict_repr
+
+    def test_from_dict(self, lattice):
+        # When
+        dict_repr = lattice.to_dict()
+        global_object.map._clear()
+        # Then
+        new_lattice = Lattice.from_dict(dict_repr)
+        # Expect
+        assert new_lattice.unique_name == 'test_lattice'
+        assert new_lattice.display_name == 'Test Lattice'
+        assert new_lattice.length_a.value == 1.0
+        assert new_lattice.length_b.value == 2.0
+        assert new_lattice.length_c.value == 3.0
+        assert new_lattice.alpha.value == 80.0
+        assert new_lattice.beta.value == 85.0
+        assert new_lattice.gamma.value == 95.0
+        assert len(new_lattice.get_fittable_parameters()) == 6 + 4 * 2
+        assert len(new_lattice.atom_sites) == 2
+        assert all(isinstance(site, AtomSite) for site in new_lattice.atom_sites)
+        assert [site.fract_a.value for site in new_lattice.atom_sites] == [0.0, 0.5]
+
+    # def test_from_dict_cubic_keeps_lengths_and_angles_locked(self, atom_sites):
+    #     # When
+    #     dict_repr = Lattice.cubic(length_a=3.0, atom_sites=atom_sites).to_dict()
+    #     global_object.map._clear()
+    #     # Then
+    #     new_lattice = Lattice.from_dict(dict_repr)
+    #     resolve_all_parameter_dependencies(new_lattice)
+    #     new_lattice.length_a = 5.0
+    #     # Expect
+    #     assert new_lattice.length_b.value == 5.0
+    #     assert new_lattice.length_c.value == 5.0
+    #     assert new_lattice.alpha.value == 90.0
+    #     assert new_lattice.beta.value == 90.0
+    #     assert new_lattice.gamma.value == 90.0
+    #     assert len(new_lattice.atom_sites) == 2
+    #     lattice_fittable = [p for p in new_lattice.get_fittable_parameters() if p.name.startswith(('length', 'angle'))]
+    #     assert len(lattice_fittable) == 1
+    #     assert lattice_fittable[0] is new_lattice.length_a
+
+    # def test_from_dict_hexagonal_keeps_lengths_and_angles_locked(self):
+    #     # When
+    #     dict_repr = Lattice.hexagonal(length_a=2.0, length_c=4.0).to_dict()
+    #     global_object.map._clear()
+    #     # Then
+    #     new_lattice = Lattice.from_dict(dict_repr)
+    #     resolve_all_parameter_dependencies(new_lattice)
+    #     new_lattice.length_a = 6.0
+    #     # Expect
+    #     assert new_lattice.length_b.value == 6.0
+    #     assert new_lattice.length_c.value == 4.0
+    #     assert new_lattice.alpha.value == 90.0
+    #     assert new_lattice.beta.value == 90.0
+    #     assert new_lattice.gamma.value == 120.0
+    #     fittable_parameters = new_lattice.get_fittable_parameters()
+    #     assert len(fittable_parameters) == 2
+    #     assert any(parameter is new_lattice.length_a for parameter in fittable_parameters)
+    #     assert any(parameter is new_lattice.length_c for parameter in fittable_parameters)
+
+    def test_from_dict_invalid_type(self):
+        # When Then Expect
+        with pytest.raises(TypeError, match='Expected a dictionary. Got str'):
+            Lattice.from_dict('not_a_dict')
+
+    def test_from_dict_missing_atom_sites(self, lattice):
+        # When
+        dict_repr = lattice.to_dict()
+        del dict_repr['atom_sites']
+        # Then Expect
+        with pytest.raises(ValueError, match='Missing "atom_sites" key'):
+            Lattice.from_dict(dict_repr)

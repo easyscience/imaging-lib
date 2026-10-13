@@ -10,7 +10,7 @@ class Atom:
     """A dataclass representing a known atomic species, identified by its element symbol and an optional isotope
     mass number.
 
-    This is the base class of the [`Atoms`][.Atoms] enumeration, where each member is an [`Atom`][.] instance.
+    This is the base class of the [`Atoms`][..Atoms] enumeration, where each member is an [`Atom`][.] instance.
 
     Attributes
     ----------

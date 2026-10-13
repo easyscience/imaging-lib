@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+from typing import Any
+from typing import Dict
+from typing import List
+
 from easyscience import Parameter
 from easyscience import global_object
 from easyscience.base_classes import EasyList
@@ -181,7 +185,7 @@ class Lattice(ModelBase):
         ValueError
             If ``length_a`` is not positive.
         TypeError
-            If ``atom_sites`` is provided and is not a list of [`AtomSite`][.atom_site.AtomSite] objects.
+            If ``atom_sites`` is provided and is not a list of [`AtomSite`][....atom_site.AtomSite] objects.
         """
         default_unique_name = False
         if unique_name is None:
@@ -201,6 +205,18 @@ class Lattice(ModelBase):
         lattice._default_unique_name = default_unique_name
         lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
         lattice.length_c.make_dependent_on('length_a', {'length_a': lattice.length_a})
+        # Lock the angles by making them dependent on a hidden parameter
+        lattice._angle_lock = Parameter(
+            name='angle_lock',
+            value=90,
+            unit='deg',
+            min=INFINITESIMAL,
+            max=180.0 - INFINITESIMAL,
+            fixed=True,
+        )
+        lattice.alpha.make_dependent_on('angle_lock', {'angle_lock': lattice._angle_lock})
+        lattice.beta.make_dependent_on('angle_lock', {'angle_lock': lattice._angle_lock})
+        lattice.gamma.make_dependent_on('angle_lock', {'angle_lock': lattice._angle_lock})
         return lattice
 
     @classmethod
@@ -238,7 +254,7 @@ class Lattice(ModelBase):
         ValueError
             If ``length_a`` or ``length_c`` is not positive.
         TypeError
-            If ``atom_sites`` is provided and is not a list of [`AtomSite`][.atom_site.AtomSite] objects.
+            If ``atom_sites`` is provided and is not a list of [`AtomSite`][....atom_site.AtomSite] objects.
         """
         default_unique_name = False
         if unique_name is None:
@@ -257,6 +273,18 @@ class Lattice(ModelBase):
         )
         lattice._default_unique_name = default_unique_name
         lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
+        # Lock the angles by making them dependent on a hidden parameter
+        lattice._angle_lock = Parameter(
+            name='angle_lock',
+            value=90,
+            unit='deg',
+            min=INFINITESIMAL,
+            max=180.0 - INFINITESIMAL,
+            fixed=True,
+        )
+        lattice.alpha.make_dependent_on('angle_lock', {'angle_lock': lattice._angle_lock})
+        lattice.beta.make_dependent_on('angle_lock', {'angle_lock': lattice._angle_lock})
+        lattice.gamma.make_dependent_on('4*angle_lock/3', {'angle_lock': lattice._angle_lock})
         return lattice
 
     @property
@@ -492,22 +520,56 @@ class Lattice(ModelBase):
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
+    def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
+        """Convert the lattice object to a dictionary representation.
+
+        Parameters
+        ----------
+        skip : List[str] | None
+            A list of attribute names to skip when converting to a dictionary.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary representation of the [Lattice][..] object.
+        """
+        out_dict = super().to_dict(skip=skip)
+        angle_lock = getattr(self, '_angle_lock', None)
+        if angle_lock is not None:
+            out_dict['angle_lock'] = angle_lock.as_dict(skip=skip)
+        return out_dict
+
     @classmethod
     def from_dict(cls, obj_dict: dict):
-        """Populate the lattice object from a dictionary representation.
+        """Recreate the lattice object from its dictionary representation created with the [to_dict][to_dict] method.
 
         Parameters
         ----------
         obj_dict : dict
-            A dictionary containing the lattice parameters and atomic sites.
+            A dictionary representation of the [Lattice][..] object.
+
+        Returns
+        -------
+        Lattice
+            An instance of the [Lattice][..] object recreated from the dictionary.
+
+        Raises
+        ------
+        TypeError
+            If the input is not a dictionary.
+        ValueError
+            If the dictionary does not represent a serialized [Lattice][..] object.
         """
 
         if not isinstance(obj_dict, dict):
             raise TypeError(f'Expected a dictionary. Got {type(obj_dict).__name__}')
         temp_obj_dict = dict(obj_dict)  # Don't modify the original dictionary
+        angle_lock_dict = temp_obj_dict.pop('angle_lock', None)
         if 'atom_sites' not in temp_obj_dict:
             raise ValueError('The dictionary does not represent a serialized Lattice. Missing "atom_sites" key.')
-        atom_sites_easy_list = temp_obj_dict.pop('atom_sites')
+        atom_sites_dict = temp_obj_dict.pop('atom_sites')
         instance = super().from_dict(temp_obj_dict)
-        instance._atom_sites = atom_sites_easy_list
+        instance._atom_sites = EasyList.from_dict(atom_sites_dict)
+        if angle_lock_dict is not None:
+            instance._angle_lock = Parameter.from_dict(angle_lock_dict)
         return instance

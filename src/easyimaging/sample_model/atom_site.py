@@ -113,7 +113,7 @@ class AtomSite(ModelBase):
         Parameters
         ----------
         value : Atoms | str
-            An [`Atoms`][..atoms.Atoms] enum member, or the name of one as a string.
+            An [`Atoms`][....atoms.Atoms] enum member, or the name of one as a string.
 
         Returns
         -------
@@ -123,9 +123,9 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
-            If ``value`` is neither an [`Atoms`][..atoms.Atoms] enum member nor a string.
+            If ``value`` is neither an [`Atoms`][....atoms.Atoms] enum member nor a string.
         KeyError
-            If ``value`` is a string that does not correspond to a valid [`Atoms`][..atoms.Atoms] member.
+            If ``value`` is a string that does not correspond to a valid [`Atoms`][....atoms.Atoms] member.
         """
         return self._atom
 
