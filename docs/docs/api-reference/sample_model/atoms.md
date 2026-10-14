@@ -1,6 +1,12 @@
-::: easyimaging.sample_model.atoms.Atom options: heading_level: 2
+::: easyimaging.sample_model.atoms.Atom
 
-::: easyimaging.sample_model.atoms.Atoms options: heading_level: 2
+    options:
+      heading_level: 2
+
+::: easyimaging.sample_model.atoms.Atoms
+
+    options:
+      heading_level: 2
 
 The full list of pre-defined
 [`Atom`][easyimaging.sample_model.atoms.Atom] instances in the
