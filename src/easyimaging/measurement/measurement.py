@@ -6,6 +6,7 @@ from __future__ import annotations
 import warnings
 from functools import partial
 from pathlib import Path
+from typing import Any
 
 import ess.imaging as essimaging
 import numpy as np
@@ -445,6 +446,49 @@ class Measurement(NewBase):
         raise AttributeError('Cannot set _data_array, it is a read-only property.')
 
     @property
+    def time_of_flights(self) -> sc.Variable:
+        """The time-of-flight values of the measurement.
+
+        Parameters
+        ----------
+        value : sc.Variable | np.ndarray
+            The new time-of-flight values to set.<br>
+            If a numpy array is provided, the unit is assumed to be seconds.
+
+        Returns
+        -------
+        sc.Variable
+            A copy of the time-of-flight values as a [`sc.Variable`][scipp.Variable].
+
+        Raises
+        ------
+        ValueError
+            If ``value`` is not 1-dimensional with the same length as the number of frames.<br>
+            If any element in ``value`` is negative.
+        TypeError
+            If ``value`` is not a [`sc.Variable`][scipp.Variable] or [`np.ndarray`][numpy.ndarray].
+        UnitError
+            If ``value`` is a [`sc.Variable`][scipp.Variable] and does not have a unit of time.
+        """
+        return self._data_array.coords['tof'].copy()
+
+    @time_of_flights.setter
+    def time_of_flights(self, value: sc.Variable | np.ndarray) -> None:
+        # Setters have no docstrings. They should be written in the getter docstring instead.
+        value = self._validate_provided_coord(
+            data_array=self._data_array,
+            coord=value,
+            coord_name='time_of_flights',
+            dim='t',
+            length_context='frames in the measurement',
+            expected_dim_string='time',
+            expected_unit='s',
+        )
+        if any(value.to(unit='s') < sc.scalar(0, unit='s')):
+            raise ValueError('time_of_flight values must be non-negative.')
+        self._data_array.coords['tof'] = value
+
+    @property
     def x_positions(self) -> sc.Variable:
         """The x-coordinates of the physical positions of the pixels.
 
@@ -608,49 +652,6 @@ class Measurement(NewBase):
             raise ValueError('Cannot delete physical coordinate positions because they are not set.')
 
     @property
-    def time_of_flights(self) -> sc.Variable:
-        """The time-of-flight values of the measurement.
-
-        Parameters
-        ----------
-        value : sc.Variable | np.ndarray
-            The new time-of-flight values to set.<br>
-            If a numpy array is provided, the unit is assumed to be seconds.
-
-        Returns
-        -------
-        sc.Variable
-            A copy of the time-of-flight values as a [`sc.Variable`][scipp.Variable].
-
-        Raises
-        ------
-        ValueError
-            If ``value`` is not 1-dimensional with the same length as the number of frames.<br>
-            If any element in ``value`` is negative.
-        TypeError
-            If ``value`` is not a [`sc.Variable`][scipp.Variable] or [`np.ndarray`][numpy.ndarray].
-        UnitError
-            If ``value`` is a [`sc.Variable`][scipp.Variable] and does not have a unit of time.
-        """
-        return self._data_array.coords['tof'].copy()
-
-    @time_of_flights.setter
-    def time_of_flights(self, value: sc.Variable | np.ndarray) -> None:
-        # Setters have no docstrings. They should be written in the getter docstring instead.
-        value = self._validate_provided_coord(
-            data_array=self._data_array,
-            coord=value,
-            coord_name='time_of_flights',
-            dim='t',
-            length_context='frames in the measurement',
-            expected_dim_string='time',
-            expected_unit='s',
-        )
-        if any(value.to(unit='s') < sc.scalar(0, unit='s')):
-            raise ValueError('time_of_flight values must be non-negative.')
-        self._data_array.coords['tof'] = value
-
-    @property
     def regions_of_interest(self) -> EasyList[RectangleROI]:
         """The list of regions of interest (ROIs) defined for this measurement.<br> This attribute is **read-only**.
 
@@ -686,6 +687,73 @@ class Measurement(NewBase):
     #         'Cannot set regions_of_interest, it is a read-only property. '
     #         'Please simply add or remove ROIs directly from the list.'
     #     )
+
+    @property
+    def unique_name(self) -> str:
+        """
+        The unique identifier of the measurement object.
+
+        Parameters
+        ----------
+        value : str
+            The new unique name for the [measurement][..] object.
+
+        Returns
+        -------
+        str
+            The current unique name of the [measurement][..].
+
+        Raises
+        ------
+        TypeError
+            If ``value`` is not a string.
+        ValueError
+            If the new unique name is already in use.
+
+        Notes
+        -----
+        Setting a new unique name does not free up the old name.
+        """
+        return super().unique_name
+
+    @unique_name.setter
+    # Setters have no docstrings. They should be written in the getter docstring instead.
+    def unique_name(self, value: str):
+        super().unique_name.fset(self, value)
+
+    @property
+    def display_name(self) -> str:
+        """
+        The pretty display name of the measurement object.
+
+        This name is used when the object is displayed in user interfaces and reports.
+
+        Parameters
+        ----------
+        value : str | None
+            The new display name for the [measurement][..] object.
+
+        Returns
+        -------
+        str
+            The current display name of the [measurement][..].
+
+        Raises
+        ------
+        TypeError
+            If ``value`` is not a string or ``None``.
+
+        Notes
+        -----
+        If it has not been set, the [unique name][..unique_name] of the [measurement][..] object
+        will be used as its display name.
+        """
+        return super().display_name
+
+    @display_name.setter
+    # Setters have no docstrings. They should be written in the getter docstring instead.
+    def display_name(self, value: str):
+        super().display_name.fset(self, value)
 
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """Rebin the measurement image stack.
@@ -1428,3 +1496,62 @@ class Measurement(NewBase):
             display names of all associated regions of interest.
         """
         return f'{self.display_name} with shape {self._data_array.shape} and regions of interest: {[roi.display_name for roi in self.regions_of_interest]}'  # noqa: E501
+
+    def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
+        """Convert the measurement object to a dictionary representation.
+
+        Used for saving the measurement to file.
+
+        Parameters
+        ----------
+        skip : List[str] | None
+            A list of attribute names to exclude from the output dictionary.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary representation of the [Measurement][..] object.
+
+        Notes
+        -----
+        A [unique_name][..unique_name] that was generated automatically is not
+        written to the dictionary; only an explicitly supplied one is, so that a
+        deserialized object gets a fresh name instead of clashing with an existing one.
+        Likewise [display_name][..display_name] is omitted when it has not been set.
+        """
+        return super().to_dict(skip=skip)
+
+    @classmethod
+    def from_dict(cls, obj_dict: dict[str, Any]) -> Measurement:
+        """Recreate the measurement object from its dictionary representation created with the [to_dict][to_dict] method.
+
+        Parameters
+        ----------
+        obj_dict : dict
+            A dictionary representation of the [Measurement][..] object.
+
+        Returns
+        -------
+        Measurement
+            An instance of the [Measurement][..] object recreated from the dictionary.
+
+        Raises
+        ------
+        ValueError
+            If the dictionary does not represent a serialized [Measurement][..] object.
+        """
+        return super().from_dict(obj_dict)
+
+    def __copy__(self) -> Measurement:
+        """Create a deep copy of the measurement object.
+
+        Notes
+        -----
+        This uses the [to_dict][to_dict] and [from_dict][from_dict] methods to create the deep copy.
+
+        Returns
+        -------
+        Measurement
+            A deep copy of the measurement object.
+        """
+        return super().__copy__()

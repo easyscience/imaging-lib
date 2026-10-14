@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+from __future__ import annotations
+
 from typing import Any
 from typing import Dict
 from typing import List
@@ -160,7 +162,7 @@ class Lattice(ModelBase):
         atom_sites: list[AtomSite] | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
-    ):
+    ) -> Lattice:
         """
         Create a cubic lattice with $a=b=c$ and $\\alpha=\\beta=\\gamma=90^\\circ$.
 
@@ -227,7 +229,7 @@ class Lattice(ModelBase):
         atom_sites: list[AtomSite] | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
-    ):
+    ) -> Lattice:
         """
         Create a hexagonal lattice with $a=b\\neq c$ and $\\alpha=\\beta=90^\\circ$, $\\gamma=120^\\circ$.
 
@@ -486,6 +488,73 @@ class Lattice(ModelBase):
         """
         return self._atom_sites
 
+    @property
+    def unique_name(self) -> str:
+        """
+        The unique identifier of the lattice object.
+
+        Parameters
+        ----------
+        value : str
+            The new unique name for the [lattice][..] object.
+
+        Returns
+        -------
+        str
+            The current unique name of the [lattice][..].
+
+        Raises
+        ------
+        TypeError
+            If ``value`` is not a string.
+        ValueError
+            If the new unique name is already in use.
+
+        Notes
+        -----
+        Setting a new unique name does not free up the old name.
+        """
+        return super().unique_name
+
+    @unique_name.setter
+    # Setters have no docstrings. They should be written in the getter docstring instead.
+    def unique_name(self, value: str):
+        super().unique_name.fset(self, value)
+
+    @property
+    def display_name(self) -> str:
+        """
+        The pretty display name of the lattice object.
+
+        This name is used when the object is displayed in user interfaces and reports.
+
+        Parameters
+        ----------
+        value : str | None
+            The new display name for the [lattice][..] object.
+
+        Returns
+        -------
+        str
+            The current display name of the [lattice][..].
+
+        Raises
+        ------
+        TypeError
+            If ``value`` is not a string or ``None``.
+
+        Notes
+        -----
+        If it has not been set, the [unique name][..unique_name] of the [lattice][..] object
+        will be used as its display name.
+        """
+        return super().display_name
+
+    @display_name.setter
+    # Setters have no docstrings. They should be written in the getter docstring instead.
+    def display_name(self, value: str):
+        super().display_name.fset(self, value)
+
     def _validate_length(self, value: Numeric, axis: str):
         if not isinstance(value, Numeric):
             raise TypeError(f'Lattice length_{axis} must be a numeric value. Got {type(value).__name__}')
@@ -523,15 +592,24 @@ class Lattice(ModelBase):
     def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
         """Convert the lattice object to a dictionary representation.
 
+        Used for saving the measurement to file.
+
         Parameters
         ----------
         skip : List[str] | None
-            A list of attribute names to skip when converting to a dictionary.
+            A list of attribute names to exclude from the output dictionary.
 
         Returns
         -------
         Dict[str, Any]
             A dictionary representation of the [Lattice][..] object.
+
+        Notes
+        -----
+        A [unique_name][..unique_name] that was generated automatically is not
+        written to the dictionary; only an explicitly supplied one is, so that a
+        deserialized object gets a fresh name instead of clashing with an existing one.
+        Likewise [display_name][..display_name] is omitted when it has not been set.
         """
         out_dict = super().to_dict(skip=skip)
         angle_lock = getattr(self, '_angle_lock', None)
@@ -540,7 +618,7 @@ class Lattice(ModelBase):
         return out_dict
 
     @classmethod
-    def from_dict(cls, obj_dict: dict):
+    def from_dict(cls, obj_dict: dict) -> Lattice:
         """Recreate the lattice object from its dictionary representation created with the [to_dict][to_dict] method.
 
         Parameters
@@ -573,3 +651,17 @@ class Lattice(ModelBase):
         if angle_lock_dict is not None:
             instance._angle_lock = Parameter.from_dict(angle_lock_dict)
         return instance
+
+    def __copy__(self) -> Lattice:
+        """Create a deep copy of the lattice object.
+
+        Notes
+        -----
+        This uses the [to_dict][to_dict] and [from_dict][from_dict] methods to create the deep copy.
+
+        Returns
+        -------
+        Lattice
+            A deep copy of the lattice object.
+        """
+        return super().__copy__()

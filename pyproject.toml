@@ -31,6 +31,7 @@ dependencies = [
   'plopp',                                                                   # The plotting library of scipp
   'ncrystal[composer]',                                                      # The backend calculator
   'pooch',                                                                   # Data downloader
+  'pandas',                                                                  # For pretty tables
 ]
 
 [project.optional-dependencies]
@@ -65,6 +66,7 @@ dev = [
   'mkdocs-plugin-inline-svg',         # MkDocs: Inline SVG support
   'mkdocs-markdownextradata-plugin',  # MkDocs: Markdown extra data support, such as global variables
   'mkdocstrings-python',              # MkDocs: Python docstring support
+  'markdown-exec[ansi]',              # Execute Markdown code blocks
   'pyyaml',                           # YAML parser
   'spdx-headers',                     # SPDX license header validation
 ]

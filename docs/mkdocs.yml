@@ -179,6 +179,7 @@ plugins:
             - url: https://scipp.github.io/scitiff/objects.inv
             - url: https://scipp.github.io/plopp/objects.inv
   - search
+  - markdown-exec
 
 # Determines additional directories to watch when running mkdocs serve
 watch:
@@ -212,5 +213,5 @@ nav:
           - SampleModel: api-reference/sample_model/index.md
           - Lattice: api-reference/sample_model/lattice.md
           - AtomSite: api-reference/sample_model/atom_site.md
-          - Atom: api-reference/sample_model/atoms.md
+          - Atoms: api-reference/sample_model/atoms.md
           - crystals: api-reference/sample_model/crystals.md

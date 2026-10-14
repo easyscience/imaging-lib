@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+from __future__ import annotations
+
+from typing import Any
+
 from easyscience import global_object
 from easyscience.base_classes import ModelBase
 from easyscience.variable import Parameter
@@ -258,6 +262,73 @@ class AtomSite(ModelBase):
         self._validate_debye_temperature(value)
         self._debye_temperature.value = value
 
+    @property
+    def unique_name(self) -> str:
+        """
+        The unique identifier of the AtomSite object.
+
+        Parameters
+        ----------
+        value : str
+            The new unique name for the [AtomSite][..] object.
+
+        Returns
+        -------
+        str
+            The current unique name of the [AtomSite][..].
+
+        Raises
+        ------
+        TypeError
+            If ``value`` is not a string.
+        ValueError
+            If the new unique name is already in use.
+
+        Notes
+        -----
+        Setting a new unique name does not free up the old name.
+        """
+        return super().unique_name
+
+    @unique_name.setter
+    # Setters have no docstrings. They should be written in the getter docstring instead.
+    def unique_name(self, value: str):
+        super().unique_name.fset(self, value)
+
+    @property
+    def display_name(self) -> str:
+        """
+        The pretty display name of the AtomSite object.
+
+        This name is used when the object is displayed in user interfaces and reports.
+
+        Parameters
+        ----------
+        value : str | None
+            The new display name for the [AtomSite][..] object.
+
+        Returns
+        -------
+        str
+            The current display name of the [AtomSite][..].
+
+        Raises
+        ------
+        TypeError
+            If ``value`` is not a string or ``None``.
+
+        Notes
+        -----
+        If it has not been set, the [unique name][..unique_name] of the [AtomSite][..] object
+        will be used as its display name.
+        """
+        return super().display_name
+
+    @display_name.setter
+    # Setters have no docstrings. They should be written in the getter docstring instead.
+    def display_name(self, value: str):
+        super().display_name.fset(self, value)
+
     def _validate_fract_value(self, value: Numeric, axis: str):
         if not isinstance(value, Numeric):
             raise TypeError(f'"fract_{axis}" must be a numeric value')
@@ -299,3 +370,62 @@ class AtomSite(ModelBase):
             f"AtomSite(atomic_species='{self.atom._name_}', fract_a={self.fract_a.value},"
             f' fract_b={self.fract_b.value}, fract_c={self.fract_c.value})'
         )
+
+    def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
+        """Convert the AtomSite object to a dictionary representation.
+
+        Used for saving the measurement to file.
+
+        Parameters
+        ----------
+        skip : List[str] | None
+            A list of attribute names to exclude from the output dictionary.
+
+        Returns
+        -------
+        Dict[str, Any]
+            A dictionary representation of the [AtomSite][..] object.
+
+        Notes
+        -----
+        A [unique_name][..unique_name] that was generated automatically is not
+        written to the dictionary; only an explicitly supplied one is, so that a
+        deserialized object gets a fresh name instead of clashing with an existing one.
+        Likewise [display_name][..display_name] is omitted when it has not been set.
+        """
+        return super().to_dict(skip=skip)
+
+    @classmethod
+    def from_dict(cls, obj_dict: dict[str, Any]) -> AtomSite:
+        """Recreate the AtomSite object from its dictionary representation created with the [to_dict][to_dict] method.
+
+        Parameters
+        ----------
+        obj_dict : dict
+            A dictionary representation of the [AtomSite][..] object.
+
+        Returns
+        -------
+        AtomSite
+            An instance of the [AtomSite][..] object recreated from the dictionary.
+
+        Raises
+        ------
+        ValueError
+            If the dictionary does not represent a serialized [AtomSite][..] object.
+        """
+        return super().from_dict(obj_dict)
+
+    def __copy__(self) -> AtomSite:
+        """Create a deep copy of the AtomSite object.
+
+        Notes
+        -----
+        This uses the [to_dict][to_dict] and [from_dict][from_dict] methods to create the deep copy.
+
+        Returns
+        -------
+        AtomSite
+            A deep copy of the AtomSite object.
+        """
+        return super().__copy__()
