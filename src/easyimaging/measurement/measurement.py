@@ -719,7 +719,7 @@ class Measurement(NewBase):
     @unique_name.setter
     # Setters have no docstrings. They should be written in the getter docstring instead.
     def unique_name(self, value: str):
-        super().unique_name.fset(self, value)
+        super(Measurement, type(self)).unique_name.fset(self, value)
 
     @property
     def display_name(self) -> str:
@@ -753,7 +753,7 @@ class Measurement(NewBase):
     @display_name.setter
     # Setters have no docstrings. They should be written in the getter docstring instead.
     def display_name(self, value: str):
-        super().display_name.fset(self, value)
+        super(Measurement, type(self)).display_name.fset(self, value)
 
     def rebin(self, dimensions: dict[str, Numeric]) -> None:
         """Rebin the measurement image stack.

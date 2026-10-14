@@ -519,7 +519,7 @@ class Lattice(ModelBase):
     @unique_name.setter
     # Setters have no docstrings. They should be written in the getter docstring instead.
     def unique_name(self, value: str):
-        super().unique_name.fset(self, value)
+        super(Lattice, type(self)).unique_name.fset(self, value)
 
     @property
     def display_name(self) -> str:
@@ -553,7 +553,7 @@ class Lattice(ModelBase):
     @display_name.setter
     # Setters have no docstrings. They should be written in the getter docstring instead.
     def display_name(self, value: str):
-        super().display_name.fset(self, value)
+        super(Lattice, type(self)).display_name.fset(self, value)
 
     def _validate_length(self, value: Numeric, axis: str):
         if not isinstance(value, Numeric):
