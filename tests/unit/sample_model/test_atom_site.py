@@ -9,6 +9,7 @@ from easyscience import global_object
 
 from easyimaging.sample_model import Atoms
 from easyimaging.sample_model import AtomSite
+from easyimaging.sample_model.atoms import Atom
 
 
 class TestAtomSite:
@@ -87,7 +88,7 @@ class TestAtomSite:
         with pytest.raises(KeyError, match='"atom" must be a valid Atoms enum or a valid Atoms name string'):
             AtomSite(atom=invalid_atom, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0)
 
-    @pytest.mark.parametrize('invalid_atom', [26, None, 1.5], ids=['int', 'none', 'float'])
+    @pytest.mark.parametrize('invalid_atom', [26, None, 1.5, Atom('Fe', None, 261)], ids=['int', 'none', 'float', 'bare_atom'])
     def test_init_invalid_atom_type(self, invalid_atom):
         # When Then Expect
         with pytest.raises(TypeError, match='"atom" must be a valid Atoms enum or a valid Atoms name string'):
@@ -163,8 +164,9 @@ class TestAtomSite:
             ('not_an_atom', KeyError),
             (26, TypeError),
             (None, TypeError),
+            (Atom('Co', None, 271), TypeError),
         ],
-        ids=['invalid_string', 'int', 'none'],
+        ids=['invalid_string', 'int', 'none', 'bare_atom'],
     )
     def test_atom_setter_invalid_leaves_atom_unchanged(self, atom_site, invalid_atom, error):
         # When

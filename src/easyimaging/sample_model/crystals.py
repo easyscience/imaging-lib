@@ -59,7 +59,7 @@ def body_centered_cubic(
         if isinstance(atom, str):
             name = atom
         else:
-            name = getattr(atom, '_name_', 'Unknown')
+            name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} BCC Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -131,7 +131,7 @@ def face_centered_cubic(
         if isinstance(atom, str):
             name = atom
         else:
-            name = getattr(atom, '_name_', 'Unknown')
+            name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} FCC Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -221,7 +221,7 @@ def diamond_cubic(
         if isinstance(atom, str):
             name = atom
         else:
-            name = getattr(atom, '_name_', 'Unknown')
+            name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} Diamond Cubic Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -345,11 +345,11 @@ def zincblende(
         if isinstance(atom1, str):
             name1 = atom1
         else:
-            name1 = getattr(atom1, '_name_', 'Unknown')
+            name1 = getattr(atom1, 'name', 'Unknown')
         if isinstance(atom2, str):
             name2 = atom2
         else:
-            name2 = getattr(atom2, '_name_', 'Unknown')
+            name2 = getattr(atom2, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name1}{name2} Zincblende Lattice')
     lattice = Lattice.cubic(
         length_a=length_a,
@@ -466,7 +466,7 @@ def hexagonal_close_packed(
         if isinstance(atom, str):
             name = atom
         else:
-            name = getattr(atom, '_name_', 'Unknown')
+            name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} HCP Lattice')
     lattice = Lattice.hexagonal(
         length_a=length_a,

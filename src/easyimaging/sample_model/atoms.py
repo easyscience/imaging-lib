@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-@dataclass
+@dataclass(frozen=True)
 class Atom:
     """A dataclass representing a known atomic species, identified by its element symbol and an optional isotope
     mass number.

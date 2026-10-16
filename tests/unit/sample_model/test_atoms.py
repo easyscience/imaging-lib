@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from easyimaging.sample_model.atoms import Atom
@@ -21,6 +23,14 @@ class TestAtom:
         atom = Atom(element='Fe', isotope=None, enum_id=261)
         # Then Expect
         assert atom.isotope is None
+
+    def test_is_immutable(self):
+        # When
+        atom = Atom(element='Fe', isotope=56, enum_id=263)
+        # Then Expect
+        with pytest.raises(FrozenInstanceError):
+            atom.element = 'Cu'
+        assert atom.element == 'Fe'
 
 
 class TestAtoms:
@@ -55,6 +65,23 @@ class TestAtoms:
         member = Atoms['Fe56']
         # Then Expect
         assert member is Atoms.Fe56
+
+    def test_members_are_hashable(self):
+        # When
+        debye_temperatures = {Atoms.Fe: 470.0, Atoms.Cu: 343.0}
+        species = {Atoms.Fe, Atoms.Fe56, Atoms.Fe}
+        # Then Expect
+        assert debye_temperatures[Atoms.Fe] == 470.0
+        assert species == {Atoms.Fe, Atoms.Fe56}
+
+    @pytest.mark.parametrize('field, value', [('element', 'Cu'), ('isotope', 63)], ids=['element', 'isotope'])
+    def test_members_are_immutable(self, field, value):
+        # When
+        original_value = getattr(Atoms.Fe, field)
+        # Then Expect
+        with pytest.raises(FrozenInstanceError):
+            setattr(Atoms.Fe, field, value)
+        assert getattr(Atoms.Fe, field) == original_value
 
     def test_enum_ids_are_unique_across_all_members(self):
         # When

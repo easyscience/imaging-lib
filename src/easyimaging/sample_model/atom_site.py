@@ -90,7 +90,7 @@ class AtomSite(ModelBase):
         self._validate_fract_value(fract_c, 'c')
 
         if unique_name is None:
-            unique_name = global_object.generate_unique_name(f'{atom._name_} AtomSite')
+            unique_name = global_object.generate_unique_name(f'{atom.name} AtomSite')
             super().__init__(unique_name=unique_name, display_name=display_name)
             self._default_unique_name = True  # This gets set to False by the super init
         else:
@@ -141,7 +141,7 @@ class AtomSite(ModelBase):
         value = self._validate_atom(value)
         self._atom = value
         if self._default_unique_name:
-            self.unique_name = global_object.generate_unique_name(f'{value._name_} AtomSite')
+            self.unique_name = global_object.generate_unique_name(f'{value.name} AtomSite')
             # Change _default_unique_name when Parameter uses NewBase
             self.fract_a.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_a')
             self.fract_b.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_b')
@@ -349,7 +349,7 @@ class AtomSite(ModelBase):
                 value = Atoms[value]
             except KeyError:
                 raise KeyError(f'"atom" must be a valid Atoms enum or a valid Atoms name string. Got: {value}')
-        elif value not in Atoms:
+        elif not isinstance(value, Atoms):
             raise TypeError(f'"atom" must be a valid Atoms enum or a valid Atoms name string. Got: {value}')
         return value
 
@@ -369,7 +369,7 @@ class AtomSite(ModelBase):
             A human-readable summary including the atomic species and fractional coordinates.
         """
         return (
-            f"AtomSite(atomic_species='{self.atom._name_}', fract_a={self.fract_a.value},"
+            f"AtomSite(atomic_species='{self.atom.name}', fract_a={self.fract_a.value},"
             f' fract_b={self.fract_b.value}, fract_c={self.fract_c.value})'
         )
 
