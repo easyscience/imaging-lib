@@ -3,14 +3,13 @@
 ###########
 
 [workspace]
-
 # Supported platforms for the lock file (pixi.lock)
 platforms = [
   'win-64',
   # Set minimum supported version for glibc to be 2.35 to ensure packages
   # like `crysfml` that only have wheels for glibc 2.35+
   # (manylinux_2_35_x86_64) are used.
-  #libc = { family = 'glibc', version = '2.35' }
+  # libc = { family = 'glibc', version = '2.35' }
   { platform = 'linux-64', glibc = '2.35' },
   # Set minimum supported version for macOS to be 14.0 to ensure packages
   # like `scipp` that only have wheels for macOS 14.0+ (macosx_14_0_arm64)
@@ -36,19 +35,19 @@ PYTHONIOENCODING = 'utf-8'
 # Set specific Python versions to be used in CI testing.
 
 [feature.py-min.dependencies]
-python = '3.11.*'
+python = '3.12.*'
 
 [feature.py-max.dependencies]
-python = '3.13.*'
+python = '3.14.*'
 
 # Development dependencies for local development and testing with
 # editable installations.
 
 [feature.dev.dependencies]
-nodejs = '*'      # Required for Prettier (non-Python formatting)
-jupyterlab = '*'  # Jupyter notebooks
-ipython = '*'     # Interactive Python shell
-pixi-kernel = '*' # Pixi Jupyter kernel
+nodejs = '*'       # Required for Prettier (non-Python formatting)
+jupyterlab = '*'   # Jupyter notebooks
+ipython = '*'      # Interactive Python shell
+pixi-kernel = '*'  # Pixi Jupyter kernel
 
 [feature.dev.pypi-dependencies]
 pip = '*'
@@ -58,9 +57,9 @@ easyimaging = { path = '.', editable = true, extras = ['dev'] }
 # of editable installations.
 
 [feature.user.dependencies]
-jupyterlab = '*'  # Jupyter notebooks
-ipython = '*'     # Interactive Python shell
-pixi-kernel = '*' # Pixi Jupyter kernel
+jupyterlab = '*'   # Jupyter notebooks
+ipython = '*'      # Interactive Python shell
+pixi-kernel = '*'  # Pixi Jupyter kernel
 
 [feature.user.pypi-dependencies]
 pip = '*'
@@ -71,13 +70,12 @@ easyimaging = '*'
 ##############
 
 [environments]
-
 # The `default` feature is always included in all environments.
 # Additional features can be specified per environment.
 
 # Specific environments for CI testing with different Python versions.
-py-311-env = { features = ['py-min', 'dev'] }
-py-313-env = { features = ['py-max', 'dev'] }
+py-312-env = { features = ['py-min', 'dev'] }
+py-314-env = { features = ['py-max', 'dev'] }
 
 # The `default` environment is developer-oriented for local development
 # and testing with editable installation of the current package.
@@ -92,7 +90,6 @@ user = { features = ['py-max', 'user'] }
 #######
 
 [tasks]
-
 ##################
 # 🧪 Testing Tasks
 ##################
@@ -177,9 +174,9 @@ notebook-tweak = 'python tools/tweak_notebooks.py docs/docs/tutorials/'
 notebook-exec = 'python -m pytest --nbmake docs/docs/tutorials/ --nbmake-timeout=1200 --overwrite --color=yes -n auto -v'
 
 notebook-prepare = { depends-on = [
-  #'notebook-convert',
+  # 'notebook-convert',
   'notebook-strip',
-  #'notebook-tweak',
+  # 'notebook-tweak',
 ] }
 
 ########################
@@ -271,7 +268,7 @@ clean-pycache = "find . -type d -name '__pycache__' -prune -exec rm -rf '{}' +"
 post-install = { depends-on = [
   'npm-config',
   'prettier-install',
-  #'pre-commit-setup',
+  # 'pre-commit-setup',
 ] }
 
 ##########################
