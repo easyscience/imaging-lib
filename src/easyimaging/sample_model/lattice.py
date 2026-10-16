@@ -3,9 +3,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
-from typing import Dict
-from typing import List
 
 from easyscience import Parameter
 from easyscience import global_object
@@ -13,6 +12,9 @@ from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
 
 from .atom_site import AtomSite
+
+if TYPE_CHECKING:
+    from easyscience.variable.descriptor_base import DescriptorBase
 
 Numeric = int | float
 INFINITESIMAL = 1e-3
@@ -555,6 +557,75 @@ class Lattice(ModelBase):
     def display_name(self, value: str):
         super(Lattice, type(self)).display_name.fset(self, value)
 
+    def get_all_variables(self) -> list[DescriptorBase]:
+        """
+        Get all ``Descriptors`` and ``Parameters`` in the lattice object.
+
+
+        Notes
+        -----
+        Fittable [`Parameters`][easyscience.Parameter] is a subset of
+        [`Descriptors`][easyscience.variable.descriptor_base.DescriptorBase] and are hence also included in the list.
+
+
+        Returns
+        -------
+        list[DescriptorBase]
+            A list of all [`Descriptors`][easyscience.variable.descriptor_base.DescriptorBase] contained in the [`Lattice`][..]
+            object.
+        """
+        return super().get_all_variables()
+
+    def get_all_parameters(self) -> list[Parameter]:
+        """
+        Get **all** ``Parameters`` in the lattice object.
+
+        Returns
+        -------
+        list[Parameter]
+            A list of all [`Parameters`][easyscience.Parameter] contained in the [`Lattice`][..] object.
+        """
+        return super().get_all_parameters()
+
+    def get_fittable_parameters(self) -> list[Parameter]:
+        """
+        Get all fittable ``Parameters`` in the lattice object.
+
+        In comparison to [`get_all_parameters`][..get_all_parameters], this method excludes dependent
+        [`Parameters`][easyscience.Parameter].
+
+        Returns
+        -------
+        list[Parameter]
+            A list of all fittable [`Parameters`][easyscience.Parameter] contained in the [`Lattice`][..] object.
+        """
+        return super().get_fittable_parameters()
+
+    def get_free_parameters(self) -> list[Parameter]:
+        """
+        Get all **free** ``Parameters`` in the lattice object.
+
+        In comparison to [`get_fittable_parameters`][..get_fittable_parameters], this method also excludes currently fixed
+        [`Parameters`][easyscience.Parameter].
+
+        Returns
+        -------
+        list[Parameter]
+            A list of all free [`Parameters`][easyscience.Parameter] contained in the [`Lattice`][..] object.
+        """
+        return super().get_free_parameters()
+
+    def get_fit_parameters(self) -> list[Parameter]:
+        """
+        This is an alias for [`get_free_parameters`][..get_free_parameters].
+
+        Returns
+        -------
+        list[Parameter]
+            A list of all free [`Parameters`][easyscience.Parameter] contained in the [`Lattice`][..] object.
+        """
+        return super().get_fit_parameters()
+
     def _validate_length(self, value: Numeric, axis: str):
         if not isinstance(value, Numeric):
             raise TypeError(f'Lattice length_{axis} must be a numeric value. Got {type(value).__name__}')
@@ -589,19 +660,19 @@ class Lattice(ModelBase):
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
-    def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
+    def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
         """Convert the lattice object to a dictionary representation.
 
         Used for saving the measurement to file.
 
         Parameters
         ----------
-        skip : List[str] | None
+        skip : list[str] | None
             A list of attribute names to exclude from the output dictionary.
 
         Returns
         -------
-        Dict[str, Any]
+        dict[str, Any]
             A dictionary representation of the [Lattice][..] object.
 
         Notes

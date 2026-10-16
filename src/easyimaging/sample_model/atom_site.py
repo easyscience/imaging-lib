@@ -15,8 +15,9 @@ Numeric = int | float
 
 
 class AtomSite(ModelBase):
-    """An `AtomSite` object represents a specific position in a crystal structure and its occupying atom, defined by its
-    atomic species, vibrational properties, and fractional coordinates (a, b, c) within the host lattice's unit cell.
+    """An [`AtomSite`][.] object represents a specific position in a crystal structure and its occupying atom, defined by its
+    [atomic species][...atoms.Atom], vibrational properties, and fractional coordinates $(a, b, c)$ within the host lattice's
+    unit cell.
 
     An [`AtomSite`][.] is most commonly created as part of a [`Lattice`][...lattice.Lattice], either directly via its
     constructor, or indirectly through one of the crystal-structure convenience functions in
@@ -24,7 +25,7 @@ class AtomSite(ModelBase):
 
     Example
     -------
-    Creating an [AtomSite][.] instance manually:
+    Creating an [`AtomSite`][.] instance manually:
     ```python
     from easyimaging.sample_model import AtomSite, Atoms
 
@@ -54,7 +55,8 @@ class AtomSite(ModelBase):
         Parameters
         ----------
         atom : Atoms | str
-            The atomic species that occupies the site.
+            The atomic species that occupies the site. Can be either an [`Atoms`][....atoms.Atoms] object or its name as a
+            string.
         fract_a : int | float
             The fractional a-coordinate of the site.
         fract_b : int | float
@@ -72,12 +74,12 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
-            If `atom` is not an Atoms enum.<br>
+            If `atom` is not an [`Atoms`][....atoms.Atoms] enum member or a string.<br>
             If any of the fractional coordinates are not floats or ints.
         ValueError
             If any of the fractional coordinates are out of range.
         KeyError
-            If the provided atom string does not correspond to a valid Atoms enum member.
+            If the provided atom string does not correspond to a valid [`Atoms`][....atoms.Atoms] enum member.
         """
 
         atom = self._validate_atom(atom)
