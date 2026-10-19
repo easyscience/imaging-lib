@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import numbers
 import warnings
 from functools import partial
 from pathlib import Path
@@ -23,8 +24,6 @@ from scitiff.io import ImageJMetadataNotFoundWarning
 from ..regions_of_interest import RectangleROI
 from ..utils import _is_notebook
 from ..utils import _to_edges
-
-Numeric = int | float
 
 
 class Measurement(NewBase):
@@ -755,7 +754,7 @@ class Measurement(NewBase):
     def display_name(self, value: str):
         super(Measurement, type(self)).display_name.fset(self, value)
 
-    def rebin(self, dimensions: dict[str, Numeric]) -> None:
+    def rebin(self, dimensions: dict[str, numbers.Real]) -> None:
         """Rebin the measurement image stack.
 
         This operation increases the signal-to-noise ratio of the [Measurement][..] data, at the cost of a reduced resolution,
@@ -815,7 +814,7 @@ class Measurement(NewBase):
         """
         if not isinstance(dimensions, dict):
             raise TypeError('dimensions must be a dictionary mapping dimension names to rebin factors.')
-        if all(isinstance(value, Numeric) and value == 1 for value in dimensions.values()):  # Reverts to original data
+        if all(isinstance(value, numbers.Real) and value == 1 for value in dimensions.values()):  # Reverts to original data
             # self.revert_rebin() # If we want secondary rebins to work on the original data
             return
         sizes = dimensions.copy()

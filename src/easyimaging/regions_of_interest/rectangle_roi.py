@@ -3,11 +3,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Sequence
-from typing import Tuple
 
 import scipp as sc
 from easyscience.base_classes import NewBase
@@ -171,22 +168,22 @@ class RectangleROI(NewBase):
         else:
             raise ValueError('Cannot delete physical coordinate ranges because they are not set.')
 
-    def pixel_slice(self) -> Tuple[slice, slice]:
+    def pixel_slice(self) -> tuple[slice, slice]:
         """Get a pixel index slice object corresponding to the ROI.
 
         Returns
         -------
-        tuple
+        tuple[slice, slice]
             Two (x,y) slice objects representing the pixel ranges of the ROI.
         """
         return slice(self._x_pixel_start, self._x_pixel_end), slice(self._y_pixel_start, self._y_pixel_end)
 
-    def slice(self) -> Tuple[slice, slice]:
+    def slice(self) -> tuple[slice, slice]:
         """Get a physical coordinate slice object corresponding to the ROI.
 
         Returns
         -------
-        tuple
+        tuple[slice, slice]
             Two (x,y) slice objects representing the physical coordinate ranges of the ROI.
 
         Raises
@@ -636,7 +633,7 @@ class RectangleROI(NewBase):
                 'Please use the set_physical_coord_range method.'
             )
 
-    def to_dict(self, skip: List[str] | None = None) -> Dict[str, Any]:
+    def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
         """Convert the ROI instance to a dictionary representation.
 
         Used for saving the ROI to file.
@@ -702,7 +699,7 @@ class RectangleROI(NewBase):
         return out_dict
 
     @classmethod
-    def from_dict(cls, input_dict: Dict[str, Any]) -> RectangleROI:
+    def from_dict(cls, input_dict: dict[str, Any]) -> RectangleROI:
         """Recreate the RectangleROI object from its dictionary representation created with the [to_dict][to_dict] method.
 
         Parameters

@@ -12,5 +12,5 @@ physical sample.
 - [AtomSite](atom_site.md) - The atomic sites of a crystallographic
   lattice.
 - [Atoms](atoms.md) - The atomic species occupying an atomic site.
-- [crystals](crystals) - A module containing convenience functions to
+- [crystals](crystals.md) - A module containing convenience functions to
   easily create and occupy common crystallographic lattices.

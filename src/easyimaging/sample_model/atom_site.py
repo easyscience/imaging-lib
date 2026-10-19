@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import numbers
 from typing import Any
 
 from easyscience import global_object
@@ -11,7 +12,6 @@ from easyscience.variable import Parameter
 
 from .atoms import Atoms
 
-Numeric = int | float
 DEBYE_INFINITESIMAL = 1e-9
 
 
@@ -19,6 +19,8 @@ class AtomSite(ModelBase):
     """An [`AtomSite`][.] object represents a specific position in a crystal structure and its occupying atom, defined by its
     [atomic species][...atoms.Atom], vibrational properties, and fractional coordinates $(a, b, c)$ within the host lattice's
     unit cell.
+
+    Fractional coordinates $(a, b, c)$ are wrapped around the unit-cell to the half-open range [0, 1).
 
     An [`AtomSite`][.] is most commonly created as part of a [`Lattice`][...lattice.Lattice], either directly via its
     constructor, or indirectly through one of the crystal-structure convenience functions in
@@ -43,10 +45,10 @@ class AtomSite(ModelBase):
     def __init__(
         self,
         atom: Atoms | str,
-        fract_a: Numeric,
-        fract_b: Numeric,
-        fract_c: Numeric,
-        debye_temperature: Numeric | None = None,
+        fract_a: numbers.Real,
+        fract_b: numbers.Real,
+        fract_c: numbers.Real,
+        debye_temperature: numbers.Real | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
     ):
@@ -76,11 +78,10 @@ class AtomSite(ModelBase):
         ------
         TypeError
             If `atom` is not an [`Atoms`][....atoms.Atoms] enum member or a string.<br>
-            If any of the fractional coordinates are not floats or ints.
-            If ``debye_temperature`` is not a number.
+            If any of the fractional coordinates or the debye_temperature are not numbers.
         ValueError
-            If any of the fractional coordinates are out of range.
-            If ``debye_temperature`` is not positive.
+            If any of the fractional coordinates are not within the range [-1.0, 1.0].
+            If the debye_temperature is not positive.
         KeyError
             If the provided atom string does not correspond to a valid [`Atoms`][....atoms.Atoms] enum member.
         """
@@ -88,9 +89,9 @@ class AtomSite(ModelBase):
         atom = self._validate_atom(atom)
         self._atom = atom
 
-        self._validate_fract_value(fract_a, 'a')
-        self._validate_fract_value(fract_b, 'b')
-        self._validate_fract_value(fract_c, 'c')
+        wrapped_fract_a = self._validate_fract_value(fract_a, 'a')
+        wrapped_fract_b = self._validate_fract_value(fract_b, 'b')
+        wrapped_fract_c = self._validate_fract_value(fract_c, 'c')
         if debye_temperature is not None:
             self._validate_debye_temperature(debye_temperature)
 
@@ -107,9 +108,9 @@ class AtomSite(ModelBase):
             )
             debye_temperature = 300.0
 
-        self._fract_a = self._generate_fract_parameter(fract_a, 'a')
-        self._fract_b = self._generate_fract_parameter(fract_b, 'b')
-        self._fract_c = self._generate_fract_parameter(fract_c, 'c')
+        self._fract_a = self._generate_fract_parameter(wrapped_fract_a, 'a')
+        self._fract_b = self._generate_fract_parameter(wrapped_fract_b, 'b')
+        self._fract_c = self._generate_fract_parameter(wrapped_fract_c, 'c')
 
         debye_name = global_object.generate_unique_name(f'{self.unique_name}_debye_temperature')
         self._debye_temperature = Parameter(
@@ -162,10 +163,12 @@ class AtomSite(ModelBase):
     def fract_a(self) -> Parameter:
         """The fractional x-coordinate of the site.
 
+        The value is wrapped around the unit-cell to the half-open range [0, 1).
+
         Parameters
         ----------
         value : int | float
-            A number between 0.0 and 1.0.
+            A number between -1.0 and 1.0.
 
         Returns
         -------
@@ -175,26 +178,28 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
-            If ``value`` is not numeric.
+            If ``value`` is not a number.
         ValueError
-            If ``value`` is not between 0.0 and 1.0.
+            If ``value`` is not between -1.0 and 1.0.
         """
         return self._fract_a
 
     @fract_a.setter
-    def fract_a(self, value: Numeric):
+    def fract_a(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        self._validate_fract_value(value, 'a')
-        self._fract_a.value = value
+        wrapped_value = self._validate_fract_value(value, 'a')
+        self._fract_a.value = wrapped_value
 
     @property
     def fract_b(self) -> Parameter:
         """The fractional y-coordinate of the site.
 
+        The value is wrapped around the unit-cell to the half-open range [0, 1).
+
         Parameters
         ----------
         value : int | float
-            A number between 0.0 and 1.0.
+            A number between -1.0 and 1.0.
 
         Returns
         -------
@@ -204,26 +209,28 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
-            If ``value`` is not numeric.
+            If ``value`` is not a number.
         ValueError
-            If ``value`` is not between 0.0 and 1.0.
+            If ``value`` is not between -1.0 and 1.0.
         """
         return self._fract_b
 
     @fract_b.setter
-    def fract_b(self, value: Numeric):
+    def fract_b(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        self._validate_fract_value(value, 'b')
-        self._fract_b.value = value
+        wrapped_value = self._validate_fract_value(value, 'b')
+        self._fract_b.value = wrapped_value
 
     @property
     def fract_c(self) -> Parameter:
         """The fractional z-coordinate of the site.
 
+        The value is wrapped around the unit-cell to the half-open range [0, 1).
+
         Parameters
         ----------
         value : int | float
-            A number between 0.0 and 1.0.
+            A number between -1.0 and 1.0.
 
         Returns
         -------
@@ -233,17 +240,17 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
-            If ``value`` is not numeric.
+            If ``value`` is not a number.
         ValueError
-            If ``value`` is not between 0.0 and 1.0.
+            If ``value`` is not between -1.0 and 1.0.
         """
         return self._fract_c
 
     @fract_c.setter
-    def fract_c(self, value: Numeric):
+    def fract_c(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
-        self._validate_fract_value(value, 'c')
-        self._fract_c.value = value
+        wrapped_value = self._validate_fract_value(value, 'c')
+        self._fract_c.value = wrapped_value
 
     @property
     def debye_temperature(self) -> Parameter:
@@ -262,14 +269,14 @@ class AtomSite(ModelBase):
         Raises
         ------
         TypeError
-            If ``value`` is not numeric.
+            If ``value`` is not a number.
         ValueError
             If ``value`` is not positive.
         """
         return self._debye_temperature
 
     @debye_temperature.setter
-    def debye_temperature(self, value: Numeric):
+    def debye_temperature(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_debye_temperature(value)
         self._debye_temperature.value = value
@@ -341,14 +348,16 @@ class AtomSite(ModelBase):
     def display_name(self, value: str):
         super(AtomSite, type(self)).display_name.fset(self, value)
 
-    def _validate_fract_value(self, value: Numeric, axis: str):
-        if not isinstance(value, Numeric):
+    def _validate_fract_value(self, value: numbers.Real, axis: str):
+        if not isinstance(value, numbers.Real) or isinstance(value, bool):
             raise TypeError(f'"fract_{axis}" must be a numeric value')
-        if not (0.0 <= value <= 1.0):
-            raise ValueError(f'"fract_{axis}" must be between 0.0 and 1.0')
+        if not (-1.0 <= value <= 1.0):
+            raise ValueError(f'"fract_{axis}" must be between -1.0 and 1.0')
+        wrapped_value = value % 1.0
+        return 0.0 if wrapped_value == 1.0 else wrapped_value  # a tiny negative value rounds up to 1.0
 
-    def _validate_debye_temperature(self, value: Numeric):
-        if not isinstance(value, Numeric):
+    def _validate_debye_temperature(self, value: numbers.Real):
+        if not isinstance(value, numbers.Real):
             raise TypeError('"debye_temperature" must be a numeric value')
         if value <= DEBYE_INFINITESIMAL:
             raise ValueError('"debye_temperature" must be positive')
@@ -363,7 +372,7 @@ class AtomSite(ModelBase):
             raise TypeError(f'"atom" must be a valid Atoms enum or a valid Atoms name string. Got: {value}')
         return value
 
-    def _generate_fract_parameter(self, fract_value: Numeric, axis: str) -> Parameter:
+    def _generate_fract_parameter(self, fract_value: numbers.Real, axis: str) -> Parameter:
 
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_{axis}')
 
@@ -386,7 +395,7 @@ class AtomSite(ModelBase):
     def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
         """Convert the AtomSite object to a dictionary representation.
 
-        Used for saving the measurement to file.
+        Used for saving the [AtomSite][..] to file.
 
         Parameters
         ----------

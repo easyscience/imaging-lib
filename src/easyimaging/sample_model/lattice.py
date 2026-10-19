@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import numbers
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -16,14 +18,13 @@ from .atom_site import AtomSite
 if TYPE_CHECKING:
     from easyscience.variable.descriptor_base import DescriptorBase
 
-Numeric = int | float
 INFINITESIMAL = 1e-3
 
 
 class Lattice(ModelBase):
     """A Lattice represents the periodic arrangement of atoms in a crystal structure, defined by its lattice
     parameter: (``length_a``, ``length_b``, ``length_c``), lattice-vector angles: (``alpha``, ``beta``, ``gamma``)
-    and a list of [`AtomSite`][...atom_site.AtomSite] objects, with their corresponding [atomic species][...atoms.Atoms],
+    and a sequence of [`AtomSite`][...atom_site.AtomSite] objects, with their corresponding [atomic species][...atoms.Atoms],
     occupying it.
 
     A [`Lattice`][.] object can currently be created in 3 ways of descending specificity:
@@ -90,13 +91,13 @@ class Lattice(ModelBase):
 
     def __init__(
         self,
-        length_a: Numeric,
-        length_b: Numeric,
-        length_c: Numeric,
-        alpha: Numeric = 90.0,
-        beta: Numeric = 90.0,
-        gamma: Numeric = 90.0,
-        atom_sites: list[AtomSite] | None = None,
+        length_a: numbers.Real,
+        length_b: numbers.Real,
+        length_c: numbers.Real,
+        alpha: numbers.Real = 90.0,
+        beta: numbers.Real = 90.0,
+        gamma: numbers.Real = 90.0,
+        atom_sites: Sequence[AtomSite] | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
     ):
@@ -117,8 +118,8 @@ class Lattice(ModelBase):
             The angle between the $\\vec{a}$ and $\\vec{c}$ lattice vectors (in degrees).
         gamma : float | int
             The angle between the $\\vec{a}$ and $\\vec{b}$ lattice vectors (in degrees).
-        atom_sites : list[AtomSite] | None
-            A list of [`AtomSite`][..] objects to insert into the lattice.
+        atom_sites : Sequence[AtomSite] | None
+            A sequence of [`AtomSite`][..] objects to insert into the lattice.
         unique_name : str | None
             A unique identifier for the [`Lattice`][..]. Defaults to ``'Lattice'`` appended by a unique integer.
         display_name : str | None
@@ -132,7 +133,7 @@ class Lattice(ModelBase):
         TypeError
             If any of ``length_a``, ``length_b``, or ``length_c`` is not a numeric value.<br>
             If any of ``alpha``, ``beta``, or ``gamma`` is not a numeric value.<br>
-            If ``atom_sites`` is provided and is not a list of [`AtomSite`][....atom_site.AtomSite] objects.
+            If ``atom_sites`` is provided and is not a sequence of [`AtomSite`][....atom_site.AtomSite] objects.
         """
         for length, axis in ((length_a, 'a'), (length_b, 'b'), (length_c, 'c')):
             self._validate_length(length, axis)
@@ -140,8 +141,8 @@ class Lattice(ModelBase):
             self._validate_angle(angle, name)
 
         if atom_sites is not None:
-            if not isinstance(atom_sites, list) or not all(isinstance(site, AtomSite) for site in atom_sites):
-                raise TypeError('atom_sites must be a list of AtomSite objects.')
+            if not isinstance(atom_sites, Sequence) or not all(isinstance(site, AtomSite) for site in atom_sites):
+                raise TypeError('atom_sites must be a sequence of AtomSite objects.')
 
         super().__init__(unique_name=unique_name, display_name=display_name)
 
@@ -161,8 +162,8 @@ class Lattice(ModelBase):
     @classmethod
     def cubic(
         cls,
-        length_a: Numeric,
-        atom_sites: list[AtomSite] | None = None,
+        length_a: numbers.Real,
+        atom_sites: Sequence[AtomSite] | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> Lattice:
@@ -173,8 +174,8 @@ class Lattice(ModelBase):
         ----------
         length_a : float | int
             The lattice constant of the cubic lattice in Å.
-        atom_sites : list[AtomSite] | None
-            A list of [`AtomSite`][..] objects to insert into the lattice.
+        atom_sites : Sequence[AtomSite] | None
+            A sequence of [`AtomSite`][..] objects to insert into the lattice.
         unique_name : str | None
             A unique identifier for the [`Lattice`][..]. Defaults to ``'CubicLattice'`` appended by a unique integer.
         display_name : str | None
@@ -190,7 +191,7 @@ class Lattice(ModelBase):
         ValueError
             If ``length_a`` is not positive.
         TypeError
-            If ``atom_sites`` is provided and is not a list of [`AtomSite`][....atom_site.AtomSite] objects.
+            If ``atom_sites`` is provided and is not a sequence of [`AtomSite`][....atom_site.AtomSite] objects.
         """
         default_unique_name = False
         if unique_name is None:
@@ -227,9 +228,9 @@ class Lattice(ModelBase):
     @classmethod
     def hexagonal(
         cls,
-        length_a: Numeric,
-        length_c: Numeric,
-        atom_sites: list[AtomSite] | None = None,
+        length_a: numbers.Real,
+        length_c: numbers.Real,
+        atom_sites: Sequence[AtomSite] | None = None,
         unique_name: str | None = None,
         display_name: str | None = None,
     ) -> Lattice:
@@ -242,8 +243,8 @@ class Lattice(ModelBase):
             The lattice constant of the a and b lattice vectors in angstrom.
         length_c : float | int
             The lattice constant of the c lattice vector in angstrom.
-        atom_sites : list[AtomSite] | None
-            A list of [`AtomSite`][..] objects to insert into the lattice.
+        atom_sites : Sequence[AtomSite] | None
+            A sequence of [`AtomSite`][..] objects to insert into the lattice.
         unique_name : str | None
             A unique identifier for the [`Lattice`][..]. Defaults to ``'HexagonalLattice'`` appended by a unique integer.
         display_name : str | None
@@ -259,7 +260,7 @@ class Lattice(ModelBase):
         ValueError
             If ``length_a`` or ``length_c`` is not positive.
         TypeError
-            If ``atom_sites`` is provided and is not a list of [`AtomSite`][....atom_site.AtomSite] objects.
+            If ``atom_sites`` is provided and is not a sequence of [`AtomSite`][....atom_site.AtomSite] objects.
         """
         default_unique_name = False
         if unique_name is None:
@@ -316,7 +317,7 @@ class Lattice(ModelBase):
         return self._length_a
 
     @length_a.setter
-    def length_a(self, value: Numeric):
+    def length_a(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_length(value, 'a')
         self._length_a.value = value
@@ -345,7 +346,7 @@ class Lattice(ModelBase):
         return self._length_b
 
     @length_b.setter
-    def length_b(self, value: Numeric):
+    def length_b(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_length(value, 'b')
         self._length_b.value = value
@@ -374,7 +375,7 @@ class Lattice(ModelBase):
         return self._length_c
 
     @length_c.setter
-    def length_c(self, value: Numeric):
+    def length_c(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_length(value, 'c')
         self._length_c.value = value
@@ -404,7 +405,7 @@ class Lattice(ModelBase):
         return self._alpha
 
     @alpha.setter
-    def alpha(self, value: Numeric):
+    def alpha(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_angle(value, 'alpha')
         self._alpha.value = value
@@ -434,7 +435,7 @@ class Lattice(ModelBase):
         return self._beta
 
     @beta.setter
-    def beta(self, value: Numeric):
+    def beta(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_angle(value, 'beta')
         self._beta.value = value
@@ -464,7 +465,7 @@ class Lattice(ModelBase):
         return self._gamma
 
     @gamma.setter
-    def gamma(self, value: Numeric):
+    def gamma(self, value: numbers.Real):
         # Setters have no docstrings. They should be written in the getter docstring instead.
         self._validate_angle(value, 'gamma')
         self._gamma.value = value
@@ -627,19 +628,19 @@ class Lattice(ModelBase):
         """
         return super().get_fit_parameters()
 
-    def _validate_length(self, value: Numeric, axis: str):
-        if not isinstance(value, Numeric):
+    def _validate_length(self, value: numbers.Real, axis: str):
+        if not isinstance(value, numbers.Real):
             raise TypeError(f'Lattice length_{axis} must be a numeric value. Got {type(value).__name__}')
         if not (value > INFINITESIMAL):
             raise ValueError(f'Lattice length_{axis} must be positive and non-zero.')
 
-    def _validate_angle(self, value: Numeric, name: str):
-        if not isinstance(value, Numeric):
+    def _validate_angle(self, value: numbers.Real, name: str):
+        if not isinstance(value, numbers.Real):
             raise TypeError(f'Lattice angle {name} must be a numeric value. Got {type(value).__name__}')
         if not (INFINITESIMAL < value < 180 - INFINITESIMAL):
             raise ValueError(f'Lattice angle {name} must be between 0 and 180 degrees.')
 
-    def _create_length_parameter(self, length_value: Numeric, axis: str) -> Parameter:
+    def _create_length_parameter(self, length_value: numbers.Real, axis: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_length_{axis}')
         parameter = Parameter(
             name=f'length_{axis}', value=length_value, unit='angstrom', min=INFINITESIMAL, fixed=True, unique_name=unique_name
@@ -647,7 +648,7 @@ class Lattice(ModelBase):
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
-    def _create_angle_parameter(self, angle_value: Numeric, name: str) -> Parameter:
+    def _create_angle_parameter(self, angle_value: numbers.Real, name: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_angle_{name}')
         parameter = Parameter(
             name=f'angle_{name}',
@@ -664,7 +665,7 @@ class Lattice(ModelBase):
     def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
         """Convert the lattice object to a dictionary representation.
 
-        Used for saving the measurement to file.
+        Used for saving the [Lattice][..] to file.
 
         Parameters
         ----------
@@ -715,11 +716,7 @@ class Lattice(ModelBase):
             raise TypeError(f'Expected a dictionary. Got {type(obj_dict).__name__}')
         temp_obj_dict = dict(obj_dict)  # Don't modify the original dictionary
         angle_lock_dict = temp_obj_dict.pop('angle_lock', None)
-        if 'atom_sites' not in temp_obj_dict:
-            raise ValueError('The dictionary does not represent a serialized Lattice. Missing "atom_sites" key.')
-        atom_sites_dict = temp_obj_dict.pop('atom_sites')
         instance = super().from_dict(temp_obj_dict)
-        instance._atom_sites = EasyList.from_dict(atom_sites_dict)
         if angle_lock_dict is not None:
             instance._angle_lock = Parameter.from_dict(angle_lock_dict)
         return instance

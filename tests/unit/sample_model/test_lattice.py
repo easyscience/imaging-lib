@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+import numpy as np
 import pytest
 from easyscience import global_object
 
@@ -138,8 +139,39 @@ class TestLattice:
     @pytest.mark.parametrize('atom_sites', ['not_a_list', ['not_an_atom_site']], ids=['not_a_list', 'not_an_atom_site'])
     def test_init_invalid_atom_sites_type(self, atom_sites):
         # When Then Expect
-        with pytest.raises(TypeError, match='atom_sites must be a list of AtomSite objects.'):
+        with pytest.raises(TypeError, match='atom_sites must be a sequence of AtomSite objects.'):
             Lattice(length_a=1.0, length_b=1.0, length_c=1.0, atom_sites=atom_sites)
+
+    def test_init_accepts_atom_sites_tuple(self, atom_sites):
+        # When Then
+        lattice = Lattice(length_a=1.0, length_b=1.0, length_c=1.0, atom_sites=tuple(atom_sites))
+        # Expect
+        assert len(lattice.atom_sites) == 2
+        assert all(new_site is site for new_site, site in zip(lattice.atom_sites, atom_sites))
+
+    def test_init_accepts_atom_sites_of_other_lattice(self, atom_sites):
+        # When
+        other_lattice = Lattice(length_a=1.0, length_b=1.0, length_c=1.0, atom_sites=atom_sites)
+        # Then
+        lattice = Lattice(length_a=2.0, length_b=2.0, length_c=2.0, atom_sites=other_lattice.atom_sites)
+        # Expect
+        assert len(lattice.atom_sites) == 2
+        assert all(new_site is site for new_site, site in zip(lattice.atom_sites, atom_sites))
+        assert lattice.atom_sites is not other_lattice.atom_sites
+
+    def test_init_accepts_numpy_scalars(self):
+        # When
+        lattice = Lattice(
+            length_a=np.float32(2.5),
+            length_b=np.int64(3),
+            length_c=np.float64(4.0),
+            alpha=np.float32(80.0),
+            beta=np.int64(90),
+            gamma=np.float64(100.0),
+        )
+        # Then Expect
+        assert (lattice.length_a.value, lattice.length_b.value, lattice.length_c.value) == (2.5, 3.0, 4.0)
+        assert (lattice.alpha.value, lattice.beta.value, lattice.gamma.value) == (80.0, 90.0, 100.0)
 
     def test_cubic_valid(self):
         # When
@@ -215,9 +247,10 @@ class TestLattice:
             Lattice.hexagonal(**kwargs)
 
     @pytest.mark.parametrize('attribute', ['length_a', 'length_b', 'length_c'])
-    def test_length_setter_valid(self, lattice, attribute):
+    @pytest.mark.parametrize('value', [9.0, np.float32(9.0), np.int64(9)], ids=['float', 'float32', 'int64'])
+    def test_length_setter_valid(self, lattice, attribute, value):
         # When Then
-        setattr(lattice, attribute, 9.0)
+        setattr(lattice, attribute, value)
         # Expect
         assert getattr(lattice, attribute).value == 9.0
 
@@ -240,9 +273,10 @@ class TestLattice:
             setattr(lattice, attribute, invalid_value)
 
     @pytest.mark.parametrize('attribute', ['alpha', 'beta', 'gamma'])
-    def test_angle_setter_valid(self, lattice, attribute):
+    @pytest.mark.parametrize('value', [100.0, np.float32(100.0), np.int64(100)], ids=['float', 'float32', 'int64'])
+    def test_angle_setter_valid(self, lattice, attribute, value):
         # When Then
-        setattr(lattice, attribute, 100.0)
+        setattr(lattice, attribute, value)
         # Expect
         assert getattr(lattice, attribute).value == 100.0
 
@@ -397,11 +431,3 @@ class TestLattice:
         # When Then Expect
         with pytest.raises(TypeError, match='Expected a dictionary. Got str'):
             Lattice.from_dict('not_a_dict')
-
-    def test_from_dict_missing_atom_sites(self, lattice):
-        # When
-        dict_repr = lattice.to_dict()
-        del dict_repr['atom_sites']
-        # Then Expect
-        with pytest.raises(ValueError, match='Missing "atom_sites" key'):
-            Lattice.from_dict(dict_repr)

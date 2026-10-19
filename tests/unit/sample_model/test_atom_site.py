@@ -83,6 +83,19 @@ class TestAtomSite:
         assert site.atom is Atoms.Fe
         assert site.unique_name.startswith('Fe AtomSite')
 
+    def test_init_accepts_numpy_scalars(self):
+        # When
+        site = AtomSite(
+            atom=Atoms.Fe,
+            fract_a=np.float32(0.5),
+            fract_b=np.int64(0),
+            fract_c=np.float64(-0.25),
+            debye_temperature=np.int64(470),
+        )
+        # Then Expect
+        assert (site.fract_a.value, site.fract_b.value, site.fract_c.value) == (0.5, 0.0, 0.75)
+        assert site.debye_temperature.value == 470.0
+
     @pytest.mark.parametrize('invalid_atom', ['not_an_atom', 'fe', ''], ids=['unknown', 'wrong_case', 'empty'])
     def test_init_invalid_atom_string(self, invalid_atom):
         # When Then Expect
@@ -99,11 +112,13 @@ class TestAtomSite:
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
-            (1.5, ValueError, r'must be between 0\.0 and 1\.0'),
-            (-0.1, ValueError, r'must be between 0\.0 and 1\.0'),
+            (1.5, ValueError, r'must be between -1\.0 and 1\.0'),
+            (-1.5, ValueError, r'must be between -1\.0 and 1\.0'),
+            (float('nan'), ValueError, r'must be between -1\.0 and 1\.0'),
             ('0.5', TypeError, 'must be a numeric value'),
+            (True, TypeError, 'must be a numeric value'),
         ],
-        ids=['above_range', 'below_range', 'wrong_type'],
+        ids=['above_range', 'below_range', 'nan', 'wrong_type', 'bool'],
     )
     def test_init_invalid_fract_value(self, axis, invalid_value, error, message):
         # When
@@ -113,14 +128,26 @@ class TestAtomSite:
         with pytest.raises(error, match=message):
             AtomSite(**kwargs)
 
+    @pytest.mark.parametrize('axis', ['a', 'b', 'c'], ids=['a', 'b', 'c'])
+    @pytest.mark.parametrize('value, expected', [(1.0, 0.0), (-0.25, 0.75), (-1.0, 0.0)], ids=['one', 'negative', 'minus_one'])
+    def test_init_wraps_fract_value(self, axis, value, expected):
+        # When
+        kwargs = {'atom': Atoms.Fe, 'fract_a': 0.0, 'fract_b': 0.0, 'fract_c': 0.0, 'debye_temperature': 1.0}
+        kwargs[f'fract_{axis}'] = value
+        # Then
+        site = AtomSite(**kwargs)
+        # Expect
+        assert getattr(site, f'fract_{axis}').value == expected
+
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
             (-1.0, ValueError, 'must be positive'),
             (0.0, ValueError, 'must be positive'),
             ('cold', TypeError, 'must be a numeric value'),
+            (True, TypeError, 'value=True must be a number'),
         ],
-        ids=['negative', 'zero', 'wrong_type'],
+        ids=['negative', 'zero', 'wrong_type', 'bool'],
     )
     def test_init_invalid_debye_temperature(self, invalid_value, error, message):
         # When Then Expect
@@ -208,13 +235,33 @@ class TestAtomSite:
         assert site.unique_name == original_unique_name
 
     @pytest.mark.parametrize('attribute', ['fract_a', 'fract_b', 'fract_c'])
-    def test_fract_setter_valid(self, atom_site, attribute):
+    @pytest.mark.parametrize('value', [0.75, np.float32(0.75)], ids=['float', 'float32'])
+    def test_fract_setter_valid(self, atom_site, attribute, value):
         # When
         site = atom_site
         # Then
-        setattr(site, attribute, 0.75)
+        setattr(site, attribute, value)
         # Expect
         assert getattr(site, attribute).value == 0.75
+
+    @pytest.mark.parametrize('attribute', ['fract_a', 'fract_b', 'fract_c'])
+    @pytest.mark.parametrize('value, expected', [(1.0, 0.0), (-0.25, 0.75), (-1.0, 0.0)], ids=['one', 'negative', 'minus_one'])
+    def test_fract_setter_wraps_value(self, atom_site, attribute, value, expected):
+        # When
+        site = atom_site
+        # Then
+        setattr(site, attribute, value)
+        # Expect
+        assert getattr(site, attribute).value == expected
+
+    @pytest.mark.parametrize('attribute', ['fract_a', 'fract_b', 'fract_c'])
+    def test_fract_setter_wraps_tiny_negative_value_below_one(self, atom_site, attribute):
+        # When
+        site = atom_site
+        # Then
+        setattr(site, attribute, -1e-17)  # 1.0 - 1e-17 rounds to 1.0 in floating point
+        # Expect
+        assert 0.0 <= getattr(site, attribute).value < 1.0
 
     @pytest.mark.parametrize('attribute', ['fract_a', 'fract_b', 'fract_c'])
     def test_fract_setter_invalid_leaves_value_unchanged(self, atom_site, attribute):
@@ -222,15 +269,16 @@ class TestAtomSite:
         site = atom_site
         original_value = getattr(site, attribute).value
         # Then Expect
-        with pytest.raises(ValueError, match=r'must be between 0\.0 and 1\.0'):
+        with pytest.raises(ValueError, match=r'must be between -1\.0 and 1\.0'):
             setattr(site, attribute, 2.0)
         assert getattr(site, attribute).value == original_value
 
-    def test_debye_temperature_setter_valid(self, atom_site):
+    @pytest.mark.parametrize('value', [400.0, np.float32(400.0), np.int64(400)], ids=['float', 'float32', 'int64'])
+    def test_debye_temperature_setter_valid(self, atom_site, value):
         # When
         site = atom_site
         # Then
-        site.debye_temperature = 400.0
+        site.debye_temperature = value
         # Expect
         assert site.debye_temperature.value == 400.0
 

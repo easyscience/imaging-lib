@@ -5,19 +5,19 @@
 This module contains convenience functions to easily create [`Lattice`][easyimaging.sample_model.Lattice] objects and occupy
 them with [`Atoms`][easyimaging.sample_model.atoms.Atoms] to create common crystallographic lattices."""
 
+import numbers
+
 from easyscience import global_object
 
 from .atom_site import AtomSite
 from .atoms import Atoms
 from .lattice import Lattice
 
-Numeric = int | float
-
 
 def body_centered_cubic(
-    length_a: Numeric,
+    length_a: numbers.Real,
     atom: Atoms | str,
-    debye_temperature: Numeric | None = None,
+    debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
 ):
@@ -86,9 +86,9 @@ def body_centered_cubic(
 
 
 def face_centered_cubic(
-    length_a: Numeric,
+    length_a: numbers.Real,
     atom: Atoms | str,
-    debye_temperature: Numeric | None = None,
+    debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
 ):
@@ -172,9 +172,9 @@ def face_centered_cubic(
 
 
 def diamond_cubic(
-    length_a: Numeric,
+    length_a: numbers.Real,
     atom: Atoms | str,
-    debye_temperature: Numeric | None = None,
+    debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
 ):
@@ -290,11 +290,11 @@ def diamond_cubic(
 
 
 def zincblende(
-    length_a: Numeric,
+    length_a: numbers.Real,
     atom1: Atoms | str,
     atom2: Atoms | str,
-    debye_temperature1: Numeric | None = None,
-    debye_temperature2: Numeric | None = None,
+    debye_temperature1: numbers.Real | None = None,
+    debye_temperature2: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
 ):
@@ -418,10 +418,10 @@ def zincblende(
 
 
 def hexagonal_close_packed(
-    length_a: Numeric,
-    length_c: Numeric,
+    length_a: numbers.Real,
+    length_c: numbers.Real,
     atom: Atoms | str,
-    debye_temperature: Numeric | None = None,
+    debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
 ):

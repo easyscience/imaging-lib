@@ -21,6 +21,6 @@ available in EasyImaging.
     crystallographic lattice.
   - [Atoms](sample_model/atoms.md) - The atomic species occupying an
     atomic site.
-  - [crystals](sample_model/crystals) - A module containing convenience
-    functions to easily create and occupy common crystallographic
-    lattices.
+  - [crystals](sample_model/crystals.md) - A module containing
+    convenience functions to easily create and occupy common
+    crystallographic lattices.
