@@ -1571,6 +1571,7 @@
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../atoms/#easyimaging.sample_model.atoms.Atom">atomic species</a>, vibrational properties, and fractional coordinates <span class="arithmatex">\((a, b, c)\)</span> within the host lattice's
 unit cell.</p>
+<p>Fractional coordinates <span class="arithmatex">\((a, b, c)\)</span> are wrapped around the unit-cell to the half-open range [0, 1).</p>
 <p>An <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="#easyimaging.sample_model.AtomSite"><code>AtomSite</code></a> is most commonly created as part of a <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;Lattice&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;length_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;length_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;alpha&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;90.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;beta&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;90.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gamma&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;90.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;atom_sites&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../lattice/#easyimaging.sample_model.Lattice"><code>Lattice</code></a>, either directly via its
 constructor, or indirectly through one of the crystal-structure convenience functions in
 <a class="autorefs autorefs-internal" title="&lt;code&gt;crystals&lt;/code&gt;" href="../crystals/#easyimaging.sample_model.crystals"><code>easyimaging.sample_model.crystals</code></a>.</p>
@@ -1784,8 +1785,7 @@ string.</p>
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../atoms/#easyimaging.sample_model.atoms.Atoms"><code>Atoms</code></a> enum member or a string.<br>
-If any of the fractional coordinates are not floats or ints.
-If <code>debye_temperature</code> is not a number.</p>
+If any of the fractional coordinates or the debye_temperature are not numbers.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -1798,8 +1798,8 @@ If <code>debye_temperature</code> is not a number.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If any of the fractional coordinates are out of range.
-If <code>debye_temperature</code> is not positive.</p>
+                <p>If any of the fractional coordinates are not within the range [-1.0, 1.0].
+If the debye_temperature is not positive.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2268,6 +2268,7 @@ If <code>debye_temperature</code> is not positive.</p>
     <div class="doc doc-contents ">
 
         <p>The fractional x-coordinate of the site.</p>
+<p>The value is wrapped around the unit-cell to the half-open range [0, 1).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2293,7 +2294,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A number between 0.0 and 1.0.</p>
+                <p>A number between -1.0 and 1.0.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2348,7 +2349,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not numeric.</p>
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2361,7 +2362,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not between 0.0 and 1.0.</p>
+                <p>If <code>value</code> is not between -1.0 and 1.0.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2393,6 +2394,7 @@ If <code>debye_temperature</code> is not positive.</p>
     <div class="doc doc-contents ">
 
         <p>The fractional y-coordinate of the site.</p>
+<p>The value is wrapped around the unit-cell to the half-open range [0, 1).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2418,7 +2420,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A number between 0.0 and 1.0.</p>
+                <p>A number between -1.0 and 1.0.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2473,7 +2475,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not numeric.</p>
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2486,7 +2488,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not between 0.0 and 1.0.</p>
+                <p>If <code>value</code> is not between -1.0 and 1.0.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2518,6 +2520,7 @@ If <code>debye_temperature</code> is not positive.</p>
     <div class="doc doc-contents ">
 
         <p>The fractional z-coordinate of the site.</p>
+<p>The value is wrapped around the unit-cell to the half-open range [0, 1).</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2543,7 +2546,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A number between 0.0 and 1.0.</p>
+                <p>A number between -1.0 and 1.0.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2598,7 +2601,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not numeric.</p>
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2611,7 +2614,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not between 0.0 and 1.0.</p>
+                <p>If <code>value</code> is not between -1.0 and 1.0.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2723,7 +2726,7 @@ If <code>debye_temperature</code> is not positive.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is not numeric.</p>
+                <p>If <code>value</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -3243,7 +3246,7 @@ can be changed.</p>
     <div class="doc doc-contents ">
 
         <p>Convert the AtomSite object to a dictionary representation.</p>
-<p>Used for saving the measurement to file.</p>
+<p>Used for saving the <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;AtomSite&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atom&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fract_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;debye_temperature&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unique_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;display_name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="#easyimaging.sample_model.AtomSite">AtomSite</a> to file.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
