@@ -1784,7 +1784,8 @@ string.</p>
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-dataclass&quot;&gt;&lt;code&gt;dataclass&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt;" href="../atoms/#easyimaging.sample_model.atoms.Atoms"><code>Atoms</code></a> enum member or a string.<br>
-If any of the fractional coordinates are not floats or ints.</p>
+If any of the fractional coordinates are not floats or ints.
+If <code>debye_temperature</code> is not a number.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -1797,7 +1798,8 @@ If any of the fractional coordinates are not floats or ints.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If any of the fractional coordinates are out of range.</p>
+                <p>If any of the fractional coordinates are out of range.
+If <code>debye_temperature</code> is not positive.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2666,7 +2668,7 @@ If any of the fractional coordinates are not floats or ints.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A non-negative number, in Kelvin.</p>
+                <p>A positive number, in Kelvin.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
@@ -2734,7 +2736,7 @@ If any of the fractional coordinates are not floats or ints.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>If <code>value</code> is negative.</p>
+                <p>If <code>value</code> is not positive.</p>
 <!-- prettier-ignore-start -->
 
 <!-- prettier-ignore-end -->
