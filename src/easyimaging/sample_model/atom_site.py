@@ -12,6 +12,7 @@ from easyscience.variable import Parameter
 from .atoms import Atoms
 
 Numeric = int | float
+DEBYE_INFINITESIMAL = 1e-9
 
 
 class AtomSite(ModelBase):
@@ -76,8 +77,10 @@ class AtomSite(ModelBase):
         TypeError
             If `atom` is not an [`Atoms`][....atoms.Atoms] enum member or a string.<br>
             If any of the fractional coordinates are not floats or ints.
+            If ``debye_temperature`` is not a number.
         ValueError
             If any of the fractional coordinates are out of range.
+            If ``debye_temperature`` is not positive.
         KeyError
             If the provided atom string does not correspond to a valid [`Atoms`][....atoms.Atoms] enum member.
         """
@@ -88,6 +91,8 @@ class AtomSite(ModelBase):
         self._validate_fract_value(fract_a, 'a')
         self._validate_fract_value(fract_b, 'b')
         self._validate_fract_value(fract_c, 'c')
+        if debye_temperature is not None:
+            self._validate_debye_temperature(debye_temperature)
 
         if unique_name is None:
             unique_name = global_object.generate_unique_name(f'{atom.name} AtomSite')
@@ -96,20 +101,24 @@ class AtomSite(ModelBase):
         else:
             super().__init__(unique_name=unique_name, display_name=display_name)
 
-        self._fract_a = self._generate_fract_parameter(fract_a, 'a')
-        self._fract_b = self._generate_fract_parameter(fract_b, 'b')
-        self._fract_c = self._generate_fract_parameter(fract_c, 'c')
-
         if debye_temperature is None:
             global_object.log.warning(
                 f"Debye temperature not provided for AtomSite '{self.unique_name}'.Setting to default value of 300 K."
             )
             debye_temperature = 300.0
-        else:
-            self._validate_debye_temperature(debye_temperature)
+
+        self._fract_a = self._generate_fract_parameter(fract_a, 'a')
+        self._fract_b = self._generate_fract_parameter(fract_b, 'b')
+        self._fract_c = self._generate_fract_parameter(fract_c, 'c')
+
         debye_name = global_object.generate_unique_name(f'{self.unique_name}_debye_temperature')
         self._debye_temperature = Parameter(
-            name='debye_temperature', value=debye_temperature, unit='K', min=0.0, fixed=True, unique_name=debye_name
+            name='debye_temperature',
+            value=debye_temperature,
+            unit='K',
+            min=DEBYE_INFINITESIMAL,
+            fixed=True,
+            unique_name=debye_name,
         )
 
     @property
@@ -142,6 +151,7 @@ class AtomSite(ModelBase):
         self._atom = value
         if self._default_unique_name:
             self.unique_name = global_object.generate_unique_name(f'{value.name} AtomSite')
+            self._default_unique_name = True
             # Change _default_unique_name when Parameter uses NewBase
             self.fract_a.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_a')
             self.fract_b.unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_b')
@@ -242,7 +252,7 @@ class AtomSite(ModelBase):
         Parameters
         ----------
         value : int | float
-            A non-negative number, in Kelvin.
+            A positive number, in Kelvin.
 
         Returns
         -------
@@ -254,7 +264,7 @@ class AtomSite(ModelBase):
         TypeError
             If ``value`` is not numeric.
         ValueError
-            If ``value`` is negative.
+            If ``value`` is not positive.
         """
         return self._debye_temperature
 
@@ -340,8 +350,8 @@ class AtomSite(ModelBase):
     def _validate_debye_temperature(self, value: Numeric):
         if not isinstance(value, Numeric):
             raise TypeError('"debye_temperature" must be a numeric value')
-        if value < 0.0:
-            raise ValueError('"debye_temperature" must be non-negative')
+        if value <= DEBYE_INFINITESIMAL:
+            raise ValueError('"debye_temperature" must be positive')
 
     def _validate_atom(self, value):
         if isinstance(value, str):
@@ -395,7 +405,10 @@ class AtomSite(ModelBase):
         deserialized object gets a fresh name instead of clashing with an existing one.
         Likewise [display_name][..display_name] is omitted when it has not been set.
         """
-        return super().to_dict(skip=skip)
+        temp_dict = super().to_dict(skip=skip)
+        if 'atom' not in (skip or []):
+            temp_dict['atom'] = self.atom.name
+        return temp_dict
 
     @classmethod
     def from_dict(cls, obj_dict: dict[str, Any]) -> AtomSite:

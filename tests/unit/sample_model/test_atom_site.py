@@ -9,6 +9,7 @@ from easyscience import global_object
 
 from easyimaging.sample_model import Atoms
 from easyimaging.sample_model import AtomSite
+from easyimaging.sample_model.atom_site import DEBYE_INFINITESIMAL
 from easyimaging.sample_model.atoms import Atom
 
 
@@ -50,7 +51,7 @@ class TestAtomSite:
         assert site.fract_c.min == 0.0
         assert site.fract_c.max == 1.0
         assert site.fract_c.unit == 'dimensionless'
-        assert site.debye_temperature.min == 0.0
+        assert site.debye_temperature.min == DEBYE_INFINITESIMAL
         assert site.debye_temperature.max == np.inf
         assert site.debye_temperature.unit == 'K'
 
@@ -115,10 +116,11 @@ class TestAtomSite:
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
-            (-1.0, ValueError, 'must be non-negative'),
+            (-1.0, ValueError, 'must be positive'),
+            (0.0, ValueError, 'must be positive'),
             ('cold', TypeError, 'must be a numeric value'),
         ],
-        ids=['negative', 'wrong_type'],
+        ids=['negative', 'zero', 'wrong_type'],
     )
     def test_init_invalid_debye_temperature(self, invalid_value, error, message):
         # When Then Expect
@@ -149,6 +151,33 @@ class TestAtomSite:
         site.atom = new_atom
         # Expect
         assert site.unique_name.startswith('Co AtomSite')
+
+    def test_atom_setter_regenerates_default_unique_name_on_every_change(self):
+        # When
+        site = AtomSite(atom=Atoms.Fe, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0)
+        # Then
+        site.atom = Atoms.Co
+        site.atom = Atoms.Ni
+        # Expect
+        unique_name = site.unique_name
+        assert unique_name.startswith('Ni AtomSite')
+        assert site.fract_a.unique_name.startswith(unique_name + '_fract_a')
+        assert site.fract_b.unique_name.startswith(unique_name + '_fract_b')
+        assert site.fract_c.unique_name.startswith(unique_name + '_fract_c')
+        assert site.debye_temperature.unique_name.startswith(unique_name + '_debye_temperature')
+        assert 'unique_name' not in site.to_dict()
+
+    def test_atom_setter_registers_regenerated_unique_names(self):
+        # When
+        site = AtomSite(atom=Atoms.Fe, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0)
+        site.atom = Atoms.Co
+        # Then
+        other_site = AtomSite(atom=Atoms.Co, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0)
+        # Expect
+        assert global_object.map.get_item_by_key(site.unique_name) is site
+        assert other_site.unique_name != site.unique_name
+        assert other_site.fract_a.unique_name != site.fract_a.unique_name
+        assert other_site.debye_temperature.unique_name != site.debye_temperature.unique_name
 
     def test_atom_setter_keeps_explicit_unique_name(self, atom_site):
         # When
@@ -205,10 +234,20 @@ class TestAtomSite:
         # Expect
         assert site.debye_temperature.value == 400.0
 
-    def test_debye_temperature_setter_invalid_leaves_value_unchanged(self, atom_site):
+    @pytest.mark.parametrize('invalid_value', [-10.0, 0.0], ids=['negative', 'zero'])
+    def test_debye_temperature_setter_invalid_leaves_value_unchanged(self, atom_site, invalid_value):
         # When
         site = atom_site
         # Then Expect
-        with pytest.raises(ValueError, match='must be non-negative'):
-            site.debye_temperature = -10.0
+        with pytest.raises(ValueError, match='must be positive'):
+            site.debye_temperature = invalid_value
         assert site.debye_temperature.value == 250.0
+
+    @pytest.mark.parametrize('atom', [Atoms.Fe, Atoms.Fe56], ids=['natural', 'isotope'])
+    def test_to_dict_stores_atom_name(self, atom):
+        # When
+        site = AtomSite(atom=atom, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0)
+        # Then
+        dict_repr = site.to_dict()
+        # Expect
+        assert dict_repr['atom'] == atom.name

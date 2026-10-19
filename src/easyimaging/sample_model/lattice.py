@@ -134,22 +134,23 @@ class Lattice(ModelBase):
             If any of ``alpha``, ``beta``, or ``gamma`` is not a numeric value.<br>
             If ``atom_sites`` is provided and is not a list of [`AtomSite`][....atom_site.AtomSite] objects.
         """
-        super().__init__(unique_name=unique_name, display_name=display_name)
         for length, axis in ((length_a, 'a'), (length_b, 'b'), (length_c, 'c')):
             self._validate_length(length, axis)
         for angle, name in ((alpha, 'alpha'), (beta, 'beta'), (gamma, 'gamma')):
             self._validate_angle(angle, name)
 
-        self._atom_sites = EasyList(
-            protected_types=AtomSite, unique_name=global_object.generate_unique_name(f'{self.unique_name}_atom_sites')
-        )
-        self._atom_sites._default_unique_name = True  # This gets set to False by the super init
-
         if atom_sites is not None:
             if not isinstance(atom_sites, list) or not all(isinstance(site, AtomSite) for site in atom_sites):
                 raise TypeError('atom_sites must be a list of AtomSite objects.')
-            self._atom_sites.extend(atom_sites)
 
+        super().__init__(unique_name=unique_name, display_name=display_name)
+
+        self._atom_sites = EasyList(
+            *atom_sites if atom_sites else [],
+            protected_types=AtomSite,
+            unique_name=global_object.generate_unique_name(f'{self.unique_name}_atom_sites'),
+        )
+        self._atom_sites._default_unique_name = True  # This gets set to False by the super init
         self._length_a = self._create_length_parameter(length_a, 'a')
         self._length_b = self._create_length_parameter(length_b, 'b')
         self._length_c = self._create_length_parameter(length_c, 'c')
