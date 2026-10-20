@@ -186,12 +186,9 @@ def diamond_cubic(
     sites = []
     for a, b, c in _FCC:
         sites.append(AtomSite(atom=atom, fract_a=a, fract_b=b, fract_c=c, debye_temperature=debye_temperature))
-        sites.append(AtomSite(atom=atom,
-                              fract_a=a + 0.25,
-                              fract_b=b + 0.25,
-                              fract_c=c + 0.25,
-                              debye_temperature=debye_temperature)
-                              )
+        sites.append(
+            AtomSite(atom=atom, fract_a=a + 0.25, fract_b=b + 0.25, fract_c=c + 0.25, debye_temperature=debye_temperature)
+        )
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=sites,
@@ -270,12 +267,9 @@ def zincblende(
     sites = []
     for a, b, c in _FCC:
         sites.append(AtomSite(atom=atom1, fract_a=a, fract_b=b, fract_c=c, debye_temperature=debye_temperature1))
-        sites.append(AtomSite(atom=atom2,
-                              fract_a=a + 0.25,
-                              fract_b=b + 0.25,
-                              fract_c=c + 0.25,
-                              debye_temperature=debye_temperature2)
-                              )
+        sites.append(
+            AtomSite(atom=atom2, fract_a=a + 0.25, fract_b=b + 0.25, fract_c=c + 0.25, debye_temperature=debye_temperature2)
+        )
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=sites,
