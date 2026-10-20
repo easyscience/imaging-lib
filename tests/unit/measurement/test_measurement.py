@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
-import warnings
+import logging
 from copy import copy
 from pathlib import Path
 from typing import MutableSequence
@@ -542,37 +542,37 @@ class TestMeasurement:
                 y_positions=coord,
             )
 
-    def test_save_scitiff_downcast(self, valid_data_array, tmp_path):
+    def test_save_scitiff_downcast(self, valid_data_array, tmp_path, caplog):
         # When
         measurement = Measurement(data_array=valid_data_array)
-        # Then Expect
-        with pytest.warns(
-            UserWarning,
-            match='The data array is of type float64, which is not directly supported by the SciTIFF format. '
-            'It will be downcast to float32 when saving, which may result in loss of precision.',
-        ):
+        # Then
+        with caplog.at_level(logging.WARNING):
             measurement.save_scitiff(tmp_path / 'test.tiff')
+        # Expect
+        assert any('It will be downcast to float32 when saving' in record.message for record in caplog.records)
         assert 'non_finite' in measurement._data_array.masks
 
-    def test_save_scitiff(self, valid_data_array, tmp_path):
+    def test_save_scitiff(self, valid_data_array, tmp_path, caplog):
         # When
         data_array = valid_data_array.astype('float32')
         measurement = Measurement(data_array=data_array)
-        # Then Expect
-        with warnings.catch_warnings():
-            warnings.simplefilter('error')  # Ensure no warnings are raised for valid data type
+        # Then
+        with caplog.at_level(logging.WARNING):
             measurement.save_scitiff(tmp_path / 'test.tiff')
+        # Expect
+        assert not any('downcast' in record.message for record in caplog.records)  # No warning for a supported data type
         assert 'non_finite' in measurement._data_array.masks
 
-    def test_save_scitiff_path_object(self, valid_data_array, tmp_path):
+    def test_save_scitiff_path_object(self, valid_data_array, tmp_path, caplog):
         # When
         data_array = valid_data_array.astype('float32')
         measurement = Measurement(data_array=data_array)
         path = Path(tmp_path) / 'test.tiff'
-        # Then Expect
-        with warnings.catch_warnings():
-            warnings.simplefilter('error')  # Ensure no warnings are raised for valid data type
+        # Then
+        with caplog.at_level(logging.WARNING):
             measurement.save_scitiff(path)
+        # Expect
+        assert not any('downcast' in record.message for record in caplog.records)  # No warning for a supported data type
         assert 'non_finite' in measurement._data_array.masks
 
     def test_save_scitiff_invalid_filename_type(self, valid_data_array):
@@ -1045,15 +1045,14 @@ class TestMeasurement:
         del measurement._data_array.masks['non_finite']
         assert sc.identical(measurement._data_array, valid_data_array)
 
-    def test_revert_rebin_no_rebin(self, valid_data_array):
+    def test_revert_rebin_no_rebin(self, valid_data_array, caplog):
         # When
         measurement = Measurement(data_array=valid_data_array)
-        # Then Expect
-        with pytest.warns(
-            UserWarning,
-            match='No rebinning to revert. The data array is already in its original state.',
-        ):
+        # Then
+        with caplog.at_level(logging.WARNING):
             measurement.revert_rebin()
+        # Expect
+        assert any('No rebinning to revert' in record.message for record in caplog.records)
 
     # Without making image comparisons, this is the best we can do to test the plot function
     @pytest.mark.parametrize(

@@ -13,6 +13,7 @@ import ess.imaging as essimaging
 import numpy as np
 import plopp as pp
 import scipp as sc
+from easyscience import global_object
 from easyscience.base_classes import EasyList
 from easyscience.base_classes import NewBase
 from scipp import DimensionError
@@ -352,10 +353,6 @@ class Measurement(NewBase):
     def save_scitiff(self, filename: str | Path) -> None:
         """Save the `Measurement` data to a **SciTiff** file with the time-of-flight values and other provided metadata.
 
-        Note that [SciTiff](https://scipp.github.io/scitiff/) does not support ``float64`` precision numbers, so if the
-         [`Measurement`][..] contains data of type ``float64``, it will be downcast to ``float32`` when saving, causing a small
-          loss of precision.
-
         Parameters
         ----------
         filename : str | Path
@@ -368,19 +365,20 @@ class Measurement(NewBase):
         RuntimeError
             If the file cannot be written to the specified ``filename`` path.
 
-        Warns
+        Warnings
         -----
-        UserWarning
-            If the [Measurement][..] object's data is of type ``float64``; It will be downcast to ``float32``.
+        [SciTiff](https://scipp.github.io/scitiff/) does not support ``float64`` precision numbers, so if the
+         [`Measurement`][..] contains data of type ``float64``, it will be downcast to ``float32`` when saving, causing a small
+          loss of precision.
         """
         if not isinstance(filename, (str, Path)):
             raise TypeError('filename must be a string or Path object.')
         try:
             nan_mask = self._data_array.masks.pop('non_finite')
             if str(self._data_array.dtype) == 'float64':
-                warnings.warn(
+                global_object.log.warning(
                     'The data array is of type float64, which is not directly supported by the SciTIFF format. '
-                    'It will be downcast to float32 when saving, which may result in loss of precision. '
+                    'It will be downcast to float32 when saving, which may result in loss of precision.'
                 )
                 save_scitiff(self._data_array.astype('float32'), filename)
             else:
@@ -845,20 +843,12 @@ class Measurement(NewBase):
     def revert_rebin(self) -> None:
         """Revert any rebinning applied to the measurement data, restoring it to its original resolution.
 
-        This method undos the rebinning performed by the [rebin][..rebin] method, if it has been applied.
-
-        Warns
-        ------
-        UserWarning
-            If no rebinning has been applied and the measurement data is already in its original state.
+        This method undoes the rebinning performed by the [rebin][..rebin] method, if it has been applied.
         """
         if hasattr(self, '_rebinned_data_array'):
             del self._rebinned_data_array
         else:
-            warnings.warn(
-                'No rebinning to revert. The data array is already in its original state.',
-                UserWarning,
-            )
+            global_object.log.warning('No rebinning to revert. The data array is already in its original state.')
 
     # -------------------------------------------------------------------------------------------------------------------------
     # ----------------------------------------- Plotting methods --------------------------------------------------------------

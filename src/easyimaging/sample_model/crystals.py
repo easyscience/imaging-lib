@@ -61,6 +61,9 @@ def body_centered_cubic(
         else:
             name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} BCC Lattice')
+    if debye_temperature is None:
+        global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
+        debye_temperature = 300.0
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -133,6 +136,9 @@ def face_centered_cubic(
         else:
             name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} FCC Lattice')
+    if debye_temperature is None:
+        global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
+        debye_temperature = 300.0
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -223,6 +229,9 @@ def diamond_cubic(
         else:
             name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} Diamond Cubic Lattice')
+    if debye_temperature is None:
+        global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
+        debye_temperature = 300.0
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -351,6 +360,16 @@ def zincblende(
         else:
             name2 = getattr(atom2, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name1}{name2} Zincblende Lattice')
+    if debye_temperature1 is None:
+        global_object.log.warning(
+            f"Debye temperature not provided for '{unique_name}' (atom1). Setting to default value of 300 K."
+        )
+        debye_temperature1 = 300.0
+    if debye_temperature2 is None:
+        global_object.log.warning(
+            f"Debye temperature not provided for '{unique_name}' (atom2). Setting to default value of 300 K."
+        )
+        debye_temperature2 = 300.0
     lattice = Lattice.cubic(
         length_a=length_a,
         atom_sites=[
@@ -468,6 +487,9 @@ def hexagonal_close_packed(
         else:
             name = getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} HCP Lattice')
+    if debye_temperature is None:
+        global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
+        debye_temperature = 300.0
     lattice = Lattice.hexagonal(
         length_a=length_a,
         length_c=length_c,
