@@ -84,7 +84,9 @@ extra:
 # Customization to be included by the theme
 extra_css:
   - assets/stylesheets/extra.css
-  - assets/stylesheets/scipp_style.css # Scipp's style.css got overwritten by the Material theme.
+  # ipywidgets resolves its bundled Font Awesome fonts relative to the generated HTML
+  # page, where they do not exist. Load the font from CDN so widget icons render.
+  - https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css
 
 extra_javascript:
   - assets/javascripts/extra.js
