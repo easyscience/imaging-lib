@@ -13,6 +13,10 @@ from .atom_site import AtomSite
 from .atoms import Atoms
 from .lattice import Lattice
 
+_BCC = ((0.0, 0.0, 0.0), (0.5, 0.5, 0.5))
+_FCC = ((0.0, 0.0, 0.0), (0.5, 0.5, 0.0), (0.5, 0.0, 0.5), (0.0, 0.5, 0.5))
+_HCP = ((0.0, 0.0, 0.0), (2 / 3, 1 / 3, 0.5))
+
 
 def body_centered_cubic(
     length_a: numbers.Real,
@@ -20,7 +24,7 @@ def body_centered_cubic(
     debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
-):
+) -> Lattice:
     """
     Create a body-centered cubic (BCC) lattice.
 
@@ -56,32 +60,14 @@ def body_centered_cubic(
         If the provided atom string does not correspond to a valid [`Atoms`][...atoms.Atoms] enum member.
     """
     if unique_name is None:
-        if isinstance(atom, str):
-            name = atom
-        else:
-            name = getattr(atom, 'name', 'Unknown')
+        name = atom if isinstance(atom, str) else getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} BCC Lattice')
     if debye_temperature is None:
         global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
         debye_temperature = 300.0
     lattice = Lattice.cubic(
         length_a=length_a,
-        atom_sites=[
-            AtomSite(
-                atom=atom,
-                fract_a=0.0,
-                fract_b=0.0,
-                fract_c=0.0,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.5,
-                fract_b=0.5,
-                fract_c=0.5,
-                debye_temperature=debye_temperature,
-            ),
-        ],
+        atom_sites=[AtomSite(atom, *xyz, debye_temperature=debye_temperature) for xyz in _BCC],
         unique_name=unique_name,
         display_name=display_name,
     )
@@ -94,7 +80,7 @@ def face_centered_cubic(
     debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
-):
+) -> Lattice:
     """
     Create a face-centered cubic (FCC) lattice.
 
@@ -131,46 +117,14 @@ def face_centered_cubic(
         If the provided atom string does not correspond to a valid [`Atoms`][...atoms.Atoms] enum member.
     """
     if unique_name is None:
-        if isinstance(atom, str):
-            name = atom
-        else:
-            name = getattr(atom, 'name', 'Unknown')
+        name = atom if isinstance(atom, str) else getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} FCC Lattice')
     if debye_temperature is None:
         global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
         debye_temperature = 300.0
     lattice = Lattice.cubic(
         length_a=length_a,
-        atom_sites=[
-            AtomSite(
-                atom=atom,
-                fract_a=0.0,
-                fract_b=0.0,
-                fract_c=0.0,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.5,
-                fract_b=0.5,
-                fract_c=0.0,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.5,
-                fract_b=0.0,
-                fract_c=0.5,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.0,
-                fract_b=0.5,
-                fract_c=0.5,
-                debye_temperature=debye_temperature,
-            ),
-        ],
+        atom_sites=[AtomSite(atom, *xyz, debye_temperature=debye_temperature) for xyz in _FCC],
         unique_name=unique_name,
         display_name=display_name,
     )
@@ -183,7 +137,7 @@ def diamond_cubic(
     debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
-):
+) -> Lattice:
     """
     Create a diamond cubic lattice.
 
@@ -224,74 +178,23 @@ def diamond_cubic(
         If the provided atom string does not correspond to a valid [`Atoms`][...atoms.Atoms] enum member.
     """
     if unique_name is None:
-        if isinstance(atom, str):
-            name = atom
-        else:
-            name = getattr(atom, 'name', 'Unknown')
+        name = atom if isinstance(atom, str) else getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} Diamond Cubic Lattice')
     if debye_temperature is None:
         global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
         debye_temperature = 300.0
+    sites = []
+    for a, b, c in _FCC:
+        sites.append(AtomSite(atom=atom, fract_a=a, fract_b=b, fract_c=c, debye_temperature=debye_temperature))
+        sites.append(AtomSite(atom=atom,
+                              fract_a=a + 0.25,
+                              fract_b=b + 0.25,
+                              fract_c=c + 0.25,
+                              debye_temperature=debye_temperature)
+                              )
     lattice = Lattice.cubic(
         length_a=length_a,
-        atom_sites=[
-            AtomSite(
-                atom=atom,
-                fract_a=0.0,
-                fract_b=0.0,
-                fract_c=0.0,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.25,
-                fract_b=0.25,
-                fract_c=0.25,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.5,
-                fract_b=0.5,
-                fract_c=0.0,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.75,
-                fract_b=0.75,
-                fract_c=0.25,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.5,
-                fract_b=0.0,
-                fract_c=0.5,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.75,
-                fract_b=0.25,
-                fract_c=0.75,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.0,
-                fract_b=0.5,
-                fract_c=0.5,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=0.25,
-                fract_b=0.75,
-                fract_c=0.75,
-                debye_temperature=debye_temperature,
-            ),
-        ],
+        atom_sites=sites,
         unique_name=unique_name,
         display_name=display_name,
     )
@@ -306,7 +209,7 @@ def zincblende(
     debye_temperature2: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
-):
+) -> Lattice:
     """
     Create a zincblende lattice.
 
@@ -351,14 +254,8 @@ def zincblende(
         If the provided `atom1` or `atom2` strings does not correspond to a valid [`Atoms`][...atoms.Atoms] enum member.
     """
     if unique_name is None:
-        if isinstance(atom1, str):
-            name1 = atom1
-        else:
-            name1 = getattr(atom1, 'name', 'Unknown')
-        if isinstance(atom2, str):
-            name2 = atom2
-        else:
-            name2 = getattr(atom2, 'name', 'Unknown')
+        name1 = atom1 if isinstance(atom1, str) else getattr(atom1, 'name', 'Unknown')
+        name2 = atom2 if isinstance(atom2, str) else getattr(atom2, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name1}{name2} Zincblende Lattice')
     if debye_temperature1 is None:
         global_object.log.warning(
@@ -370,66 +267,18 @@ def zincblende(
             f"Debye temperature not provided for '{unique_name}' (atom2). Setting to default value of 300 K."
         )
         debye_temperature2 = 300.0
+    sites = []
+    for a, b, c in _FCC:
+        sites.append(AtomSite(atom=atom1, fract_a=a, fract_b=b, fract_c=c, debye_temperature=debye_temperature1))
+        sites.append(AtomSite(atom=atom2,
+                              fract_a=a + 0.25,
+                              fract_b=b + 0.25,
+                              fract_c=c + 0.25,
+                              debye_temperature=debye_temperature2)
+                              )
     lattice = Lattice.cubic(
         length_a=length_a,
-        atom_sites=[
-            AtomSite(
-                atom=atom1,
-                fract_a=0.0,
-                fract_b=0.0,
-                fract_c=0.0,
-                debye_temperature=debye_temperature1,
-            ),
-            AtomSite(
-                atom=atom2,
-                fract_a=0.25,
-                fract_b=0.25,
-                fract_c=0.25,
-                debye_temperature=debye_temperature2,
-            ),
-            AtomSite(
-                atom=atom1,
-                fract_a=0.5,
-                fract_b=0.5,
-                fract_c=0.0,
-                debye_temperature=debye_temperature1,
-            ),
-            AtomSite(
-                atom=atom2,
-                fract_a=0.75,
-                fract_b=0.75,
-                fract_c=0.25,
-                debye_temperature=debye_temperature2,
-            ),
-            AtomSite(
-                atom=atom1,
-                fract_a=0.5,
-                fract_b=0.0,
-                fract_c=0.5,
-                debye_temperature=debye_temperature1,
-            ),
-            AtomSite(
-                atom=atom2,
-                fract_a=0.75,
-                fract_b=0.25,
-                fract_c=0.75,
-                debye_temperature=debye_temperature2,
-            ),
-            AtomSite(
-                atom=atom1,
-                fract_a=0.0,
-                fract_b=0.5,
-                fract_c=0.5,
-                debye_temperature=debye_temperature1,
-            ),
-            AtomSite(
-                atom=atom2,
-                fract_a=0.25,
-                fract_b=0.75,
-                fract_c=0.75,
-                debye_temperature=debye_temperature2,
-            ),
-        ],
+        atom_sites=sites,
         unique_name=unique_name,
         display_name=display_name,
     )
@@ -443,7 +292,7 @@ def hexagonal_close_packed(
     debye_temperature: numbers.Real | None = None,
     unique_name: str | None = None,
     display_name: str | None = None,
-):
+) -> Lattice:
     """
     Create a hexagonal close-packed (HCP) lattice.
 
@@ -482,10 +331,7 @@ def hexagonal_close_packed(
         If the provided atom string does not correspond to a valid [`Atoms`][...atoms.Atoms] enum member.
     """
     if unique_name is None:
-        if isinstance(atom, str):
-            name = atom
-        else:
-            name = getattr(atom, 'name', 'Unknown')
+        name = atom if isinstance(atom, str) else getattr(atom, 'name', 'Unknown')
         unique_name = global_object.generate_unique_name(f'{name} HCP Lattice')
     if debye_temperature is None:
         global_object.log.warning(f"Debye temperature not provided for '{unique_name}'. Setting to default value of 300 K.")
@@ -493,22 +339,7 @@ def hexagonal_close_packed(
     lattice = Lattice.hexagonal(
         length_a=length_a,
         length_c=length_c,
-        atom_sites=[
-            AtomSite(
-                atom=atom,
-                fract_a=0.0,
-                fract_b=0.0,
-                fract_c=0.0,
-                debye_temperature=debye_temperature,
-            ),
-            AtomSite(
-                atom=atom,
-                fract_a=2 / 3,
-                fract_b=1 / 3,
-                fract_c=0.5,
-                debye_temperature=debye_temperature,
-            ),
-        ],
+        atom_sites=[AtomSite(atom, *xyz, debye_temperature=debye_temperature) for xyz in _HCP],
         unique_name=unique_name,
         display_name=display_name,
     )
