@@ -176,7 +176,7 @@ notebook-exec = 'python -m pytest --nbmake docs/docs/tutorials/ --nbmake-timeout
 notebook-prepare = { depends-on = [
   # 'notebook-convert',
   'notebook-strip',
-  # 'notebook-tweak',
+  'notebook-tweak',
 ] }
 
 ########################
