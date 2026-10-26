@@ -29,6 +29,7 @@ class TestBodyCenteredCubic:
         assert len(lattice.atom_sites) == 2
         assert all(site.atom is Atoms.Fe for site in lattice.atom_sites)
         assert _fract_coords(lattice) == [(0.0, 0.0, 0.0), (0.5, 0.5, 0.5)]
+        assert lattice.spacegroup == ('Im-3m', 229)
 
     def test_default_debye_temperature(self):
         # When
@@ -96,6 +97,7 @@ class TestFaceCenteredCubic:
             (0.5, 0.0, 0.5),
             (0.0, 0.5, 0.5),
         ]
+        assert lattice.spacegroup == ('Fm-3m', 225)
 
     def test_default_debye_temperature(self):
         # When
@@ -166,6 +168,7 @@ class TestDiamondCubic:
             (0.0, 0.5, 0.5),
             (0.25, 0.75, 0.75),
         ]
+        assert lattice.spacegroup == ('Fd-3m', 227)
 
     def test_default_debye_temperature(self):
         # When
@@ -245,6 +248,17 @@ class TestZincblende:
             (0.0, 0.5, 0.5),
             (0.25, 0.75, 0.75),
         ]
+
+    @pytest.mark.parametrize(
+        'atom1, atom2, expected_spacegroup',
+        [(Atoms.Ga, Atoms.As, ('F-43m', 216)), (Atoms.Si, Atoms.Si, ('Fd-3m', 227))],
+        ids=['different_atoms', 'identical_atoms_is_diamond_cubic'],
+    )
+    def test_spacegroup(self, atom1, atom2, expected_spacegroup):
+        # When Then
+        lattice = zincblende(length_a=5.65, atom1=atom1, atom2=atom2)
+        # Expect
+        assert lattice.spacegroup == expected_spacegroup
 
     def test_default_debye_temperature(self):
         # When
@@ -331,6 +345,7 @@ class TestHexagonalClosePacked:
         assert len(lattice.atom_sites) == 2
         assert all(site.atom is Atoms.Mg for site in lattice.atom_sites)
         assert _fract_coords(lattice) == [(0.0, 0.0, 0.0), (pytest.approx(2 / 3), pytest.approx(1 / 3), 0.5)]
+        assert lattice.spacegroup == ('P6_3/mmc', 194)
 
     def test_default_debye_temperature(self):
         # When

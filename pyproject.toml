@@ -32,6 +32,7 @@ dependencies = [
   'ncrystal[composer]',                                                      # The backend calculator
   'pooch',                                                                   # Data downloader
   'pandas',                                                                  # For pretty tables
+  'spglib',                                                                  # Space group symmetry library
 ]
 
 [project.optional-dependencies]

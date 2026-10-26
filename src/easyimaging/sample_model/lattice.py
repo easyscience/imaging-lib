@@ -5,18 +5,23 @@ from __future__ import annotations
 
 import numbers
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from math import cos
+from math import sin
 from typing import Any
 
+import spglib
 from easyscience import Parameter
 from easyscience import global_object
 from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
+from easyscience.variable.descriptor_base import DescriptorBase
 
 from .atom_site import AtomSite
 
-if TYPE_CHECKING:
-    from easyscience.variable.descriptor_base import DescriptorBase
+
+class LatticeError(ValueError):
+    pass
+
 
 INFINITESIMAL = 1e-3
 
@@ -493,6 +498,27 @@ class Lattice(ModelBase):
         return self._atom_sites
 
     @property
+    def spacegroup(self) -> tuple[str, int]:
+        """The space group of the lattice.
+
+        The spacegroup is represented Hermann-Mauguin notation and space group number.
+
+        Returns
+        -------
+        tuple[str, int]
+            The space group symbol and number of the lattice.
+
+        Raises
+        ------
+        LatticeError
+            If the lattice structure is invalid and the space group cannot be determined.
+        """
+        spacegroup_str = self._validate_lattice()
+        spacegroup_symbol, spacegroup_number = spacegroup_str.split()
+        spacegroup_number = int(spacegroup_number[1:-1])
+        return spacegroup_symbol, spacegroup_number
+
+    @property
     def unique_name(self) -> str:
         """
         The unique identifier of the lattice object.
@@ -576,7 +602,17 @@ class Lattice(ModelBase):
             A list of all [`Descriptors`][easyscience.variable.descriptor_base.DescriptorBase] contained in the [`Lattice`][..]
             object.
         """
-        return super().get_all_variables()
+        # Override to skip evaluating spacegroup property on call.
+        vars = []
+        for attr_name in dir(self):
+            if attr_name.startswith('spacegroup'):
+                continue
+            attr = getattr(self, attr_name)
+            if isinstance(attr, DescriptorBase):
+                vars.append(attr)
+            elif hasattr(attr, 'get_all_variables'):
+                vars += attr.get_all_variables()
+        return vars
 
     def get_all_parameters(self) -> list[Parameter]:
         """
@@ -661,6 +697,29 @@ class Lattice(ModelBase):
         )
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
+
+    def _validate_lattice(self) -> str:
+        """Returns the str to make it usable in the spacegroup property."""
+        a = self.length_a.value
+        b = self.length_b.value
+        c = self.length_c.value
+        alpha = self._alpha.full_value.to(unit='rad').value
+        beta = self._beta.full_value.to(unit='rad').value
+        gamma = self._gamma.full_value.to(unit='rad').value
+        vector_a = [a, 0.0, 0.0]
+        vector_b = [b * cos(gamma), b * sin(gamma), 0.0]
+        vector_c = [
+            c * cos(beta),
+            c * (cos(alpha) - cos(beta) * cos(gamma)) / sin(gamma),
+            c * (1 - cos(beta) ** 2 - ((cos(alpha) - cos(beta) * cos(gamma)) / sin(gamma)) ** 2) ** 0.5,
+        ]
+        lattice = [vector_a, vector_b, vector_c]
+        positions = [[site.fract_a.value, site.fract_b.value, site.fract_c.value] for site in self.atom_sites]
+        atomic_species = [site.atom.enum_id for site in self.atom_sites]
+        spacegroup_str = spglib.get_spacegroup([lattice, positions, atomic_species])
+        if spacegroup_str is None:
+            raise LatticeError('Invalid lattice structure.')
+        return spacegroup_str
 
     def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
         """Convert the lattice object to a dictionary representation.

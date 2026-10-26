@@ -9,6 +9,7 @@ from easyimaging.sample_model.atom_site import AtomSite
 from easyimaging.sample_model.atoms import Atoms
 from easyimaging.sample_model.lattice import INFINITESIMAL
 from easyimaging.sample_model.lattice import Lattice
+from easyimaging.sample_model.lattice import LatticeError
 
 
 class TestLattice:
@@ -46,6 +47,7 @@ class TestLattice:
         assert len(lattice.atom_sites) == 2
         assert lattice.atom_sites[0] is atom_sites[0]
         assert lattice.atom_sites[1] is atom_sites[1]
+        assert lattice.spacegroup == ('P-1', 2)
 
     def test_init_parameter_defaults(self):
         # When
@@ -196,9 +198,10 @@ class TestLattice:
 
     def test_cubic_with_atom_sites(self, atom_sites):
         # When
-        lattice = Lattice.cubic(length_a=3.0, atom_sites=atom_sites)
+        lattice = Lattice.cubic(length_a=3.0, atom_sites=[atom_sites[0]])
         # Then Expect
-        assert len(lattice.atom_sites) == 2
+        assert len(lattice.atom_sites) == 1
+        assert lattice.spacegroup == ('Pm-3m', 221)
 
     def test_cubic_invalid_length_value(self):
         # When Then Expect
@@ -221,6 +224,13 @@ class TestLattice:
         assert lattice.beta.value == 90.0
         assert lattice.gamma.value == 120.0
         assert lattice.unique_name.startswith('HexagonalLattice')
+
+    def test_hexagonal_with_atoms(self, atom_sites):
+        # When
+        lattice = Lattice.hexagonal(length_a=2.0, length_c=4.0, atom_sites=[atom_sites[0]])
+        # Then Expect
+        assert len(lattice.atom_sites) == 1
+        assert lattice.spacegroup == ('P6/mmm', 191)
 
     def test_hexagonal_length_b_tracks_length_a_only(self):
         # When
@@ -337,6 +347,51 @@ class TestLattice:
         with pytest.raises(AttributeError, match='This is a dependent parameter'):
             setattr(lattice, attribute, 100.0)
         assert getattr(lattice, attribute).value == original_value
+
+    def test_spacegroup_updates_with_lattice_angles(self):
+        # When
+        site = AtomSite(atom=Atoms.Fe, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0)
+        lattice = Lattice(length_a=3.0, length_b=3.0, length_c=5.0, atom_sites=[site])
+        assert lattice.spacegroup == ('P4/mmm', 123)
+        # Then
+        lattice.gamma = 120.0
+        # Expect
+        assert lattice.spacegroup == ('P6/mmm', 191)
+
+    def test_spacegroup_updates_with_atomic_species(self, atom_sites):
+        # When
+        lattice = Lattice.cubic(length_a=3.0, atom_sites=atom_sites)
+        assert lattice.spacegroup == ('Im-3m', 229)
+        # Then
+        lattice.atom_sites[1].atom = Atoms.Cu
+        # Expect
+        assert lattice.spacegroup == ('Pm-3m', 221)
+
+    def test_spacegroup_no_atom_sites_raises(self):
+        # When
+        lattice = Lattice.cubic(length_a=3.0)
+        # Then Expect
+        with pytest.raises(LatticeError, match='Invalid lattice structure.'):
+            lattice.spacegroup
+
+    def test_get_all_variables_contains_lattice_and_atom_site_variables(self, lattice, atom_sites):
+        # When
+        expected = [lattice.length_a, lattice.length_b, lattice.length_c, lattice.alpha, lattice.beta, lattice.gamma]
+        for site in atom_sites:
+            expected += site.get_all_variables()
+        # Then
+        variables = lattice.get_all_variables()
+        # Expect
+        assert sorted(map(id, variables)) == sorted(map(id, expected))
+
+    def test_get_all_variables_no_atom_sites(self):
+        # When
+        lattice = Lattice.cubic(length_a=3.0)
+        # Then
+        variables = lattice.get_all_variables()
+        # Expect
+        expected = [lattice.length_a, lattice.length_b, lattice.length_c, lattice.alpha, lattice.beta, lattice.gamma]
+        assert sorted(map(id, variables)) == sorted(map(id, expected))
 
     def test_to_dict_without_symmetry_constructor_has_no_angle_lock(self, lattice):
         # When Then
