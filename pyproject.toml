@@ -40,6 +40,7 @@ dev = [
   'build',                            # Building the package
   'pre-commit',                       # Pre-commit hooks
   'jinja2',                           # Templating
+  'ipympl',                           # Matplotlib widget backend for plotting tests and notebooks
   'nbmake',                           # Building notebooks
   'nbstripout',                       # Strip output from notebooks
   'nbqa',                             # Linting and formatting notebooks
