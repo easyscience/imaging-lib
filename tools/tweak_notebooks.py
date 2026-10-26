@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
-"""Add a hidden static-plot setup cell to generated documentation notebooks."""
+"""Add hidden setup for embedding plot widgets in documentation notebooks."""
 
 import argparse
 from pathlib import Path
@@ -8,24 +8,33 @@ from pathlib import Path
 import nbformat
 
 SETUP_TAG = 'docs-static-plots'
-SNAPSHOT_SETUP = """\
-from io import BytesIO
-from IPython.display import Image, display
-from plopp.backends.matplotlib.figure import MplBaseFig
-from plopp.widgets import Box
+WIDGET_SETUP = """\
+from base64 import b64decode
+from ipywidgets import Image, Widget
+from ipympl.backend_nbagg import Canvas
+from matplotlib.backend_bases import Event
+import pooch
 
-def display_snapshot(obj):
-    if hasattr(obj, 'fig'):
-        buffer = BytesIO()
-        obj.fig.savefig(buffer, format='png', bbox_inches='tight')
-        display(Image(data=buffer.getvalue()))
-    else:
-        for child in getattr(obj, 'children', ()):
-            display_snapshot(child)
+# Hide informational download messages, but keep warnings and errors.
+pooch.get_logger().setLevel('WARNING')
 
-formatter = get_ipython().display_formatter.ipython_display_formatter
-formatter.for_type(MplBaseFig, display_snapshot)
-formatter.for_type(Box, display_snapshot)
+def snapshot_canvases(widget):
+    if isinstance(widget, Canvas):
+        # Keep the surrounding controls, but use an image with fixed display dimensions.
+        widget.callbacks.process('figure_enter_event', Event('figure_enter_event', widget))
+        data = widget._repr_mimebundle_()
+        width, height = widget._size
+        return Image(value=b64decode(data['image/png']), width=int(width), height=int(height))
+    if hasattr(widget, 'children'):
+        widget.children = tuple(snapshot_canvases(child) for child in widget.children)
+    return widget
+
+def widget_mimebundle(widget):
+    data = widget._repr_mimebundle_()
+    snapshot = snapshot_canvases(widget)
+    return data if snapshot is widget else snapshot._repr_mimebundle_()
+
+get_ipython().display_formatter.mimebundle_formatter.for_type(Widget, widget_mimebundle)
 """
 
 
@@ -47,7 +56,7 @@ def main():
         notebook.cells.insert(
             0,
             nbformat.v4.new_code_cell(
-                SNAPSHOT_SETUP,
+                WIDGET_SETUP,
                 metadata={'tags': ['hide-in-docs', SETUP_TAG]},
                 id=SETUP_TAG,
             ),
