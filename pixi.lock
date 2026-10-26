@@ -8088,6 +8088,7 @@ packages:
   - format-docstring ; extra == 'dev'
   - gitpython ; extra == 'dev'
   - interrogate ; extra == 'dev'
+  - ipympl ; extra == 'dev'
   - jinja2 ; extra == 'dev'
   - jupyterquiz ; extra == 'dev'
   - jupytext ; extra == 'dev'
