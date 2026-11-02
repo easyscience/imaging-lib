@@ -16,6 +16,7 @@ from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
 from easyscience.variable.descriptor_base import DescriptorBase
 
+from ._lattice_viewer import plot_lattice
 from .atom_site import AtomSite
 
 
@@ -28,7 +29,7 @@ INFINITESIMAL = 1e-3
 
 class Lattice(ModelBase):
     """A Lattice represents the periodic arrangement of atoms in a crystal structure, defined by its lattice
-    parameter: (``length_a``, ``length_b``, ``length_c``), lattice-vector angles: (``alpha``, ``beta``, ``gamma``)
+    parameters: (``length_a``, ``length_b``, ``length_c``), lattice-vector angles: (``alpha``, ``beta``, ``gamma``)
     and a sequence of [`AtomSite`][...atom_site.AtomSite] objects, with their corresponding [atomic species][...atoms.Atoms],
     occupying it.
 
@@ -501,7 +502,7 @@ class Lattice(ModelBase):
     def spacegroup(self) -> tuple[str, int]:
         """The space group of the lattice.
 
-        The spacegroup is represented Hermann-Mauguin notation and space group number.
+        The spacegroup is represented in Hermann-Mauguin notation and space group number.
 
         Returns
         -------
@@ -517,6 +518,34 @@ class Lattice(ModelBase):
         spacegroup_symbol, spacegroup_number = spacegroup_str.split()
         spacegroup_number = int(spacegroup_number[1:-1])
         return spacegroup_symbol, spacegroup_number
+
+    @property
+    def lattice_vectors(self) -> list[list[float, float, float]]:
+        """The three lattice vectors $\\vec{a}$, $\\vec{b}$ and $\\vec{c}$, defining the lattice.
+
+        The lattice vectors are given in Cartesian coordinates in Å.<br>
+        The Cartesian coordinate system is chosen such that $\\vec{a}$ always points along the $x$-axis, $\\vec{b}$ always lies
+        in the $xy$-plane, and $\\vec{c}$ then completes the right-handed set.
+
+        Returns
+        -------
+        list[list[float, float, float]]
+            A list of the three 3-dimensional lattice vectors: ``[vector_a, vector_b, vector_c]``.
+        """
+        a = self.length_a.value
+        b = self.length_b.value
+        c = self.length_c.value
+        alpha = self._alpha.full_value.to(unit='rad').value
+        beta = self._beta.full_value.to(unit='rad').value
+        gamma = self._gamma.full_value.to(unit='rad').value
+        vector_a = [a, 0.0, 0.0]
+        vector_b = [b * cos(gamma), b * sin(gamma), 0.0]
+        vector_c = [
+            c * cos(beta),
+            c * (cos(alpha) - cos(beta) * cos(gamma)) / sin(gamma),
+            c * (1 - cos(beta) ** 2 - ((cos(alpha) - cos(beta) * cos(gamma)) / sin(gamma)) ** 2) ** 0.5,
+        ]
+        return [vector_a, vector_b, vector_c]
 
     @property
     def unique_name(self) -> str:
@@ -664,6 +693,90 @@ class Lattice(ModelBase):
         """
         return super().get_fit_parameters()
 
+    def display(self):
+        """
+        Display a 3D visualization of the lattice.
+
+        Atoms are represented as spheres, with their size and color corresponding to the element type.<br>
+        Atoms on the unit cell boundaries are mirrored on the opposite sides of the unit cell.
+
+        Bonds between atoms are shown as cylinders and are rendered only if the distance between them is within the atoms
+        covalent radii sum plus a small 0.25 Å threshold **and** lie within the first coordination shell of both atoms.
+
+        ???+ info "Controls"
+            **Camera controls**
+
+            - Left-click and drag to rotate the camera
+            - Wheel-scroll to zoom in and out
+            - Right-click and drag to pan the camera
+
+            **Buttons**
+
+            &ensp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5"
+              width="17" height="15" rx="1.5"/><path d="M9.5 4.5V19.5M14.5 4.5V19.5"/></svg> /
+            <svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5"
+              width="17" height="15" rx="1.5"/><path d="M9 4.5 11 19.5M15 4.5 13 19.5"/></svg>
+            &ensp;&thinsp; Change camera perspective between parallel and orthographic view <br>
+            &ensp;<b style="color: #DC2828">a</b> / <b style="color: #28B428">b</b> / <b style="color: #2850DC">c</b>
+            &nbsp;&thinsp; Change camera view to view along the corresponding axis <br>
+            &ensp;&emsp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 11 12 3l9 8"/><path d="M5 9.5V20h5v-6h4v6h5V9.5"/></svg>
+            &ensp;&emsp; Reset camera view to the default orientation <br>
+            &ensp;&emsp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11.8 12.2 14 10M12.9 16.1l1.8.4"/>
+              <circle cx="9" cy="15" r="4.2" fill="currentColor" stroke="none"/><circle cx="16" cy="8" r="3"
+              fill="currentColor" stroke="none"/><circle cx="17" cy="17" r="2.6" fill="currentColor" stroke="none"/></svg>
+            &ensp;&emsp; Toggle visibility of atoms <br>
+            &ensp;&emsp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><rect x="3.5" y="5"
+              width="17" height="14" rx="2"/><path d="M9 15.5 12 8.5l3 7M10.1 13.2h3.8"/></svg>
+            &ensp;&emsp; Toggle visibility of atomic labels <br>
+            &ensp;&emsp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24"><line x1="8"
+              y1="16" x2="16" y2="8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="6.7"
+              cy="17.3" r="3.1" fill="currentColor"/><circle cx="17.3" cy="6.7" r="3.1" fill="currentColor"/></svg>
+            &ensp;&emsp; Toggle visibility of chemical bonds <br>
+            &ensp;&emsp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M12 2.5 20 7v9l-8 4.5L4 16V7Z"/><path d="M4 7l8 4.5L20 7M12 11.5v9"/></svg>
+            &ensp;&emsp; Toggle visibility of the unit cell boundaries <br>
+            &ensp;&emsp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 19V6M5 19h13M5 19l7-7"/><path d="M5 6 3.3 8.2M5 6l1.7 2.2M18 19l-2.2-1.4M18 19l-2.2 1.4"/></svg>
+            &ensp;&emsp; Toggle visibility of the lattice vectors <br>
+            &ensp;&emsp;<svg width='1.2em' height='1.2em' style='vertical-align: -0.25em' viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12"
+              cy="13" r="3.4"/></svg>
+            &ensp;&emsp; Save the current view of the lattice as a PNG
+
+
+        ```python exec="true"
+        from easyimaging.sample_model import Atoms
+        from easyimaging.sample_model.crystals import body_centered_cubic
+
+        lattice = body_centered_cubic(
+            length_a=2.87,
+            atom=Atoms.Fe,
+            debye_temperature=400.0,
+        )
+        view = lattice.display()._repr_html_()
+        print(
+            '<div style="display: flex; width: fit-content; margin:0 auto; '
+            f'border: .05rem solid var(--md-typeset-table-color); border-radius: .1rem">{view}</div>'
+        )
+        ```
+
+        Raises
+        ------
+        LatticeError
+            If the lattice structure is invalid and therefore cannot be displayed.
+        """
+        self._validate_lattice()
+        return plot_lattice(self)
+
     def _validate_length(self, value: numbers.Real, axis: str):
         if not isinstance(value, numbers.Real):
             raise TypeError(f'Lattice length_{axis} must be a numeric value. Got {type(value).__name__}')
@@ -700,23 +813,9 @@ class Lattice(ModelBase):
 
     def _validate_lattice(self) -> str:
         """Returns the str to make it usable in the spacegroup property."""
-        a = self.length_a.value
-        b = self.length_b.value
-        c = self.length_c.value
-        alpha = self._alpha.full_value.to(unit='rad').value
-        beta = self._beta.full_value.to(unit='rad').value
-        gamma = self._gamma.full_value.to(unit='rad').value
-        vector_a = [a, 0.0, 0.0]
-        vector_b = [b * cos(gamma), b * sin(gamma), 0.0]
-        vector_c = [
-            c * cos(beta),
-            c * (cos(alpha) - cos(beta) * cos(gamma)) / sin(gamma),
-            c * (1 - cos(beta) ** 2 - ((cos(alpha) - cos(beta) * cos(gamma)) / sin(gamma)) ** 2) ** 0.5,
-        ]
-        lattice = [vector_a, vector_b, vector_c]
         positions = [[site.fract_a.value, site.fract_b.value, site.fract_c.value] for site in self.atom_sites]
         atomic_species = [site.atom.enum_id for site in self.atom_sites]
-        spacegroup_str = spglib.get_spacegroup([lattice, positions, atomic_species])
+        spacegroup_str = spglib.get_spacegroup([self.lattice_vectors, positions, atomic_species])
         if spacegroup_str is None:
             raise LatticeError('Invalid lattice structure.')
         return spacegroup_str

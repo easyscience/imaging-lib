@@ -374,6 +374,28 @@ class TestLattice:
         with pytest.raises(LatticeError, match='Invalid lattice structure.'):
             lattice.spacegroup
 
+    def test_lattice_vectors_cubic(self):
+        # When
+        lattice = Lattice.cubic(length_a=3.0)
+        # Then
+        vectors = lattice.lattice_vectors
+        # Expect
+        assert np.allclose(vectors, [[3.0, 0.0, 0.0], [0.0, 3.0, 0.0], [0.0, 0.0, 3.0]])
+
+    def test_lattice_vectors_have_lattice_lengths_and_angles(self, lattice):
+        # When Then
+        vector_a, vector_b, vector_c = np.array(lattice.lattice_vectors)
+
+        def angle_between(vector_1, vector_2):
+            cosine = np.dot(vector_1, vector_2) / (np.linalg.norm(vector_1) * np.linalg.norm(vector_2))
+            return np.degrees(np.arccos(cosine))
+
+        # Expect
+        assert np.allclose([np.linalg.norm(v) for v in (vector_a, vector_b, vector_c)], [1.0, 2.0, 3.0])
+        assert np.isclose(angle_between(vector_b, vector_c), 80.0)  # alpha
+        assert np.isclose(angle_between(vector_a, vector_c), 85.0)  # beta
+        assert np.isclose(angle_between(vector_a, vector_b), 95.0)  # gamma
+
     def test_get_all_variables_contains_lattice_and_atom_site_variables(self, lattice, atom_sites):
         # When
         expected = [lattice.length_a, lattice.length_b, lattice.length_c, lattice.alpha, lattice.beta, lattice.gamma]

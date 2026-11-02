@@ -28,6 +28,9 @@ node_modules
 # Tox
 .tox
 
+# Vendored JavaScript libraries
+src/easyimaging/sample_model/_lattice_viewer/vendor/
+
 # Misc
 .benchmarks
 .cache

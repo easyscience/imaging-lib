@@ -32,6 +32,22 @@ def body_centered_cubic(
     $\\alpha=\\beta=\\gamma=90^\\circ$. The [`Lattice`][...Lattice] object is then populated with two atoms at the fractional
     coordinates: $(0,0,0)$ and $(\\frac{1}{2},\\frac{1}{2},\\frac{1}{2})$, corresponding to a BCC lattice.
 
+    ```python exec="true"
+    from easyimaging.sample_model import Atoms
+    from easyimaging.sample_model.crystals import body_centered_cubic
+
+    lattice = body_centered_cubic(
+        length_a=2.87,
+        atom=Atoms.Fe,
+        debye_temperature=400.0,
+    )
+    view = lattice.display()._repr_html_()
+    print(
+        '<div style="display: flex; width: fit-content; margin:0 auto; '
+        f'border: .05rem solid var(--md-typeset-table-color); border-radius: .1rem">{view}</div>'
+    )
+    ```
+
     Parameters
     ----------
     length_a : float | int
@@ -88,6 +104,22 @@ def face_centered_cubic(
     $\\alpha=\\beta=\\gamma=90^\\circ$. The [`Lattice`][...Lattice] object is then populated with four atoms at the fractional
     coordinates: $(0,0,0)$, $(\\frac{1}{2},\\frac{1}{2},0)$, $(\\frac{1}{2},0,\\frac{1}{2})$, and
     $(0,\\frac{1}{2},\\frac{1}{2})$, corresponding to an FCC lattice.
+
+    ```python exec="true"
+    from easyimaging.sample_model import Atoms
+    from easyimaging.sample_model.crystals import face_centered_cubic
+
+    lattice = face_centered_cubic(
+        length_a=3.77,
+        atom=Atoms.Al,
+        debye_temperature=400.0,
+    )
+    view = lattice.display()._repr_html_()
+    print(
+        '<div style="display: flex; width: fit-content; margin:0 auto; '
+        f'border: .05rem solid var(--md-typeset-table-color); border-radius: .1rem">{view}</div>'
+    )
+    ```
 
     Parameters
     ----------
@@ -149,6 +181,22 @@ def diamond_cubic(
     1. $(0,0,0)$, $(\\frac{1}{2},\\frac{1}{2},0)$, $(\\frac{1}{2},0,\\frac{1}{2})$ and $(0,\\frac{1}{2},\\frac{1}{2})$.
     2. $(\\frac{1}{4},\\frac{1}{4},\\frac{1}{4})$, $(\\frac{3}{4},\\frac{3}{4},\\frac{1}{4})$, $(\\frac{3}{4},\\frac{1}{4},
     \\frac{3}{4})$ and $(\\frac{1}{4},\\frac{3}{4},\\frac{3}{4})$.
+
+    ```python exec="true"
+    from easyimaging.sample_model import Atoms
+    from easyimaging.sample_model.crystals import diamond_cubic
+
+    lattice = diamond_cubic(
+        length_a=3.57,
+        atom=Atoms.C,
+        debye_temperature=400.0,
+    )
+    view = lattice.display()._repr_html_()
+    print(
+        '<div style="display: flex; width: fit-content; margin:0 auto; '
+        f'border: .05rem solid var(--md-typeset-table-color); border-radius: .1rem">{view}</div>'
+    )
+    ```
 
     Parameters
     ----------
@@ -218,6 +266,24 @@ def zincblende(
     1. $(0,0,0)$, $(\\frac{1}{2},\\frac{1}{2},0)$, $(\\frac{1}{2},0,\\frac{1}{2})$ and $(0,\\frac{1}{2},\\frac{1}{2})$.
     2. $(\\frac{1}{4},\\frac{1}{4},\\frac{1}{4})$, $(\\frac{3}{4},\\frac{3}{4},\\frac{1}{4})$, $(\\frac{3}{4},\\frac{1}{4},
     \\frac{3}{4})$ and $(\\frac{1}{4},\\frac{3}{4},\\frac{3}{4})$.
+
+    ```python exec="true"
+    from easyimaging.sample_model import Atoms
+    from easyimaging.sample_model.crystals import zincblende
+
+    lattice = zincblende(
+        length_a=5.41,
+        atom1=Atoms.Zn,
+        atom2=Atoms.S,
+        debye_temperature1=400.0,
+        debye_temperature2=400.0,
+    )
+    view = lattice.display()._repr_html_()
+    print(
+        '<div style="display: flex; width: fit-content; margin:0 auto; '
+        f'border: .05rem solid var(--md-typeset-table-color); border-radius: .1rem">{view}</div>'
+    )
+    ```
 
     Parameters
     ----------
@@ -294,6 +360,23 @@ def hexagonal_close_packed(
     $\\alpha=\\beta=90^\\circ$, $\\gamma=120^\\circ$. The [`Lattice`][...Lattice] object is then populated with two
     atoms at the fractional coordinates $(0,0,0)$ and $(\\frac{2}{3},\\frac{1}{3},\\frac{1}{2})$, corresponding to the two
     atoms in the primitive HCP unit cell.
+
+    ```python exec="true"
+    from easyimaging.sample_model import Atoms
+    from easyimaging.sample_model.crystals import hexagonal_close_packed
+
+    lattice = hexagonal_close_packed(
+        length_a=1.7,
+        length_c=4.71,
+        atom=Atoms.C,
+        debye_temperature=400.0,
+    )
+    view = lattice.display()._repr_html_()
+    print(
+        '<div style="display: flex; width: fit-content; margin:0 auto; '
+        f'border: .05rem solid var(--md-typeset-table-color); border-radius: .1rem">{view}</div>'
+    )
+    ```
 
     Parameters
     ----------
