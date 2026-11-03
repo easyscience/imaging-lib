@@ -201,7 +201,7 @@ class TestAtomSite:
         # Then
         other_site = AtomSite(atom=Atoms.Co, fract_a=0.0, fract_b=0.0, fract_c=0.0, debye_temperature=1.0)
         # Expect
-        assert global_object.map.get_item_by_key(site.unique_name) is site
+        assert global_object.registry[site.unique_name] is site
         assert other_site.unique_name != site.unique_name
         assert other_site.fract_a.unique_name != site.fract_a.unique_name
         assert other_site.debye_temperature.unique_name != site.debye_temperature.unique_name

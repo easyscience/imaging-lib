@@ -7,11 +7,11 @@ from collections.abc import Sequence
 from typing import Any
 
 import scipp as sc
-from easyscience.base_classes import NewBase
+from easyscience.base_classes import EasyBase
 from scipp import UnitError
 
 
-class RectangleROI(NewBase):
+class RectangleROI(EasyBase):
     """Object representing a rectangular region of interest (ROI) in an image.
 
     This object is most simply created by the [`roi_creator`][....Measurement.roi_creator] method in the

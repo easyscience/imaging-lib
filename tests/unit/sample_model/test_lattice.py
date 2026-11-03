@@ -4,6 +4,7 @@
 import numpy as np
 import pytest
 from easyscience import global_object
+from easyscience.variable.parameter_dependency_resolver import resolve_all_parameter_dependencies
 
 from easyimaging.sample_model.atom_site import AtomSite
 from easyimaging.sample_model.atoms import Atoms
@@ -308,7 +309,7 @@ class TestLattice:
         # When
         dict_repr = lattice.to_dict()
         # Then
-        global_object.map._clear()
+        global_object.registry.clear()
         new_instance = Lattice.from_dict(dict_repr)
         new_dict = new_instance.to_dict()
         # Expect
@@ -449,7 +450,7 @@ class TestLattice:
     def test_from_dict(self, lattice):
         # When
         dict_repr = lattice.to_dict()
-        global_object.map._clear()
+        global_object.registry.clear()
         # Then
         new_lattice = Lattice.from_dict(dict_repr)
         # Expect
@@ -466,43 +467,51 @@ class TestLattice:
         assert all(isinstance(site, AtomSite) for site in new_lattice.atom_sites)
         assert [site.fract_a.value for site in new_lattice.atom_sites] == [0.0, 0.5]
 
-    # def test_from_dict_cubic_keeps_lengths_and_angles_locked(self, atom_sites):
-    #     # When
-    #     dict_repr = Lattice.cubic(length_a=3.0, atom_sites=atom_sites).to_dict()
-    #     global_object.map._clear()
-    #     # Then
-    #     new_lattice = Lattice.from_dict(dict_repr)
-    #     resolve_all_parameter_dependencies(new_lattice)
-    #     new_lattice.length_a = 5.0
-    #     # Expect
-    #     assert new_lattice.length_b.value == 5.0
-    #     assert new_lattice.length_c.value == 5.0
-    #     assert new_lattice.alpha.value == 90.0
-    #     assert new_lattice.beta.value == 90.0
-    #     assert new_lattice.gamma.value == 90.0
-    #     assert len(new_lattice.atom_sites) == 2
-    #     lattice_fittable = [p for p in new_lattice.get_fittable_parameters() if p.name.startswith(('length', 'angle'))]
-    #     assert len(lattice_fittable) == 1
-    #     assert lattice_fittable[0] is new_lattice.length_a
+    def test_from_dict_cubic_keeps_lengths_and_angles_locked(self, atom_sites):
+        # When
+        dict_repr = Lattice.cubic(length_a=3.0, atom_sites=atom_sites).to_dict()
+        global_object.registry.clear()
+        # Then
+        new_lattice = Lattice.from_dict(dict_repr)
+        resolve_all_parameter_dependencies(new_lattice)
+        new_lattice.length_a = 5.0
+        # Expect
+        assert new_lattice.length_b.value == 5.0
+        assert new_lattice.length_c.value == 5.0
+        assert new_lattice.alpha.value == 90.0
+        assert new_lattice.beta.value == 90.0
+        assert new_lattice.gamma.value == 90.0
+        assert len(new_lattice.atom_sites) == 2
+        fittable_parameters = new_lattice.get_fittable_parameters()
+        assert len(fittable_parameters) == 2 * 4 + 1  # 2 atom sites each with 4 fittable parameters + 1 for length_a
+        assert new_lattice.length_a in fittable_parameters
+        with pytest.raises(AttributeError):
+            new_lattice.length_b = 6.0
+        with pytest.raises(AttributeError):
+            new_lattice.alpha = 100.0
 
-    # def test_from_dict_hexagonal_keeps_lengths_and_angles_locked(self):
-    #     # When
-    #     dict_repr = Lattice.hexagonal(length_a=2.0, length_c=4.0).to_dict()
-    #     global_object.map._clear()
-    #     # Then
-    #     new_lattice = Lattice.from_dict(dict_repr)
-    #     resolve_all_parameter_dependencies(new_lattice)
-    #     new_lattice.length_a = 6.0
-    #     # Expect
-    #     assert new_lattice.length_b.value == 6.0
-    #     assert new_lattice.length_c.value == 4.0
-    #     assert new_lattice.alpha.value == 90.0
-    #     assert new_lattice.beta.value == 90.0
-    #     assert new_lattice.gamma.value == 120.0
-    #     fittable_parameters = new_lattice.get_fittable_parameters()
-    #     assert len(fittable_parameters) == 2
-    #     assert any(parameter is new_lattice.length_a for parameter in fittable_parameters)
-    #     assert any(parameter is new_lattice.length_c for parameter in fittable_parameters)
+    def test_from_dict_hexagonal_keeps_lengths_and_angles_locked(self):
+        # When
+        dict_repr = Lattice.hexagonal(length_a=2.0, length_c=4.0).to_dict()
+        global_object.registry.clear()
+        # Then
+        new_lattice = Lattice.from_dict(dict_repr)
+        resolve_all_parameter_dependencies(new_lattice)
+        new_lattice.length_a = 6.0
+        # Expect
+        assert new_lattice.length_b.value == 6.0
+        assert new_lattice.length_c.value == 4.0
+        assert new_lattice.alpha.value == 90.0
+        assert new_lattice.beta.value == 90.0
+        assert new_lattice.gamma.value == 120.0
+        fittable_parameters = new_lattice.get_fittable_parameters()
+        assert len(fittable_parameters) == 2  # length_a and length_c are fittable
+        assert new_lattice.length_a in fittable_parameters
+        assert new_lattice.length_c in fittable_parameters
+        with pytest.raises(AttributeError):
+            new_lattice.length_b = 7.0
+        with pytest.raises(AttributeError):
+            new_lattice.gamma = 100.0
 
     def test_from_dict_invalid_type(self):
         # When Then Expect

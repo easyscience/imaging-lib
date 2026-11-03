@@ -114,7 +114,6 @@ class AtomSite(ModelBase):
 
         debye_name = global_object.generate_unique_name(f'{self.unique_name}_debye_temperature')
         self._debye_temperature = Parameter(
-            name='debye_temperature',
             value=debye_temperature,
             unit='K',
             min=DEBYE_INFINITESIMAL,
@@ -376,8 +375,9 @@ class AtomSite(ModelBase):
 
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_fract_{axis}')
 
-        # Change _default_unique_name when Parameter uses NewBase
-        return Parameter(name=f'fract_{axis}', value=fract_value, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
+        param = Parameter(value=fract_value, min=0.0, max=1.0, fixed=True, unique_name=unique_name)
+        param._default_unique_name = True  # This gets set to False by the super init
+        return param
 
     def __repr__(self):
         """Return a string representation of the AtomSite.

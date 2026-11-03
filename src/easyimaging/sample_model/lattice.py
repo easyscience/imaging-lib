@@ -219,7 +219,6 @@ class Lattice(ModelBase):
         lattice.length_c.make_dependent_on('length_a', {'length_a': lattice.length_a})
         # Lock the angles by making them dependent on a hidden parameter
         lattice._angle_lock = Parameter(
-            name='angle_lock',
             value=90,
             unit='deg',
             min=INFINITESIMAL,
@@ -287,7 +286,6 @@ class Lattice(ModelBase):
         lattice.length_b.make_dependent_on('length_a', {'length_a': lattice.length_a})
         # Lock the angles by making them dependent on a hidden parameter
         lattice._angle_lock = Parameter(
-            name='angle_lock',
             value=90,
             unit='deg',
             min=INFINITESIMAL,
@@ -682,17 +680,6 @@ class Lattice(ModelBase):
         """
         return super().get_free_parameters()
 
-    def get_fit_parameters(self) -> list[Parameter]:
-        """
-        This is an alias for [`get_free_parameters`][..get_free_parameters].
-
-        Returns
-        -------
-        list[Parameter]
-            A list of all free [`Parameters`][easyscience.Parameter] contained in the [`Lattice`][..] object.
-        """
-        return super().get_fit_parameters()
-
     def display(self):
         """
         Display a 3D visualization of the lattice.
@@ -791,16 +778,13 @@ class Lattice(ModelBase):
 
     def _create_length_parameter(self, length_value: numbers.Real, axis: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_length_{axis}')
-        parameter = Parameter(
-            name=f'length_{axis}', value=length_value, unit='angstrom', min=INFINITESIMAL, fixed=True, unique_name=unique_name
-        )
+        parameter = Parameter(value=length_value, unit='angstrom', min=INFINITESIMAL, fixed=True, unique_name=unique_name)
         parameter._default_unique_name = True  # This gets set to False by the super init
         return parameter
 
     def _create_angle_parameter(self, angle_value: numbers.Real, name: str) -> Parameter:
         unique_name = global_object.generate_unique_name(f'{self.unique_name}_angle_{name}')
         parameter = Parameter(
-            name=f'angle_{name}',
             value=angle_value,
             unit='deg',
             min=INFINITESIMAL,
@@ -845,7 +829,7 @@ class Lattice(ModelBase):
         out_dict = super().to_dict(skip=skip)
         angle_lock = getattr(self, '_angle_lock', None)
         if angle_lock is not None:
-            out_dict['angle_lock'] = angle_lock.as_dict(skip=skip)
+            out_dict['angle_lock'] = angle_lock.to_dict(skip=skip)
         return out_dict
 
     @classmethod

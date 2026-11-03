@@ -14,8 +14,8 @@ import numpy as np
 import plopp as pp
 import scipp as sc
 from easyscience import global_object
+from easyscience.base_classes import EasyBase
 from easyscience.base_classes import EasyList
-from easyscience.base_classes import NewBase
 from scipp import DimensionError
 from scipp import UnitError
 from scitiff import load_scitiff
@@ -27,7 +27,7 @@ from ..utils import _is_notebook
 from ..utils import _to_edges
 
 
-class Measurement(NewBase):
+class Measurement(EasyBase):
     """Object responsible for managing and inspecting the **normalized** measurement data of a time-of-flight neutron imaging
      experiment. This object can be created in 3 ways:
 
