@@ -4,21 +4,30 @@
 from easyscience.base_classes import ModelBase
 
 from .lattice import Lattice
+from .sample_properties import SampleProperties
 
 
 class SampleModel(ModelBase):
     """The sample model for representing a sample in neutron imaging experiments."""
 
-    def __init__(self, lattice: Lattice):
-        """Initialize the sample model with a lattice."""
+    def __init__(self, lattice: Lattice, sample_properties: SampleProperties):
+        """Initialize the sample model with a lattice and sample properties."""
         if not isinstance(lattice, Lattice):
             raise TypeError("lattice must be an instance of Lattice")
+        if not isinstance(sample_properties, SampleProperties):
+            raise TypeError("sample_properties must be an instance of SampleProperties")
         self._lattice = lattice
+        self._sample_properties = sample_properties
 
     @property
     def lattice(self) -> Lattice:
         """Get the lattice of the sample."""
         return self._lattice
+
+    @property
+    def sample_properties(self) -> SampleProperties:
+        """Get the sample properties of the sample."""
+        return self._sample_properties
 
     @lattice.setter
     def lattice(self, lattice: Lattice):
@@ -26,6 +35,13 @@ class SampleModel(ModelBase):
         if not isinstance(lattice, Lattice):
             raise TypeError("lattice must be an instance of Lattice")
         self._lattice = lattice
+
+    @sample_properties.setter
+    def sample_properties(self, sample_properties: SampleProperties):
+        """Set the sample properties of the sample."""
+        if not isinstance(sample_properties, SampleProperties):
+            raise TypeError("sample_properties must be an instance of SampleProperties")
+        self._sample_properties = sample_properties
 
     def display(self):
         """

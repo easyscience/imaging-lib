@@ -16,8 +16,8 @@ from easyscience.base_classes import EasyList
 from easyscience.base_classes import ModelBase
 from easyscience.variable.descriptor_base import DescriptorBase
 
-from ._lattice_viewer import plot_lattice
 from .atom_site import AtomSite
+from .lattice_viewer import plot_lattice
 
 
 class LatticeError(ValueError):
