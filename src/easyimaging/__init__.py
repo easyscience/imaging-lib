@@ -6,5 +6,6 @@
 from importlib.metadata import version
 
 from .measurement import Measurement
+from .sample_model.sample_model import SampleModel
 
 __version__ = version(__package__)

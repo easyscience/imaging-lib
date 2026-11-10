@@ -167,7 +167,7 @@ class AtomSite(ModelBase):
         Parameters
         ----------
         value : int | float
-            A number between -1.0 and 1.0.
+            A number between -1.0 and 2.0.
 
         Returns
         -------
@@ -179,7 +179,7 @@ class AtomSite(ModelBase):
         TypeError
             If ``value`` is not a number.
         ValueError
-            If ``value`` is not between -1.0 and 1.0.
+            If ``value`` is not between -1.0 and 2.0.
         """
         return self._fract_a
 
@@ -198,7 +198,7 @@ class AtomSite(ModelBase):
         Parameters
         ----------
         value : int | float
-            A number between -1.0 and 1.0.
+            A number between -1.0 and 2.0.
 
         Returns
         -------
@@ -210,7 +210,7 @@ class AtomSite(ModelBase):
         TypeError
             If ``value`` is not a number.
         ValueError
-            If ``value`` is not between -1.0 and 1.0.
+            If ``value`` is not between -1.0 and 2.0.
         """
         return self._fract_b
 
@@ -229,7 +229,7 @@ class AtomSite(ModelBase):
         Parameters
         ----------
         value : int | float
-            A number between -1.0 and 1.0.
+            A number between -1.0 and 2.0.
 
         Returns
         -------
@@ -241,7 +241,7 @@ class AtomSite(ModelBase):
         TypeError
             If ``value`` is not a number.
         ValueError
-            If ``value`` is not between -1.0 and 1.0.
+            If ``value`` is not between -1.0 and 2.0.
         """
         return self._fract_c
 
@@ -350,8 +350,8 @@ class AtomSite(ModelBase):
     def _validate_fract_value(self, value: numbers.Real, axis: str):
         if not isinstance(value, numbers.Real) or isinstance(value, bool):
             raise TypeError(f'"fract_{axis}" must be a numeric value')
-        if not (-1.0 <= value <= 1.0):
-            raise ValueError(f'"fract_{axis}" must be between -1.0 and 1.0')
+        if not (-1.0 <= value <= 2.0):
+            raise ValueError(f'"fract_{axis}" must be between -1.0 and 2.0')
         wrapped_value = value % 1.0
         return 0.0 if wrapped_value == 1.0 else wrapped_value  # a tiny negative value rounds up to 1.0
 

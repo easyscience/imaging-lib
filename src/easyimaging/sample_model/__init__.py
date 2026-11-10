@@ -4,3 +4,5 @@
 from .atom_site import AtomSite
 from .atoms import Atoms
 from .lattice import Lattice
+from .sample_model import SampleModel
+from .sample_properties import SampleProperties

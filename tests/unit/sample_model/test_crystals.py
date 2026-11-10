@@ -344,7 +344,10 @@ class TestHexagonalClosePacked:
         assert lattice.gamma.value == 120.0
         assert len(lattice.atom_sites) == 2
         assert all(site.atom is Atoms.Mg for site in lattice.atom_sites)
-        assert _fract_coords(lattice) == [(0.0, 0.0, 0.0), (pytest.approx(2 / 3), pytest.approx(1 / 3), 0.5)]
+        assert _fract_coords(lattice) == [
+            (pytest.approx(1 / 3), pytest.approx(2 / 3), 0.25),
+            (pytest.approx(2 / 3), pytest.approx(1 / 3), 0.75),
+        ]
         assert lattice.spacegroup == ('P6_3/mmc', 194)
 
     def test_default_debye_temperature(self):

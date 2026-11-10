@@ -1,8 +1,13 @@
 # SPDX-FileCopyrightText: 2026 EasyScience contributors <https://github.com/easyscience>
 # SPDX-License-Identifier: BSD-3-Clause
 
+import numbers
+from typing import Sequence
+
+import numpy as np
 from easyscience.base_classes import ModelBase
 
+from .calculators import NCrystalCalculator
 from .lattice import Lattice
 from .sample_properties import SampleProperties
 
@@ -13,9 +18,9 @@ class SampleModel(ModelBase):
     def __init__(self, lattice: Lattice, sample_properties: SampleProperties):
         """Initialize the sample model with a lattice and sample properties."""
         if not isinstance(lattice, Lattice):
-            raise TypeError("lattice must be an instance of Lattice")
+            raise TypeError('lattice must be an instance of Lattice')
         if not isinstance(sample_properties, SampleProperties):
-            raise TypeError("sample_properties must be an instance of SampleProperties")
+            raise TypeError('sample_properties must be an instance of SampleProperties')
         self._lattice = lattice
         self._sample_properties = sample_properties
 
@@ -33,14 +38,14 @@ class SampleModel(ModelBase):
     def lattice(self, lattice: Lattice):
         """Set the lattice of the sample."""
         if not isinstance(lattice, Lattice):
-            raise TypeError("lattice must be an instance of Lattice")
+            raise TypeError('lattice must be an instance of Lattice')
         self._lattice = lattice
 
     @sample_properties.setter
     def sample_properties(self, sample_properties: SampleProperties):
         """Set the sample properties of the sample."""
         if not isinstance(sample_properties, SampleProperties):
-            raise TypeError("sample_properties must be an instance of SampleProperties")
+            raise TypeError('sample_properties must be an instance of SampleProperties')
         self._sample_properties = sample_properties
 
     def display(self):
@@ -124,3 +129,29 @@ class SampleModel(ModelBase):
         LatticeError
             If the lattice structure is invalid and therefore cannot be displayed.
         """
+        return self.lattice.display()
+
+    def calculate(self, wavelengths: np.ndarray | Sequence[numbers.Real]) -> np.ndarray:
+        """
+        Calculate the scattering intensity for the given wavelengths.
+
+        Parameters
+        ----------
+        wavelengths : np.ndarray | Sequence[float | int]
+            The wavelengths at which to calculate the scattering intensity.
+
+        Returns
+        -------
+        np.ndarray
+            The calculated scattering intensity for each wavelength.
+        """
+        if isinstance(wavelengths, np.ndarray):
+            internal_wavelengths = wavelengths
+        elif isinstance(wavelengths, Sequence):
+            internal_wavelengths = np.array(wavelengths)
+        else:
+            raise TypeError('wavelengths must be a np.ndarray or a Sequence of values')
+        if not np.isdtype(internal_wavelengths.dtype, ('real floating', 'integral')):
+            raise TypeError('wavelengths must be of a numeric type')
+        self.calculator = NCrystalCalculator(lattice=self.lattice, sample_properties=self.sample_properties)
+        return self.calculator.calculate(internal_wavelengths)

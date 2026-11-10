@@ -15,7 +15,7 @@ from .lattice import Lattice
 
 _BCC = ((0.0, 0.0, 0.0), (0.5, 0.5, 0.5))
 _FCC = ((0.0, 0.0, 0.0), (0.5, 0.5, 0.0), (0.5, 0.0, 0.5), (0.0, 0.5, 0.5))
-_HCP = ((0.0, 0.0, 0.0), (2 / 3, 1 / 3, 0.5))
+_HCP = ((1 / 3, 2 / 3, 0.25), (2 / 3, 1 / 3, 0.75))
 
 
 def body_centered_cubic(
@@ -358,8 +358,8 @@ def hexagonal_close_packed(
 
     This function creates a [`Lattice`][...Lattice] object with lattice constants $a=b\\neq c$ and lattice angles
     $\\alpha=\\beta=90^\\circ$, $\\gamma=120^\\circ$. The [`Lattice`][...Lattice] object is then populated with two
-    atoms at the fractional coordinates $(0,0,0)$ and $(\\frac{2}{3},\\frac{1}{3},\\frac{1}{2})$, corresponding to the two
-    atoms in the primitive HCP unit cell.
+    atoms at the fractional coordinates $(\\frac{1}{3},\\frac{2}{3},\\frac{1}{4})$ and
+    $(\\frac{2}{3},\\frac{1}{3},\\frac{3}{4})$, corresponding to the two atoms in the primitive HCP unit cell.
 
     ```python exec="true"
     from easyimaging.sample_model import Atoms

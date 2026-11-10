@@ -10,14 +10,14 @@ from easyimaging.sample_model import Atoms
 from easyimaging.sample_model import AtomSite
 from easyimaging.sample_model import Lattice
 from easyimaging.sample_model import crystals
-from easyimaging.sample_model._lattice_viewer.elements import ELEMENT_STYLES
-from easyimaging.sample_model._lattice_viewer.scene import ATOM_RADIUS_SCALE
-from easyimaging.sample_model._lattice_viewer.scene import LATTICE_VECTOR_OVERHANG
-from easyimaging.sample_model._lattice_viewer.scene import atom_spheres
-from easyimaging.sample_model._lattice_viewer.scene import bond_cylinders
-from easyimaging.sample_model._lattice_viewer.scene import build_scene
-from easyimaging.sample_model._lattice_viewer.scene import cell_edges
-from easyimaging.sample_model._lattice_viewer.scene import lattice_vector_arrows
+from easyimaging.sample_model.lattice_viewer.elements import ELEMENT_STYLES
+from easyimaging.sample_model.lattice_viewer.scene import ATOM_RADIUS_SCALE
+from easyimaging.sample_model.lattice_viewer.scene import LATTICE_VECTOR_OVERHANG
+from easyimaging.sample_model.lattice_viewer.scene import atom_spheres
+from easyimaging.sample_model.lattice_viewer.scene import bond_cylinders
+from easyimaging.sample_model.lattice_viewer.scene import build_scene
+from easyimaging.sample_model.lattice_viewer.scene import cell_edges
+from easyimaging.sample_model.lattice_viewer.scene import lattice_vector_arrows
 
 
 def test_every_element_has_a_style():

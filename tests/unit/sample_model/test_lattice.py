@@ -372,7 +372,7 @@ class TestLattice:
         # When
         lattice = Lattice.cubic(length_a=3.0)
         # Then Expect
-        with pytest.raises(LatticeError, match='Invalid lattice structure.'):
+        with pytest.raises(LatticeError, match='Lattice must have at least one atom site to be a valid crystal structure.'):
             lattice.spacegroup
 
     def test_lattice_vectors_cubic(self):

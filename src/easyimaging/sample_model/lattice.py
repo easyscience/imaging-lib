@@ -9,6 +9,7 @@ from math import cos
 from math import sin
 from typing import Any
 
+import numpy as np
 import spglib
 from easyscience import Parameter
 from easyscience import global_object
@@ -512,9 +513,9 @@ class Lattice(ModelBase):
         LatticeError
             If the lattice structure is invalid and the space group cannot be determined.
         """
-        spacegroup_str = self._validate_lattice()
-        spacegroup_symbol, spacegroup_number = spacegroup_str.split()
-        spacegroup_number = int(spacegroup_number[1:-1])
+        spacegroup_dataset = self._validate_lattice()
+        spacegroup_symbol = spacegroup_dataset.international
+        spacegroup_number = spacegroup_dataset.number
         return spacegroup_symbol, spacegroup_number
 
     @property
@@ -611,6 +612,26 @@ class Lattice(ModelBase):
     # Setters have no docstrings. They should be written in the getter docstring instead.
     def display_name(self, value: str):
         super(Lattice, type(self)).display_name.fset(self, value)
+
+    def standardize_positions(self) -> None:
+        with global_object.log.at_level('ERROR'):
+            spacegroup_dataset = self._validate_lattice()
+        origin_shift = spacegroup_dataset.origin_shift
+        for atom_site in self.atom_sites:
+            # The atom_site fract setters wrap around the unit cell
+            for i, fract in enumerate(['fract_a', 'fract_b', 'fract_c']):
+                param = getattr(atom_site, fract)
+                fixed = param.fixed
+                try:
+                    param.fixed = False
+                except AttributeError:
+                    raise RuntimeError(
+                        f'Cannot standardize `{fract}` coordinate of {atom_site.display_name} since it is a '
+                        'dependent parameter. Please make it independent with the `make_independent` method '
+                        'and try again.'
+                    )
+                setattr(atom_site, fract, param.value + origin_shift[i])
+                param.fixed = fixed
 
     def get_all_variables(self) -> list[DescriptorBase]:
         """
@@ -797,12 +818,24 @@ class Lattice(ModelBase):
 
     def _validate_lattice(self) -> str:
         """Returns the str to make it usable in the spacegroup property."""
+        if len(self.atom_sites) == 0:
+            raise LatticeError('Lattice must have at least one atom site to be a valid crystal structure.')
         positions = [[site.fract_a.value, site.fract_b.value, site.fract_c.value] for site in self.atom_sites]
-        atomic_species = [site.atom.enum_id for site in self.atom_sites]
-        spacegroup_str = spglib.get_spacegroup([self.lattice_vectors, positions, atomic_species])
-        if spacegroup_str is None:
-            raise LatticeError('Invalid lattice structure.')
-        return spacegroup_str
+        identifying_labels = [
+            site.atom.enum_id + site.debye_temperature.full_value.to(unit='K').value for site in self.atom_sites
+        ]
+        spacegroup_dataset = spglib.spg.get_symmetry_dataset([self.lattice_vectors, positions, identifying_labels])
+        if spacegroup_dataset is None:
+            raise LatticeError('Invalid lattice structure. Check your lattice parameters and angles.')
+        sorted_positions = np.sort(np.array(positions), axis=0)
+        sorted_std_positions = np.sort(spacegroup_dataset.std_positions, axis=0)
+        if not np.allclose(sorted_positions, sorted_std_positions):
+            global_object.log.warning(
+                'Warning: Atom site positions do not match the standardized positions for this '
+                "lattice's spacegroup. The `Lattice` cannot currently be used for calculations.\\n"
+                'The atom site positions can be standardized with the `standardize_positions` method.'
+            )
+        return spacegroup_dataset
 
     def to_dict(self, skip: list[str] | None = None) -> dict[str, Any]:
         """Convert the lattice object to a dictionary representation.

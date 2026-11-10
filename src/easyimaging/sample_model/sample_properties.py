@@ -17,8 +17,8 @@ class SampleProperties(ModelBase):
     [`Lattice`][...lattice.Lattice] object, which describes the atomic structure of the sample, this object defines the model
     of the sample.
     """
-    def __init__(
 
+    def __init__(
         self,
         sample_thickness: numbers.Real,
         temperature: numbers.Real | None = None,

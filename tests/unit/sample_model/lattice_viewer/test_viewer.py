@@ -6,7 +6,7 @@ import base64
 import pytest
 
 from easyimaging.sample_model import crystals
-from easyimaging.sample_model._lattice_viewer import viewer
+from easyimaging.sample_model.lattice_viewer import viewer
 
 
 @pytest.fixture

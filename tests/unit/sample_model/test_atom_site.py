@@ -112,9 +112,9 @@ class TestAtomSite:
     @pytest.mark.parametrize(
         'invalid_value, error, message',
         [
-            (1.5, ValueError, r'must be between -1\.0 and 1\.0'),
-            (-1.5, ValueError, r'must be between -1\.0 and 1\.0'),
-            (float('nan'), ValueError, r'must be between -1\.0 and 1\.0'),
+            (2.5, ValueError, r'must be between -1\.0 and 2\.0'),
+            (-1.5, ValueError, r'must be between -1\.0 and 2\.0'),
+            (float('nan'), ValueError, r'must be between -1\.0 and 2\.0'),
             ('0.5', TypeError, 'must be a numeric value'),
             (True, TypeError, 'must be a numeric value'),
         ],
@@ -269,8 +269,8 @@ class TestAtomSite:
         site = atom_site
         original_value = getattr(site, attribute).value
         # Then Expect
-        with pytest.raises(ValueError, match=r'must be between -1\.0 and 1\.0'):
-            setattr(site, attribute, 2.0)
+        with pytest.raises(ValueError, match=r'must be between -1\.0 and 2\.0'):
+            setattr(site, attribute, 2.2)
         assert getattr(site, attribute).value == original_value
 
     @pytest.mark.parametrize('value', [400.0, np.float32(400.0), np.int64(400)], ids=['float', 'float32', 'int64'])
