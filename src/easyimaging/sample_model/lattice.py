@@ -614,6 +614,12 @@ class Lattice(ModelBase):
         super(Lattice, type(self)).display_name.fset(self, value)
 
     def standardize_positions(self) -> None:
+        """
+        Standardize the positions of all atom sites in the lattice according to its spacegroup.
+
+        This method shifts the fractional coordinates of all [AtomSite][..AtomSite] objects in the [Lattice][.] by a fixed
+        origin shift determined by the spacegroup, to position them at their standardized positions.
+        """
         with global_object.log.at_level('ERROR'):
             spacegroup_dataset = self._validate_lattice()
         origin_shift = spacegroup_dataset.origin_shift

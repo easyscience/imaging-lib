@@ -29,7 +29,7 @@ node_modules
 .tox
 
 # Vendored JavaScript libraries
-src/easyimaging/sample_model/_lattice_viewer/vendor/
+src/easyimaging/sample_model/lattice_viewer/vendor/
 
 # Misc
 .benchmarks
