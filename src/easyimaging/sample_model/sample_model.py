@@ -5,7 +5,11 @@ import numbers
 from typing import Sequence
 
 import numpy as np
+import scipp as sc
 from easyscience.base_classes import ModelBase
+from scipp import UnitError
+
+from easyimaging.utils.jupyter_notebook_utilities import _is_notebook
 
 from .calculators import NCrystalCalculator
 from .lattice import Lattice
@@ -15,12 +19,19 @@ from .sample_properties import SampleProperties
 class SampleModel(ModelBase):
     """The sample model for representing a sample in neutron imaging experiments."""
 
-    def __init__(self, lattice: Lattice, sample_properties: SampleProperties):
+    def __init__(
+        self,
+        lattice: Lattice,
+        sample_properties: SampleProperties,
+        unique_name: str | None = None,
+        display_name: str | None = None,
+    ):
         """Initialize the sample model with a lattice and sample properties."""
         if not isinstance(lattice, Lattice):
             raise TypeError('lattice must be an instance of Lattice')
         if not isinstance(sample_properties, SampleProperties):
             raise TypeError('sample_properties must be an instance of SampleProperties')
+        super().__init__(unique_name=unique_name, display_name=display_name)
         self._lattice = lattice
         self._sample_properties = sample_properties
 
@@ -131,27 +142,85 @@ class SampleModel(ModelBase):
         """
         return self.lattice.display()
 
-    def calculate(self, wavelengths: np.ndarray | Sequence[numbers.Real]) -> np.ndarray:
+    def spectrum(self, wavelengths: np.ndarray | Sequence[numbers.Real] | sc.Variable) -> sc.DataArray:
         """
-        Calculate the scattering intensity for the given wavelengths.
+        Calculate the spectrum of the sample for the given wavelengths.
+
+        If the wavelengths are provided as a sc.Variable array, it must have units of length.<br>
+        If a np.ndarray or list/tuple of values is provided, the wavelengths will be assumed to be in units of Å.
 
         Parameters
         ----------
-        wavelengths : np.ndarray | Sequence[float | int]
+        wavelengths : np.ndarray | Sequence[float | int] | sc.Variable
             The wavelengths at which to calculate the scattering intensity.
 
         Returns
         -------
-        np.ndarray
+        sc.DataArray
             The calculated scattering intensity for each wavelength.
         """
         if isinstance(wavelengths, np.ndarray):
             internal_wavelengths = wavelengths
+        elif isinstance(wavelengths, sc.Variable):
+            try:
+                internal_wavelengths = wavelengths.to(unit='angstrom').values
+            except UnitError as e:
+                raise UnitError('"wavelengths" must have units of length') from e
         elif isinstance(wavelengths, Sequence):
             internal_wavelengths = np.array(wavelengths)
         else:
-            raise TypeError('wavelengths must be a np.ndarray or a Sequence of values')
+            raise TypeError('wavelengths must be a np.ndarray, a sc.Variable array, or a Sequence of values')
+        if internal_wavelengths.ndim != 1:
+            raise ValueError('wavelengths must be a one-dimensional array')
         if not np.isdtype(internal_wavelengths.dtype, ('real floating', 'integral')):
             raise TypeError('wavelengths must be of a numeric type')
+        if np.any(internal_wavelengths <= 0):
+            raise ValueError('wavelengths must be positive')
         self.calculator = NCrystalCalculator(lattice=self.lattice, sample_properties=self.sample_properties)
-        return self.calculator.calculate(internal_wavelengths)
+        calculated_spectrum = sc.array(dims=['t'], values=self.calculator.calculate(internal_wavelengths))
+        wavelengths_coord = sc.array(dims=['t'], values=internal_wavelengths, unit='angstrom')
+        return sc.DataArray(data=calculated_spectrum, coords={'wavelength': wavelengths_coord})
+
+    def plot(self, wavelengths: np.ndarray | Sequence[numbers.Real] | sc.Variable | None = None, **kwargs) -> None:
+        """
+        Plot the spectrum of the sample for the given wavelengths.
+
+        If the wavelengths are provided as a sc.Variable array, it must have units of length.<br>
+        If a np.ndarray or list/tuple of values is provided, the wavelengths will be assumed to be in units of Å.
+        If no wavelengths are provided, a default range from 0.5 Å to 8 Å will be used.
+
+        This method uses the [plopp](https://scipp.github.io/plopp/plotting/line-plot.html) library for plotting.
+
+        To customize the plot appearance, additional keyword arguments can be passed to the underlying plopp plotting function.
+         See [plopp.plot][] for which keyword arguments are available and how to use them.
+
+        Parameters
+        ----------
+        wavelengths : np.ndarray | Sequence[float | int] | sc.Variable | None
+            The wavelengths at which to calculate the scattering intensity.
+        **kwargs : dict
+            Additional keyword arguments to pass to the plotting function.<br>
+            See [plopp.plot][] for options.
+        """
+        if wavelengths is None:
+            wavelengths = np.linspace(0.5, 8, 401)
+        spectrum_data = self.spectrum(wavelengths)
+
+        plot_kwargs_defaults = {
+            'title': self.unique_name + ' - Transmission spectrum',
+            'xlabel': f'Wavelength [{spectrum_data.coords["wavelength"].unit}]',
+            'ylabel': 'Transmission',
+            'ymin': 0.0,
+            'ymax': min(1.1, float(spectrum_data.max().value * 1.1)),
+            'coords': ['wavelength'],
+            'linestyle': 'solid',
+            'marker': None,
+        }
+        # Overwrite defaults with any user-provided kwargs
+        plot_kwargs_defaults.update(kwargs)
+
+        if _is_notebook():
+            return spectrum_data.plot(**plot_kwargs_defaults)
+        else:
+            plot = spectrum_data.plot(**plot_kwargs_defaults)
+            plot.show()
