@@ -531,9 +531,9 @@ class Lattice(ModelBase):
         list[list[float, float, float]]
             A list of the three 3-dimensional lattice vectors: ``[vector_a, vector_b, vector_c]``.
         """
-        a = self.length_a.value
-        b = self.length_b.value
-        c = self.length_c.value
+        a = float(self.length_a.value)
+        b = float(self.length_b.value)
+        c = float(self.length_c.value)
         alpha = self._alpha.full_value.to(unit='rad').value
         beta = self._beta.full_value.to(unit='rad').value
         gamma = self._gamma.full_value.to(unit='rad').value
@@ -838,7 +838,7 @@ class Lattice(ModelBase):
         if not np.allclose(sorted_positions, sorted_std_positions):
             global_object.log.warning(
                 'Warning: Atom site positions do not match the standardized positions for this '
-                "lattice's spacegroup. The `Lattice` cannot currently be used for calculations.\\n"
+                "lattice's spacegroup. The `Lattice` cannot currently be used for calculations.\n"
                 'The atom site positions can be standardized with the `standardize_positions` method.'
             )
         return spacegroup_dataset

@@ -15,8 +15,7 @@ section of the documentation.
 
 The tutorials are organized into the following categories:
 
-## Getting Started
+## Core components
 
-- [The **Measurement** class](measurement.ipynb) – A tutorial which
-  explores the purpose and functions of the core-component: The
-  **Measurement** class.
+- [The **Measurement** class](measurement.ipynb) – Learn how to load in a measurement, inspect its data and create regions of interests.
+- [The **SampleModel** class](sample_model.ipynb) - Learn how to create a crystallographic model of your sample and calculate its wavelength spectrum.

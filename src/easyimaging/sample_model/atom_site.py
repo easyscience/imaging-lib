@@ -104,7 +104,8 @@ class AtomSite(ModelBase):
 
         if debye_temperature is None:
             global_object.log.warning(
-                f"Debye temperature not provided for AtomSite '{self.unique_name}'. Setting to default value of 300 K."
+                f"Warning: Debye temperature not provided for AtomSite '{self.unique_name}'. "
+                'Setting to default value of 300 K.'
             )
             debye_temperature = 300.0
 

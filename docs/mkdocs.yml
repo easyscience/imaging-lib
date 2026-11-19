@@ -203,8 +203,9 @@ nav:
       - User Guide: user-guide/index.md
   - Tutorials:
       - Tutorials: tutorials/index.md
-      - Getting Started:
+      - Core Components:
           - The Measurement class: tutorials/measurement.ipynb
+          - The SampleModel class: tutorials/sample_model.ipynb
   - API Reference:
       - API Reference: api-reference/index.md
       - measurement: api-reference/measurement/measurement.md
